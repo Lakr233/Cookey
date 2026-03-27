@@ -1,84 +1,82 @@
 {
-  "fill" : {
-    "automatic-gradient" : "extended-srgb:0.00000,0.53333,1.00000,1.00000"
+  "fill": {
+    "automatic-gradient": "extended-srgb:0.00000,0.53333,1.00000,1.00000"
   },
-  "groups" : [
+  "groups": [
     {
-      "layers" : [
+      "layers": [
         {
-          "glass" : false,
-          "hidden-specializations" : [
+          "glass": false,
+          "hidden-specializations": [
             {
-              "appearance" : "dark",
-              "value" : true
+              "appearance": "dark",
+              "value": true
             },
             {
-              "appearance" : "tinted",
-              "value" : true
+              "appearance": "tinted",
+              "value": true
             }
           ],
-          "image-name" : "key.fill.black.svg",
-          "name" : "key.fill.black"
+          "image-name": "key.fill.black.svg",
+          "name": "key.fill.black"
         },
         {
-          "glass-specializations" : [
+          "glass-specializations": [
             {
-              "value" : false
+              "value": false
             },
             {
-              "appearance" : "tinted",
-              "value" : false
+              "appearance": "tinted",
+              "value": false
             }
           ],
-          "hidden-specializations" : [
+          "hidden-specializations": [
             {
-              "value" : false
+              "value": false
             },
             {
-              "appearance" : "light",
-              "value" : true
+              "appearance": "light",
+              "value": true
             },
             {
-              "appearance" : "tinted",
-              "value" : false
+              "appearance": "tinted",
+              "value": false
             }
           ],
-          "image-name" : "key.fill.svg",
-          "name" : "key.fill"
+          "image-name": "key.fill.svg",
+          "name": "key.fill"
         },
         {
-          "glass" : false,
-          "hidden-specializations" : [
+          "glass": false,
+          "hidden-specializations": [
             {
-              "value" : false
+              "value": false
             },
             {
-              "appearance" : "dark",
-              "value" : true
+              "appearance": "dark",
+              "value": true
             },
             {
-              "appearance" : "tinted",
-              "value" : true
+              "appearance": "tinted",
+              "value": true
             }
           ],
-          "image-name" : "nordwood-themes-R53t-Tg6J4c-unsplash.jpg",
-          "name" : "nordwood-themes-R53t-Tg6J4c-unsplash"
+          "image-name": "nordwood-themes-R53t-Tg6J4c-unsplash.jpg",
+          "name": "nordwood-themes-R53t-Tg6J4c-unsplash"
         }
       ],
-      "shadow" : {
-        "kind" : "neutral",
-        "opacity" : 0.5
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.5
       },
-      "translucency" : {
-        "enabled" : true,
-        "value" : 0.5
+      "translucency": {
+        "enabled": true,
+        "value": 0.5
       }
     }
   ],
-  "supported-platforms" : {
-    "circles" : [
-      "watchOS"
-    ],
-    "squares" : "shared"
+  "supported-platforms": {
+    "circles": ["watchOS"],
+    "squares": "shared"
   }
 }

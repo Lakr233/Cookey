@@ -29,10 +29,16 @@ HelpMeIn (帮我登进去) is a **Remote Login Proxy System** that allows CLI-ba
 **Key Commands**:
 ```bash
 helpmein login <url>              # Request remote login
-helpmein status <request-id>      # Check request status
+helpmein status                   # Wait for APN push, then download session
 helpmein devices                  # List paired devices
 helpmein pair                   # Initiate device pairing
 ```
+
+**Session Retrieval (No Polling)**:
+- CLI sends request, enters waiting state
+- When iOS completes login, APN pushes to CLI device ("ready")
+- CLI queries `/v1/sessions/:id` once to download encrypted session
+- No polling loop - just one request after push notification
 
 **Tech Stack**:
 - Swift (native binary via Swift Package Manager)
@@ -45,16 +51,19 @@ helpmein pair                   # Initiate device pairing
 
 **Responsibilities**:
 - Receive APN push notifications for login requests
-- Display in-app browser for user authentication
-- Extract cookies/session after successful login
-- Send session data back to server
-- Manage device identity and keys
+- Display custom login interface (not system browser)
+- Inject JavaScript to extract cookies + localStorage
+- Send complete session data back to server
+- Manage multiple paired CLI clients
+- Secure enclave for device key storage
 
 **Key Features**:
 - Push notification handling (background + foreground)
-- In-app browser (SFSafariViewController or WKWebView)
-- Secure enclave for device key storage
+- Custom login WebView with JavaScript injection
+- Extract both cookies AND localStorage
 - Session preview before sending back
+- Multi-client support (one iPhone can serve multiple CLI agents)
+- Secure enclave for device key storage
 
 **Tech Stack**:
 - SwiftUI for UI
@@ -77,9 +86,9 @@ helpmein pair                   # Initiate device pairing
 ```
 POST /v1/devices/register           # Register new device
 POST /v1/devices/verify             # Verify device pairing
-POST /v1/requests                   # Create login request
-GET  /v1/requests/:id               # Poll request status
-POST /v1/requests/:id/complete      # Complete with session data
+POST /v1/devices/:id/requests          # Create login request (signed)
+GET  /v1/sessions/:id                  # Download session after APN push (one-time)
+POST /v1/sessions/:id/complete         # iOS completes with session data
 POST /v1/push/apn                 # Internal APN delivery
 ```
 
@@ -91,32 +100,45 @@ POST /v1/push/apn                 # Internal APN delivery
 
 **Data Models**:
 ```swift
-// Device
+// Device (iPhone)
 struct Device: Codable {
     let id: UUID
-    let publicKey: String
+    let publicKey: String           // Device's ed25519 public key
     let apnToken: String
     let name: String
     let createdAt: Date
     let lastSeenAt: Date
 }
 
+// CLI Client (paired to Device)
+struct CLIClient: Codable {
+    let id: UUID
+    let deviceId: UUID             // Which iPhone manages this CLI
+    let publicKey: String          // CLI's ed25519 public key
+    let name: String               // e.g., "MacBook Pro", "Server Container"
+    let createdAt: Date
+    let lastUsedAt: Date
+}
+
 // Login Request
 struct LoginRequest: Codable {
     let id: UUID
     let targetURL: URL
-    let requestingDeviceId: UUID
-    let status: RequestStatus  // pending | active | completed | expired
+    let cliClientId: UUID          // Which CLI is requesting
+    let deviceId: UUID             // Which iPhone should handle it
+    let status: RequestStatus       // pending | active | completed | expired
     let sessionData: SessionData?
     let createdAt: Date
     let expiresAt: Date
 }
 
-// Session Data
+// Session Data (complete browser state)
 struct SessionData: Codable {
     let cookies: [Cookie]
-    let localStorage: [String: String]?
+    let localStorage: [String: String]           // All localStorage items
+    let sessionStorage: [String: String]?        // Optional: sessionStorage
     let userAgent: String
+    let timestamp: Date
 }
 ```
 
@@ -189,7 +211,7 @@ sequenceDiagram
     CLI->>CLI: Store device_id + keys
 ```
 
-### 2. Login Request
+### 2. Login Request (No Polling)
 
 ```mermaid
 sequenceDiagram
@@ -200,25 +222,32 @@ sequenceDiagram
     participant Web as Target Website
     
     CLI->>CLI: Create signed request
-    CLI->>S: POST /requests {url, device_id, signature}
+    CLI->>S: POST /devices/:id/requests {url, cli_pubkey, signature}
     S->>S: Verify signature
     S->>S: Create request record
-    S->>APN: Push notification
+    S->>APN: Push to iPhone
+    S->>CLI: {request_id, status: pending}
     
-    APN->>iOS: "Login request: example.com"
+    APN->>iOS: "🔐 Login: example.com (for CLI-MacBook)"
     iOS->>iOS: User taps notification
-    iOS->>S: GET /requests/:id (mark active)
+    iOS->>S: Update status: active
     
-    iOS->>Web: Open in-app browser
+    iOS->>Web: Load URL in WKWebView
     Web->>iOS: User completes login
-    iOS->>iOS: Extract cookies/session
+    iOS->>iOS: Inject JS to extract:
+    iOS->>iOS: - document.cookie
+    iOS->>iOS: - localStorage (all keys)
+    iOS->>iOS: - sessionStorage (optional)
     
-    iOS->>S: POST /requests/:id/complete
-    Note over iOS,S: Session encrypted with CLI pubkey
+    iOS->>S: POST /sessions/:id/complete
+    Note over iOS,S: Session encrypted with CLI's public key
     
-    S->>APN: Push "completed"
-    S->>CLI: (Polling/WebSocket) Session data
-    CLI->>CLI: Decrypt and store
+    S->>APN: Push to CLI: "ready"
+    
+    CLI->>S: GET /sessions/:id (after push)
+    S->>CLI: Return encrypted session
+    CLI->>CLI: Decrypt with private key
+    CLI->>CLI: Store cookies + localStorage
 ```
 
 ## Technical Decisions
@@ -245,20 +274,21 @@ sequenceDiagram
 
 ### Phase 1: Core Protocol (Week 1-2)
 
-- [ ] Server: Device registration API
-- [ ] Server: Request creation/completion API
+- [ ] Server: Device + CLI client registration API
+- [ ] Server: Request creation + session completion API
+- [ ] Server: APN push to both iOS and CLI
 - [ ] iOS: Basic UI + APN handling
-- [ ] iOS: In-app browser integration
-- [ ] CLI: Pairing flow
-- [ ] CLI: Request + polling
+- [ ] iOS: WKWebView with JS injection (cookies + localStorage)
+- [ ] CLI: Pairing flow (QR code)
+- [ ] CLI: Request + APN wait + one-time session download
 
 ### Phase 2: Security & Polish (Week 3)
 
-- [ ] End-to-end encryption for sessions
-- [ ] Signature verification everywhere
-- [ ] Rate limiting
+- [ ] End-to-end encryption (ed25519 + AES)
+- [ ] Signature verification on all requests
+- [ ] Multi-CLI support on single iPhone
+- [ ] Rate limiting & request expiration
 - [ ] Error handling & retry logic
-- [ ] Request expiration cleanup
 
 ### Phase 3: Features (Week 4)
 
@@ -268,23 +298,31 @@ sequenceDiagram
 - [ ] Documentation
 - [ ] CLI distribution (Homebrew, etc.)
 
-## Open Questions
+## Open Questions (Resolved)
 
-1. **WebSocket vs Polling for CLI?**
-   - WebSocket: Real-time but more complex
-   - Polling: Simpler, sufficient for MVP
+| Question | Decision |
+|----------|----------|
+| CLI notification method | **APN push** (no polling) |
+| Session data | **cookies + localStorage + sessionStorage** |
+| iOS browser | **Custom WKWebView** with JS injection |
+| Multi-user | **Yes** - one iPhone supports multiple CLI clients |
 
-2. **Session Data Format?**
-   - Just cookies or full localStorage?
-   - Support for custom headers?
+## Remaining Questions
 
-3. **Multi-User Support?**
-   - Single user per device for MVP?
-   - Or multiple CLI agents per iOS device?
+1. **Server Hosting?**
+   - Self-hosted option? (Docker compose?)
+   - Managed service? (who pays?)
+   - Or both?
 
-4. **Server Hosting?**
-   - Self-hosted option?
-   - Managed service?
+2. **Session Storage Duration?**
+   - Delete immediately after CLI downloads?
+   - Keep for 24 hours for retry?
+   - User-configurable?
+
+3. **CLI Distribution?**
+   - Homebrew (macOS)
+   - APT/YUM (Linux)
+   - Swift Package Manager? (universal)
 
 ## Next Steps
 

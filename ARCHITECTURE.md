@@ -1,700 +1,784 @@
-# HelpMeIn 极简安全架构设计
+# HelpMeIn 架构设计
 
-## 核心原则
+## 1. 设计目标
 
-| 原则 | 实现方式 |
-|------|---------|
-| **无 APN** | 零配置，无需证书，无平台依赖 |
-| **无状态无储存** | 纯内存/临时存储，服务器不持久化敏感数据 |
-| **1MB 传输限制** | 防止滥用，限制单次传输大小 |
-| **极致简单** | 最少组件，最少依赖，单文件部署 |
+HelpMeIn 的目标不是做一个通用账号系统，而是做一个极简、可自托管、以 CLI 为中心的“扫码登录并回收浏览器会话”工具。
 
----
+核心约束如下：
 
-## 1. 系统架构图（文本版）
-
-```
-┌────────────────────────────────────────────────────────────────────────────────┐
-│                            HelpMeIn 极简架构                                   │
-├────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                │
-│   ┌─────────────┐                                                              │
-│   │ CLI Agent   │  1. 生成临时 ed25519 密钥对 (ephemeral)                      │
-│   │  (终端)      │                                                              │
-│   └──────┬──────┘                                                              │
-│          │                                                                     │
-│          │  2. 显示二维码/链接                                                  │
-│          │     {request_id, server_url, cli_pubkey, target_url}                 │
-│          │                                                                     │
-│          ▼                                                                     │
-│   ┌─────────────────────────────────────────┐                                  │
-│   │  二维码 / 手动输入 / 链接分享              │                                  │
-│   │  (无设备注册，无配对流程，扫码即连)        │                                  │
-│   └─────────────────────────────────────────┘                                  │
-│          │                                                                     │
-│          │  3. 扫码/输入                                                       │
-│          ▼                                                                     │
-│   ┌─────────────┐     4. 直连 Server      ┌─────────────┐                     │
-│   │  iOS App    │ ────────────────────────▶ │   Server    │                     │
-│   │ (WKWebView) │    GET /r/:id (metadata) │  (Go/Rust)  │                     │
-│   └─────────────┘                          └──────┬──────┘                     │
-│          │                                         │                           │
-│          │  5. 用户登录目标网站                      │  内存缓存 (TTL 5分钟)       │
-│          │     - 自动填充账号密码                     │  - 无数据库                │
-│          │     - 完成 CAPTCHA                        │  - 无持久化                │
-│          │     - 提取 cookies                       │  - 1MB 限制                │
-│          │     - 提取 localStorage                  │  - 一次性 URL              │
-│          │                                          │                           │
-│          │  6. X25519+AES 加密 session              │                           │
-│          │     (用 cli_pubkey 加密，服务器零知识)     │                           │
-│          │                                          │                           │
-│          └─────────────────────────────────────────▶ │                           │
-│                    POST /r/:id (加密 blob)           │                           │
-│                                                      │                           │
-│   ┌─────────────┐     7. 轮询获取               ◀───┘                           │
-│   │ CLI Agent   │ ────────────────────────▶    (一次性，立即删除)                │
-│   │  (终端)      │    GET /r/:id                                         │
-│   └─────────────┘                                                              │
-│          │                                                                     │
-│          │  8. 解密 session                                                   │
-│          │     - 使用临时私钥解密                                               │
-│          │     - 应用到 HTTP 客户端                                            │
-│          │                                                                     │
-│          ▼                                                                     │
-│   ┌─────────────────────────────────────────┐                                  │
-│   │  Session 使用完毕，临时密钥销毁            │                                  │
-│   │  服务器数据已删除，零残留                   │                                  │
-│   └─────────────────────────────────────────┘                                  │
-│                                                                                │
-└────────────────────────────────────────────────────────────────────────────────┘
-```
+- 无 APNs 依赖，无设备注册流程。
+- 服务端零知识，只中转加密后的 session。
+- 默认单机内存存储，可选长轮询或 WebSocket。
+- 单次 session 负载上限 1 MB。
+- CLI 本地持久化最少，但必须可恢复、可检查、可导出。
 
 ---
 
-## 2. 数据流时序
+## 2. 组件与职责
 
-```
-时序图
-═══════════════════════════════════════════════════════════════════════════════════
+系统由三部分组成：
 
-CLI                      iOS App                    Server
- │                          │                          │
- │  1. 生成密钥对            │                          │
- │  ed25519_keygen()        │                          │
- │ ───────────────────────▶ │                          │
- │                          │                          │
- │  2. 生成 request_id      │                          │
- │  base62(16 bytes)        │                          │
- │ ───────────────────────▶ │                          │
- │                          │                          │
- │  3. 显示二维码           │                          │
- │  {id, url, pubkey,       │                          │
- │   target}                │                          │
- │ ───────────────────────▶ │                          │
- │         │                │                          │
- │         │ 扫码/输入       │                          │
- │         └───────────────▶ │                          │
- │                          │                          │
- │                          │  4. 获取请求元数据        │
- │                          │  GET /r/:id              │
- │                          │ ───────────────────────▶ │
- │                          │                          │
- │                          │  5. 返回目标 URL         │
- │                          │  {target_url}            │
- │                          │ ◀─────────────────────── │
- │                          │                          │
- │                          │  6. WKWebView 登录       │
- │                          │  - 加载 target_url       │
- │                          │  - 注入登录脚本           │
- │                          │  - 提取 cookies          │
- │                          │  - 提取 localStorage     │
- │                          │                          │
- │                          │  7. 构建 session 包      │
- │                          │  {cookies, localStorage, │
- │                          │   userAgent, timestamp}  │
- │                          │                          │
- │                          │  8. X25519+AES 加密      │
- │                          │  - 生成临时 X25519 密钥对 │
- │                          │  - ECDH(cli_pubkey)      │
- │                          │  - AES-256-GCM 加密      │
- │                          │                          │
- │                          │  9. 上传加密包           │
- │                          │  POST /r/:id            │
- │                          │  {encrypted_blob,       │
- │                          │   ephemeral_pubkey,     │
- │                          │   nonce, tag}            │
- │                          │ ───────────────────────▶ │
- │                          │                          │ 10. 内存存储 (TTL 5m)
- │                          │                          │     set(id, blob, 300s)
- │                          │ 11. 返回 200 OK          │
- │                          │ ◀─────────────────────── │
- │                          │                          │
- │  12. 轮询请求            │                          │
- │  GET /r/:id (轮询)        │                          │
- │ ─────────────────────────────────────────────────▶ │
- │                          │                          │
- │                          │                          │ 13. 检查缓存
- │                          │                          │     if exists → return
- │                          │                          │     if not  → 404
- │                          │                          │
- │ 14. 返回加密包 (删除)     │                          │
- │ {encrypted_blob}        │                          │ del(id)  // 立即删除
- │ ◀─────────────────────────────────────────────────── │
- │                          │                          │
- │ 15. X25519+AES 解密       │                          │
- │ - ECDH(ephemeral_pubkey) │                          │
- │ - AES-256-GCM 解密       │                          │
- │ - 获取明文 session       │                          │
- │                          │                          │
- │ 16. 应用到 HTTP Client   │                          │
- │ - cookies → cookie jar   │                          │
- │ - localStorage → 按需使用 │                          │
- │                          │                          │
- │ 17. 密钥销毁             │                          │
- │ - 删除临时私钥           │                          │
- │ - 内存清零               │                          │
- │                          │                          │
- │                          │                          │ 18. 自动过期清理
- │                          │                          │ (Redis TTL / GC)
- │
-═══════════════════════════════════════════════════════════════════════════════════
-```
+1. CLI
+   运行在用户终端，负责生成身份、公钥发布、等待 session、解密并落盘。
+
+2. Mobile App
+   扫码后在移动端完成目标网站登录，提取 cookies 和 localStorage，再使用 CLI 公钥加密上传。
+
+3. Relay Server
+   只保存短时元数据和加密 session，不理解明文 session 内容，不持久化到数据库。
+
+信任边界：
+
+- 用户信任本地 CLI 机器。
+- 用户信任自己的移动端设备。
+- 不信任 Relay Server。
 
 ---
 
-## 3. 加密流程详解
+## 3. 本地目录结构
 
-### 3.1 密钥交换流程
+CLI 的所有本地状态放在 `~/.helpmein/` 下：
 
-```
-CLI (客户端)                           iOS (移动端)
-────────────────────────────────────────────────────────────────────────────────
-
-1. 生成 ed25519 签名密钥对 (长期或临时)
-   cli_ed25519_keypair = ed25519_keygen()
-   
-2. 转换为 X25519 用于加密
-   cli_x25519_pubkey = ed25519_to_x25519(cli_ed25519_keypair.pubkey)
-   cli_x25519_seckey = ed25519_to_x25519(cli_ed25519_keypair.seckey)
-                                       
-                                       3. 生成临时 X25519 密钥对
-                                          ios_x25519_keypair = x25519_keygen()
-                                       
-                                       4. ECDH 密钥交换
-                                          shared_secret = X25519(ios_seckey, cli_pubkey)
-                                       
-                                       5. HKDF 派生加密密钥
-                                          encryption_key = HKDF(shared_secret, salt, "HelpMeIn-v1")
-                                       
-                                       6. AES-256-GCM 加密
-                                          ciphertext = AES-GCM-Encrypt(encryption_key, plaintext, nonce)
-                                       
-                                       7. 构造加密包
-                                          encrypted_package = {
-                                            ephemeral_pubkey: ios_x25519_pubkey,  // 32 bytes
-                                            nonce: random(12 bytes),              // 12 bytes
-                                            ciphertext: ciphertext,               // variable
-                                            tag: gcm_auth_tag                     // 16 bytes
-                                          }
-
-8. 收到加密包
-   
-9. ECDH 密钥交换
-   shared_secret = X25519(cli_x25519_seckey, ephemeral_pubkey)
-   
-10. HKDF 派生相同密钥
-    encryption_key = HKDF(shared_secret, salt, "HelpMeIn-v1")
-    
-11. AES-256-GCM 解密
-    plaintext = AES-GCM-Decrypt(encryption_key, ciphertext, nonce, tag)
+```text
+~/.helpmein/
+├── keypair.json
+├── config.json
+├── sessions/
+│   └── {rid}.json
+└── daemons/
+    └── {rid}.json
 ```
 
-### 3.2 数据包格式
+权限要求：
 
-```
-// 二维码内容 (URL Encode 或 JSON)
-helpmein://login?r=abc123&u=https://server.com&t=https://target.com&k=base64(cli_pubkey)
+- `~/.helpmein/` 为 `0700`
+- `keypair.json` 为 `0600`
+- `sessions/*.json` 为 `0600`
+- `daemons/*.json` 为 `0600`
 
-// 或简化文本格式 (手动输入友好)
-abc123.server.com.target.com.base64pubkey
+### 3.1 keypair.json
 
-// 服务器响应 (GET /r/:id)
-{
-  "status": "pending" | "ready" | "expired",
-  "target_url": "https://example.com/login",
-  "created_at": 1234567890
-}
-
-// 加密 Session 上传 (POST /r/:id)
-{
-  "version": "1",
-  "ephemeral_pubkey": "base64(32 bytes)",
-  "nonce": "base64(12 bytes)",
-  "ciphertext": "base64(variable)",
-  "tag": "base64(16 bytes)"
-}
-
-// 解密后 Session 结构
-{
-  "cookies": [
-    {"name": "session_id", "value": "xxx", "domain": ".example.com", ...}
-  ],
-  "local_storage": {
-    "auth_token": "xxx",
-    "user_prefs": "{...}"
-  },
-  "user_agent": "Mozilla/5.0 ...",
-  "timestamp": 1234567890,
-  "target_domain": "example.com"
-}
-```
-
----
-
-## 4. 部署方案
-
-### 4.1 Docker 单容器部署（推荐）
-
-```dockerfile
-# Dockerfile
-FROM golang:1.23-alpine AS builder
-WORKDIR /app
-COPY server.go .
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o helpmein-server server.go
-
-FROM alpine:latest
-RUN apk --no-cache add ca-certificates
-WORKDIR /root/
-COPY --from=builder /app/helpmein-server .
-EXPOSE 8080
-CMD ["./helpmein-server"]
-```
-
-```yaml
-# docker-compose.yml
-version: '3.8'
-
-services:
-  helpmein:
-    build: .
-    ports:
-      - "8080:8080"
-    environment:
-      - PORT=8080
-      - MAX_SIZE=1048576        # 1MB
-      - TTL_SECONDS=300         # 5分钟
-      - REDIS_URL=              # 可选，留空使用内存
-    restart: unless-stopped
-    # 无外部依赖，单容器运行
-```
-
-### 4.2 纯内存模式 vs 可选 Redis
-
-| 模式 | 配置 | 适用场景 |
-|------|------|---------|
-| **纯内存** (默认) | `REDIS_URL=` | 单机部署，低流量，极简 |
-| **Redis 缓存** | `REDIS_URL=redis://host:6379` | 多实例部署，需要共享 |
-
-```go
-// 内存存储实现 (Go 伪代码)
-type MemoryStore struct {
-    mu    sync.RWMutex
-    data  map[string]*Entry
-}
-
-type Entry struct {
-    Data      []byte
-    ExpiresAt time.Time
-}
-
-func (s *MemoryStore) Get(id string) ([]byte, bool) {
-    s.mu.RLock()
-    defer s.mu.RUnlock()
-    
-    entry, exists := s.data[id]
-    if !exists || time.Now().After(entry.ExpiresAt) {
-        return nil, false
-    }
-    return entry.Data, true
-}
-
-func (s *MemoryStore) Set(id string, data []byte, ttl time.Duration) {
-    s.mu.Lock()
-    defer s.mu.Unlock()
-    
-    s.data[id] = &Entry{
-        Data:      data,
-        ExpiresAt: time.Now().Add(ttl),
-    }
-}
-
-func (s *MemoryStore) Delete(id string) {
-    s.mu.Lock()
-    defer s.mu.Unlock()
-    delete(s.data, id)
-}
-
-// 自动清理 goroutine
-func (s *MemoryStore) StartGC(interval time.Duration) {
-    go func() {
-        ticker := time.NewTicker(interval)
-        for range ticker.C {
-            s.mu.Lock()
-            now := time.Now()
-            for id, entry := range s.data {
-                if now.After(entry.ExpiresAt) {
-                    delete(s.data, id)
-                }
-            }
-            s.mu.Unlock()
-        }
-    }()
-}
-```
-
-### 4.3 环境变量配置
-
-| 变量 | 默认值 | 说明 |
-|------|-------|------|
-| `PORT` | `8080` | HTTP 服务端口 |
-| `MAX_SIZE` | `1048576` | 最大传输大小 (字节) |
-| `TTL_SECONDS` | `300` | 数据存活时间 |
-| `REDIS_URL` | `''` | 可选 Redis 连接 |
-| `LOG_LEVEL` | `info` | 日志级别 |
-| `RATE_LIMIT_RPM` | `60` | 每分钟请求限制 |
-
----
-
-## 5. API 定义
-
-### 5.1 基础信息
-
-```
-Base URL: https://server.com
-Content-Type: application/json
-```
-
-### 5.2 端点列表
-
-#### GET /r/:id
-获取请求状态和目标 URL（iOS 使用）
-
-**响应:**
-```json
-{
-  "status": "pending",
-  "target_url": "https://example.com/login",
-  "created_at": 1234567890
-}
-```
-
-**状态值:**
-- `pending`: 等待 iOS 上传 session
-- `ready`: session 已上传，可下载
-- `expired`: 已过期或不存在
-
----
-
-#### POST /r/:id
-上传加密 session（iOS 使用）
-
-**请求头:**
-```
-Content-Type: application/json
-Content-Length: <size>
-```
-
-**请求体:**
-```json
-{
-  "version": "1",
-  "ephemeral_pubkey": "base64(32bytes)",
-  "nonce": "base64(12bytes)",
-  "ciphertext": "base64(max_1mb)",
-  "tag": "base64(16bytes)"
-}
-```
-
-**响应 (200 OK):**
-```json
-{
-  "status": "uploaded",
-  "expires_at": 1234568190
-}
-```
-
-**错误响应:**
-- `400`: 格式错误
-- `413`: 超过 1MB 限制
-- `404`: 请求 ID 不存在或已过期
-- `429`: 频率限制
-
----
-
-#### GET /r/:id/download
-下载加密 session（CLI 使用，一次性）
-
-**响应 (200 OK):**
-```json
-{
-  "version": "1",
-  "ephemeral_pubkey": "base64(32bytes)",
-  "nonce": "base64(12bytes)",
-  "ciphertext": "base64",
-  "tag": "base64(16bytes)"
-}
-```
-
-**重要**: 下载后立即删除服务器数据
-
-**响应 (404 Not Found):**
-```json
-{
-  "error": "not_found",
-  "message": "Request expired or already downloaded"
-}
-```
-
----
-
-#### GET /r/:id/ws (可选 WebSocket)
-实时状态通知
-
-**用途:**
-- CLI 订阅状态变更，避免轮询
-- iOS 上传完成后立即通知 CLI
-
-**消息格式:**
-```json
-{"event": "uploaded", "timestamp": 1234567890}
-{"event": "expired", "timestamp": 1234568190}
-```
-
----
-
-#### GET /health
-健康检查
-
-**响应:**
-```json
-{
-  "status": "ok",
-  "version": "1.0.0",
-  "uptime": 3600
-}
-```
-
----
-
-### 5.3 错误码统一格式
+首次启动生成长期身份密钥，保存为 `~/.helpmein/keypair.json`：
 
 ```json
 {
-  "error": "error_code",
-  "message": "Human readable description",
-  "request_id": "abc123"  // 用于追踪
+  "version": 1,
+  "algorithm": "ed25519",
+  "public_key": "base64...",
+  "private_key": "base64...",
+  "created_at": "2026-03-28T12:00:00Z"
 }
 ```
 
-| 错误码 | 说明 |
-|-------|------|
-| `not_found` | 请求不存在或已过期 |
-| `already_downloaded` | 已被下载（一次性用完） |
-| `payload_too_large` | 超过 1MB 限制 |
-| `invalid_format` | 数据格式错误 |
-| `rate_limited` | 请求过于频繁 |
-| `internal_error` | 服务器内部错误 |
+说明：
 
----
+- 这里保存的是 CLI 的长期 `ed25519` 身份密钥。
+- 在会话加密时，运行时将该密钥按标准方式转换为 `x25519` 用于 ECDH。
+- 这样本地只需要一个稳定身份文件，不需要为每次 `login` 单独持久化私钥。
 
-## 6. 安全模型
+### 3.2 config.json
 
-### 6.1 威胁模型分析
+可选配置文件：
 
-| 威胁 | 风险等级 | 缓解措施 |
-|------|---------|---------|
-| 服务器窃取 session | **消除** | 端到端加密，服务器零知识 |
-| 中间人攻击 | **消除** | X25519 ECDH 密钥交换 |
-| 重放攻击 | **低** | 一次性 URL，用完即焚 |
-| 暴力破解 ID | **低** | 128-bit request_id，速率限制 |
-| 服务器被攻破 | **中** | 内存存储，无持久化数据 |
-| 传输拦截 | **低** | TLS 1.3 + 端到端加密 |
-| iOS 设备被盗 | **低** | 无长期密钥存储，一次性使用 |
-
-### 6.2 安全特性详解
-
-#### 6.2.1 服务器零知识 (Zero-Knowledge)
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         服务器零知识架构                                     │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│  服务器只存储:                                                                │
-│  - 加密后的 blob (ciphertext)                                                 │
-│  - 请求 ID (随机生成)                                                         │
-│  - 创建时间戳                                                                 │
-│  - 过期时间                                                                   │
-│                                                                             │
-│  服务器无法获取:                                                              │
-│  - 明文 session 内容                                                         │
-│  - cookies 值                                                                │
-│  - localStorage 数据                                                         │
-│  - 目标网站登录凭证                                                          │
-│  - 用户信息                                                                   │
-│                                                                             │
-│  加密密钥由 CLI 和 iOS 通过 ECDH 协商，服务器从未参与                         │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
-
-#### 6.2.2 一次性 URL (One-Time URL)
-
-```go
-// 下载即删除逻辑
-func handleDownload(w http.ResponseWriter, r *http.Request) {
-    id := mux.Vars(r)["id"]
-    
-    // 获取并立即删除
-    data, err := store.GetAndDelete(id)
-    if err != nil {
-        http.Error(w, "not found", 404)
-        return
-    }
-    
-    // 返回数据后，服务器不再保留任何副本
-    w.Header().Set("Content-Type", "application/json")
-    w.Write(data)
+```json
+{
+  "default_server": "https://relay.example.com",
+  "transport": "ws",
+  "timeout_seconds": 300,
+  "session_retention_days": 7
 }
 ```
 
-#### 6.2.3 自动过期清理
+### 3.3 daemons/{rid}.json
 
+后台等待进程的描述文件：
+
+```json
+{
+  "rid": "r_8GQx8tY0j8x3Yw2N",
+  "pid": 43127,
+  "ppid": 1,
+  "status": "waiting",
+  "server_url": "https://relay.example.com",
+  "transport": "ws",
+  "started_at": "2026-03-28T12:01:03Z",
+  "updated_at": "2026-03-28T12:01:03Z",
+  "target_url": "https://example.com/login"
+}
 ```
-TTL 机制:
-- 内存/Redis 设置 5 分钟 TTL
-- 过期后自动删除，不可恢复
-- GC 定期清理过期条目
-```
-
-#### 6.2.4 防重放保护
-
-```
-1. Request ID 128-bit 随机，不可预测
-2. 上传后状态变为 ready
-3. 下载后立即删除
-4. 重复下载返回 404
-5. 过期后 ID 失效
-```
-
-### 6.3 隐私保护
-
-| 数据 | 处理方式 |
-|------|---------|
-| Cookies | 端到端加密传输，服务器不可读 |
-| LocalStorage | 端到端加密传输，服务器不可读 |
-| 目标 URL | 仅用于 iOS 端登录，不记录 |
-| IP 地址 | 可选日志，可禁用 |
-| User Agent | 随 session 加密传输 |
-| 时间戳 | 仅用于 TTL 计算 |
 
 ---
 
-## 7. 极简实现要点
+## 4. CLI 启动流程
 
-### 7.1 服务端代码结构 (Go 单文件)
+每次 CLI 入口启动时都执行同一套 bootstrap 逻辑：
 
-```
-server.go (约 300-500 行)
-├── main()
-│   └── http.ListenAndServe()
-├── handlers
-│   ├── handleGetRequest()     // GET /r/:id
-│   ├── handleUpload()         // POST /r/:id
-│   ├── handleDownload()       // GET /r/:id/download
-│   ├── handleWebSocket()      // WS /r/:id/ws
-│   └── handleHealth()         // GET /health
-├── storage
-│   ├── MemoryStore            // 内存实现
-│   └── RedisStore             // Redis 实现 (可选)
-├── middleware
-│   ├── rateLimiter()          // 速率限制
-│   ├── maxBodySize()          // 1MB 限制
-│   └── logging()              // 可选日志
-└── types
-    ├── Request                // 请求结构
-    └── EncryptedPackage       // 加密包结构
-```
+1. 创建 `~/.helpmein/` 根目录，权限设为 `0700`。
+2. 检查 `~/.helpmein/keypair.json` 是否存在。
+3. 如果不存在，生成 `ed25519 keypair`，写入 `~/.helpmein/keypair.json`。
+4. 生成设备指纹。
+5. 创建 `~/.helpmein/sessions/` 目录。
+6. 创建 `~/.helpmein/daemons/` 目录。
+7. 读取 `config.json`，加载默认 server、transport、timeout。
+8. 清理明显失效的 daemon 描述文件，例如 PID 不存在且状态仍为 `waiting`。
 
-### 7.2 依赖最小化
+### 4.1 设备指纹
 
-```go
-// 标准库为主
-import (
-    "crypto/rand"
-    "encoding/base64"
-    "encoding/json"
-    "net/http"
-    "sync"
-    "time"
-    
-    // 仅两个外部依赖
-    "github.com/gorilla/websocket"    // WebSocket (可选)
-    "github.com/redis/go-redis/v9"    // Redis (可选)
-)
+设备指纹用于诊断、审计和多设备区分，不用于加密主流程，不应作为认证因子。
+
+推荐输入：
+
+- `public_key`
+- `hostname`
+- `os`
+- `arch`
+- 可用时的 `machine-id`
+
+推荐算法：
+
+```text
+fingerprint = base64url(sha256(public_key || hostname || os || arch || machine_id))
 ```
 
-### 7.3 构建与运行
+要求：
+
+- 设备指纹稳定但不需要保密。
+- 缺少 `machine-id` 时允许退化到 `public_key + hostname + os + arch`。
+- 设备指纹进入 login manifest，并写入 session 元数据。
+
+---
+
+## 5. login 命令
+
+`login` 是主入口，负责发起一次新的会话接收流程。
+
+建议命令行：
 
 ```bash
-# 单文件构建
-go build -o helpmein-server server.go
+helpmein login <target_url> [--server URL] [--timeout 300] [--transport ws|poll] [--json] [--no-detach]
+```
 
-# 运行 (零配置)
-./helpmein-server
+### 5.1 login 命令职责
 
-# 或带参数
-PORT=8080 MAX_SIZE=1048576 ./helpmein-server
+执行 `helpmein login` 时，CLI 需要完成以下动作：
 
-# Docker 构建
-docker build -t helpmein .
-docker run -p 8080:8080 helpmein
+1. 运行启动 bootstrap。
+2. 生成新的请求 ID，记为 `rid`。
+3. 读取本地 `ed25519` 公钥，并转换出本次会话可用的 `x25519` 公钥。
+4. 构造 login manifest。
+5. 将 manifest 注册到 Relay Server。
+6. 输出二维码、深链接或可手输短码。
+7. fork 子进程在后台等待 session。
+8. 父进程立即退出。
+
+### 5.2 rid 生成
+
+`rid` 必须高熵且不可预测，建议：
+
+- 128 bit 随机数
+- 使用 `base62` 或 `base32 crockford` 编码
+- 长度控制在 20 到 26 个字符之间
+
+示例：
+
+```text
+r_8GQx8tY0j8x3Yw2N
+```
+
+### 5.3 login manifest
+
+CLI 发送到 Relay Server 的 pending request 元数据：
+
+```json
+{
+  "rid": "r_8GQx8tY0j8x3Yw2N",
+  "target_url": "https://example.com/login",
+  "server_url": "https://relay.example.com",
+  "cli_public_key": "base64-x25519-pubkey",
+  "device_fingerprint": "base64url-sha256",
+  "transport_hint": "ws",
+  "created_at": "2026-03-28T12:01:03Z",
+  "expires_at": "2026-03-28T12:06:03Z"
+}
+```
+
+说明：
+
+- `target_url` 可以直接放进二维码，也可以只在 server 侧保留短时元数据。
+- `cli_public_key` 是移动端加密 session 时使用的接收方公钥。
+- `device_fingerprint` 只用于识别请求来自哪个 CLI 设备。
+
+### 5.4 用户可见输出
+
+`login` 至少输出以下信息：
+
+- `rid`
+- `target_url`
+- `server_url`
+- 二维码内容
+- 手动输入码或深链接
+- 后台 daemon PID
+
+建议二维码内容：
+
+```text
+helpmein://login?rid=<rid>&server=<server_url>&target=<target_url>&pubkey=<cli_public_key>
+```
+
+### 5.5 父进程行为
+
+父进程只负责“发起”和“交出控制权”：
+
+1. 完成 bootstrap。
+2. 生成并注册 pending request。
+3. fork 子进程。
+4. 确认子进程 PID 已写入 `~/.helpmein/daemons/{rid}.json`。
+5. 打印 `rid` 和 PID。
+6. 立即退出，退出码为 `0`。
+
+如果 fork、注册或 PID 文件写入失败，父进程必须直接返回非零退出码。
+
+---
+
+## 6. 后台进程 fork/detach
+
+这是 `login` 的核心运行模型。
+
+### 6.1 进程模型
+
+要求如下：
+
+- 主进程 fork 子进程后立即退出。
+- 子进程调用 `setsid()` 脱离控制终端。
+- 子进程关闭或重定向标准输入输出。
+- 子进程进入后台等待 session。
+- 子进程 PID 写入 `~/.helpmein/daemons/`。
+
+推荐流程：
+
+```text
+CLI parent
+  -> fork()
+  -> child PID known
+  -> wait until ~/.helpmein/daemons/{rid}.json is durable
+  -> print rid / pid
+  -> exit(0)
+
+CLI child
+  -> setsid()
+  -> redirect stdio
+  -> write daemon descriptor
+  -> connect server
+  -> wait for encrypted session
+  -> decrypt
+  -> write ~/.helpmein/sessions/{rid}.json
+  -> update daemon status=ready
+  -> exit(0)
+```
+
+### 6.2 daemon 描述文件语义
+
+`~/.helpmein/daemons/{rid}.json` 不是日志，而是状态单据。
+
+允许的 `status`：
+
+- `waiting`
+- `receiving`
+- `ready`
+- `expired`
+- `error`
+
+状态更新规则：
+
+- 启动后立刻写 `waiting`
+- 收到服务器推送但尚未落盘时写 `receiving`
+- `sessions/{rid}.json` 原子写入成功后写 `ready`
+- 超时后写 `expired`
+- 任意失败写 `error`
+
+### 6.3 等待 session 的传输方式
+
+后台子进程通过以下两种方式之一等待 session：
+
+1. WebSocket
+   连接 `GET /v1/requests/{rid}/ws`，等待服务器推送状态与加密 payload。
+
+2. 长轮询
+   循环请求 `GET /v1/requests/{rid}/wait?timeout=30`，直到返回 `ready`、`expired` 或超时。
+
+要求：
+
+- WebSocket 是首选。
+- 长轮询是兼容回退。
+- 两种模式返回的最终 payload 结构必须一致。
+
+### 6.4 收到 session 后的本地处理
+
+后台子进程在收到加密 session 后执行：
+
+1. 校验 `rid`、版本号、payload 大小。
+2. 使用本地私钥解密 session。
+3. 校验解密结果是否包含合法的 Playwright `cookies` 和 `origins`。
+4. 将 session 原子写入 `~/.helpmein/sessions/{rid}.json`。
+5. 更新 daemon 状态为 `ready`。
+6. 从 Relay Server 删除已消费的加密包，或确认服务端已自动删除。
+
+原子写入要求：
+
+- 先写 `~/.helpmein/sessions/{rid}.json.tmp`
+- `fsync`
+- `rename` 到最终文件名
+
+### 6.5 超时与退出
+
+子进程的默认生命周期与 `login --timeout` 一致，建议默认 300 秒。
+
+退出条件：
+
+- 成功落盘 session 后退出 `0`
+- 请求过期后退出 `3`
+- 网络错误重试耗尽后退出 `4`
+- 解密或格式校验失败后退出 `5`
+
+---
+
+## 7. status 命令
+
+`status` 用于查询请求或 session 的当前状态。
+
+建议命令行：
+
+```bash
+helpmein status [rid] [--latest] [--watch] [--json]
+```
+
+### 7.1 status 行为
+
+如果提供 `rid`：
+
+1. 先检查 `~/.helpmein/sessions/{rid}.json` 是否存在。
+2. 如果存在，状态为 `ready`。
+3. 否则检查 `~/.helpmein/daemons/{rid}.json`。
+4. 如果 daemon 文件存在，再检查 PID 是否还活着。
+5. 必要时向 server 查询远端状态。
+
+如果不提供 `rid`：
+
+- 默认显示最近的 pending daemon 和 ready session 摘要。
+
+### 7.2 状态判定
+
+建议对外暴露以下状态：
+
+| 状态 | 含义 |
+|------|------|
+| `waiting` | daemon 已启动，正在等待移动端上传 |
+| `receiving` | server 已返回 payload，正在解密或落盘 |
+| `ready` | 本地 session 文件已存在 |
+| `expired` | 请求已过期，未收到 session |
+| `orphaned` | daemon 描述文件存在，但 PID 不存在且 session 也不存在 |
+| `error` | 后台流程失败 |
+| `missing` | 本地和服务端都找不到该 rid |
+
+### 7.3 watch 模式
+
+`helpmein status <rid> --watch` 的目标是替代用户自己轮询。
+
+行为：
+
+- 每 1 到 2 秒刷新一次本地状态。
+- 如果 transport 为 WebSocket，也可以直接订阅 server 状态。
+- 当状态到达 `ready`、`expired` 或 `error` 时退出。
+
+### 7.4 机器可读输出
+
+`--json` 输出建议：
+
+```json
+{
+  "rid": "r_8GQx8tY0j8x3Yw2N",
+  "status": "ready",
+  "pid": 43127,
+  "target_url": "https://example.com/login",
+  "session_path": "/home/user/.helpmein/sessions/r_8GQx8tY0j8x3Yw2N.json",
+  "updated_at": "2026-03-28T12:02:19Z"
+}
 ```
 
 ---
 
-## 8. 架构优势对比
+## 8. export 命令
 
-| 特性 | 传统架构 | 新架构 (极简) |
-|------|---------|--------------|
-| 配置复杂度 | 高 (证书/依赖) | 零配置 |
-| 组件数量 | 多 (多服务/DB) | 单文件 |
-| 持久化 | 有 (数据库) | 无 (纯内存) |
-| 设备注册 | 需要 | 不需要 |
-| 配对流程 | 复杂 | 扫码即连 |
-| 延迟 | 低 (实时) | 中 (轮询/WebSocket) |
-| 部署难度 | 高 | 极低 |
-| 维护成本 | 高 | 极低 |
-| 隐私保护 | 较好 | 更好 (零知识) |
-| 适用场景 | 企业级 | 个人/小团队 |
+`export` 用于将本地 session 导出为 Playwright 直接可用的 `storageState` 文件，或导出完整原始 envelope。
+
+建议命令行：
+
+```bash
+helpmein export <rid> [--format playwright|raw] [--out FILE|-] [--pretty]
+```
+
+### 8.1 默认行为
+
+默认格式为 `playwright`。
+
+也就是说：
+
+- 读取 `~/.helpmein/sessions/{rid}.json`
+- 只输出顶层 `cookies` 和 `origins`
+- 丢弃 `_helpmein` 元数据
+
+默认输出文件建议：
+
+```text
+./storage-state.<rid>.json
+```
+
+### 8.2 raw 行为
+
+`--format raw` 导出 session 文件的完整 JSON，包括：
+
+- Playwright 兼容会话体
+- HelpMeIn 元数据
+- 来源、时间戳、设备指纹、server 信息
+
+### 8.3 Playwright 集成方式
+
+导出的 `playwright` 文件应可直接用于：
+
+```ts
+import { chromium } from '@playwright/test';
+
+const browser = await chromium.launch();
+const context = await browser.newContext({
+  storageState: './storage-state.r_8GQx8tY0j8x3Yw2N.json'
+});
+```
+
+### 8.4 export 失败条件
+
+以下情况返回非零退出码：
+
+- `rid` 对应 session 不存在
+- session JSON 非法
+- 缺少 `cookies` 或 `origins`
+- 输出路径不可写
 
 ---
 
-## 9. 总结
+## 9. Session JSON 格式
 
-HelpMeIn 极简架构的核心价值:
+本地 session 文件路径固定为：
 
-1. **极致简单**: 单文件部署，零配置，5 分钟启动
-2. **隐私优先**: 端到端加密，服务器零知识
-3. **无负担**: 无证书管理，无数据库维护
-4. **一次性**: 用完即焚，无数据残留
-5. **可审计**: 代码量少，易于安全审查
-
+```text
+~/.helpmein/sessions/{rid}.json
 ```
-部署口诀:
-一个文件 server.go
-一个镜像 docker build
-一个端口 8080
-一个命令 go run
-运行即服务
+
+该文件必须对 Playwright 友好。推荐格式为“Playwright 顶层结构 + HelpMeIn 元数据命名空间”：
+
+```json
+{
+  "cookies": [
+    {
+      "name": "sessionid",
+      "value": "abc123",
+      "domain": ".example.com",
+      "path": "/",
+      "expires": 1775068800,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "https://example.com",
+      "localStorage": [
+        {
+          "name": "authToken",
+          "value": "secret-token"
+        },
+        {
+          "name": "theme",
+          "value": "dark"
+        }
+      ]
+    }
+  ],
+  "_helpmein": {
+    "version": 1,
+    "rid": "r_8GQx8tY0j8x3Yw2N",
+    "server_url": "https://relay.example.com",
+    "target_url": "https://example.com/login",
+    "device_fingerprint": "base64url-sha256",
+    "transport": "ws",
+    "captured_at": "2026-03-28T12:02:18Z",
+    "received_at": "2026-03-28T12:02:19Z",
+    "user_agent": "Mozilla/5.0 (...)",
+    "source": "ios"
+  }
+}
 ```
+
+### 9.1 兼容性规则
+
+- `cookies` 和 `origins` 字段的结构必须与 Playwright `storageState` 一致。
+- HelpMeIn 自有元数据必须放在 `_helpmein` 下，避免和 Playwright 字段冲突。
+- `export --format playwright` 时必须剥离 `_helpmein`。
+
+### 9.2 字段约束
+
+| 字段 | 要求 |
+|------|------|
+| `cookies` | 数组，可为空，不可缺省 |
+| `origins` | 数组，可为空，不可缺省 |
+| `_helpmein.version` | 整数，当前为 `1` |
+| `_helpmein.rid` | 与文件名一致 |
+| `_helpmein.device_fingerprint` | 启动阶段生成 |
+| `_helpmein.captured_at` | 移动端抓取完成时间 |
+| `_helpmein.received_at` | CLI 落盘时间 |
+
+---
+
+## 10. 完整 CLI 命令参考
+
+### 10.1 login
+
+```bash
+helpmein login <target_url> [--server URL] [--timeout SEC] [--transport ws|poll] [--json] [--no-detach]
+```
+
+作用：
+
+- 创建一次新的登录接收请求
+- 启动后台 daemon 等待 session
+- 输出 `rid`、二维码和 PID
+
+### 10.2 status
+
+```bash
+helpmein status [rid] [--latest] [--watch] [--json]
+```
+
+作用：
+
+- 查询某个 `rid` 的状态
+- 或列出最近请求状态摘要
+
+### 10.3 export
+
+```bash
+helpmein export <rid> [--format playwright|raw] [--out FILE|-] [--pretty]
+```
+
+作用：
+
+- 导出 Playwright `storageState`
+- 或导出本地完整 session 文件
+
+### 10.4 list
+
+```bash
+helpmein list [--sessions] [--daemons] [--state waiting|ready|expired|error] [--json]
+```
+
+作用：
+
+- 列出本地 session 文件
+- 列出后台 daemon 单据
+- 支持按状态过滤
+
+默认行为：
+
+- 同时显示最近 session 与 daemon
+
+### 10.5 rm
+
+```bash
+helpmein rm <rid> [--kill] [--force]
+helpmein rm --expired
+helpmein rm --all
+```
+
+作用：
+
+- 删除本地 session 文件
+- 删除 daemon 描述文件
+- 必要时杀掉对应后台进程
+
+规则：
+
+- `--kill` 用于结束仍在运行的 daemon
+- 没有 `--force` 时，不删除运行中的 daemon
+
+### 10.6 config
+
+```bash
+helpmein config get <key>
+helpmein config set <key> <value>
+helpmein config list
+```
+
+建议支持的 key：
+
+- `default_server`
+- `transport`
+- `timeout_seconds`
+- `session_retention_days`
+
+### 10.7 server
+
+```bash
+helpmein server [--listen 0.0.0.0:8080] [--public-url URL] [--ttl 300] [--max-payload 1048576]
+```
+
+作用：
+
+- 启动自托管 Relay Server
+- 使用内存保存 pending request 和加密 session
+
+要求：
+
+- 默认 TTL 300 秒
+- 默认最大 payload 1 MB
+- 支持 WebSocket 和长轮询
+
+---
+
+## 11. Relay Server 协议
+
+服务端协议只解决三件事：
+
+1. 注册 pending request
+2. 接收移动端上传的加密 session
+3. 将加密 session 交付给等待中的 CLI daemon
+
+### 11.1 API 设计
+
+#### `POST /v1/requests`
+
+注册一个 pending request。
+
+请求体：
+
+```json
+{
+  "rid": "r_8GQx8tY0j8x3Yw2N",
+  "target_url": "https://example.com/login",
+  "cli_public_key": "base64-x25519-pubkey",
+  "device_fingerprint": "base64url-sha256",
+  "expires_at": "2026-03-28T12:06:03Z"
+}
+```
+
+#### `GET /v1/requests/{rid}`
+
+查询 request 是否存在，以及当前状态。
+
+#### `GET /v1/requests/{rid}/ws`
+
+CLI daemon 使用 WebSocket 等待状态变化和 session 交付。
+
+#### `GET /v1/requests/{rid}/wait?timeout=30`
+
+CLI daemon 使用长轮询等待 session。
+
+#### `POST /v1/requests/{rid}/session`
+
+移动端上传加密 session。
+
+请求体：
+
+```json
+{
+  "version": 1,
+  "algorithm": "x25519-xsalsa20poly1305",
+  "ephemeral_public_key": "base64...",
+  "nonce": "base64...",
+  "ciphertext": "base64...",
+  "captured_at": "2026-03-28T12:02:18Z"
+}
+```
+
+### 11.2 服务端存储约束
+
+服务端只保留：
+
+- pending request 元数据
+- 加密后的 session payload
+- 过期时间
+
+服务端不保留：
+
+- 明文 cookies
+- 明文 localStorage
+- CLI 私钥
+- 用户密码
+
+### 11.3 交付语义
+
+要求使用“一次上传，一次交付”模型：
+
+- 移动端上传成功后，server 将状态切到 `ready`
+- CLI daemon 成功收到 payload 后，server 立即删除加密 session
+- 超时未消费则 TTL 到期自动删除
+
+---
+
+## 12. 安全与实现约束
+
+### 12.1 加密模型
+
+推荐模型：
+
+- CLI 长期保存 `ed25519` 身份密钥
+- 运行时转换为 `x25519` 密钥用于 ECDH
+- 移动端为每次上传生成临时 `x25519` 密钥
+- 使用共享密钥加密 session payload
+
+这样可以同时满足：
+
+- CLI 身份稳定
+- 每次上传前向隔离
+- 服务端无法解密
+
+### 12.2 明文落盘边界
+
+只有本地 CLI 主机允许保存明文 session，且只保存到：
+
+```text
+~/.helpmein/sessions/{rid}.json
+```
+
+服务端绝不保存明文。
+
+### 12.3 容错原则
+
+- daemon 文件损坏时，`status` 必须返回 `error` 或 `orphaned`，不能静默忽略。
+- session 文件写入失败时，不得把 daemon 状态更新为 `ready`。
+- `export` 只依赖本地 session 文件，不依赖 server 在线。
+
+### 12.4 清理策略
+
+建议提供以下清理能力：
+
+- `helpmein rm --expired`
+- 启动时清理孤儿 daemon 描述文件
+- 按 `session_retention_days` 清理旧 session
+
+---
+
+## 13. 结论
+
+这个版本的 HelpMeIn 架构以 CLI 为核心，重点不是“浏览器自动化能力”，而是“可靠地把一次移动端登录结果送回本地终端，并以 Playwright 可消费的格式保存下来”。
+
+关键决策如下：
+
+- CLI 首次启动生成长期 `ed25519` 身份密钥。
+- 每次启动生成设备指纹，并确保 `sessions/` 与 `daemons/` 目录存在。
+- `login` 只负责发起请求并后台等待，不阻塞前台终端。
+- 后台子进程通过 WebSocket 或长轮询接收 session。
+- 收到 session 后固定写入 `~/.helpmein/sessions/{rid}.json`。
+- session 文件顶层保持 Playwright 兼容，CLI 元数据放在 `_helpmein` 命名空间。
+- `status`、`export`、`list`、`rm`、`config`、`server` 构成完整的 CLI 可操作面。
+
+这套设计保持了极简、零知识和可自托管三个目标，同时把 CLI 的本地状态管理定义清楚，便于后续直接实现。

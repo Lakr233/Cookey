@@ -97,10 +97,6 @@ public enum KeyManager {
         _ envelope: EncryptedSessionEnvelope,
         using keypair: KeypairFile
     ) throws -> Data {
-        guard envelope.algorithm.lowercased() == "x25519-xsalsa20poly1305" else {
-            throw KeyManagerError.invalidAlgorithm(envelope.algorithm)
-        }
-
         guard let ephemeralData = Data(base64Encoded: envelope.ephemeralPublicKey) else {
             throw KeyManagerError.invalidEphemeralPublicKey
         }

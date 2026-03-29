@@ -9,7 +9,6 @@ public enum DaemonError: Error, LocalizedError {
     case invalidDaemonPayload
     case detachFailed(String)
     case daemonDescriptorTimeout(String)
-    case sessionDecryptionUnsupported(String)
     case invalidServerURL(String)
 
     public var errorDescription: String? {
@@ -20,8 +19,6 @@ public enum DaemonError: Error, LocalizedError {
             return "Daemon detach failed: \(reason)"
         case .daemonDescriptorTimeout(let rid):
             return "Timed out waiting for daemon descriptor for \(rid)"
-        case .sessionDecryptionUnsupported(let algorithm):
-            return "Session payload algorithm is not supported by this build: \(algorithm)"
         case .invalidServerURL(let value):
             return "Invalid server URL: \(value)"
         }
@@ -171,18 +168,11 @@ public enum Daemon {
         keypair: KeypairFile,
         deviceFingerprint: String
     ) throws -> SessionFile {
-        let raw: Data
-        if envelope.algorithm.lowercased() == "plaintext-json",
-           let plaintext = Data(base64Encoded: envelope.ciphertext) {
-            raw = plaintext
-        } else if envelope.algorithm.lowercased() == "x25519-xsalsa20poly1305" {
-            raw = try KeyManager.decryptSessionEnvelope(envelope, using: keypair)
-        } else {
-            throw DaemonError.sessionDecryptionUnsupported(envelope.algorithm)
-        }
-
         let decoder = JSONDecoder()
-        let session = try decoder.decode(SessionFile.self, from: raw)
+        let session = try decoder.decode(
+            SessionFile.self,
+            from: try KeyManager.decryptSessionEnvelope(envelope, using: keypair)
+        )
         return SessionFile(
             cookies: session.cookies,
             origins: session.origins,

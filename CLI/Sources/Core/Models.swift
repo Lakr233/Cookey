@@ -299,9 +299,13 @@ private struct SessionDeliveryPayload: Decodable {
     }
 }
 
+public enum SessionEncryptionAlgorithm: String, Codable, Sendable {
+    case x25519XSalsa20Poly1305 = "x25519-xsalsa20poly1305"
+}
+
 public struct EncryptedSessionEnvelope: Codable {
     public let version: Int
-    public let algorithm: String
+    public let algorithm: SessionEncryptionAlgorithm
     public let ephemeralPublicKey: String
     public let nonce: String
     public let ciphertext: String
@@ -398,5 +402,27 @@ public struct StatusSnapshot: Codable {
         case serverURL = "server_url"
         case transport
         case errorMessage = "error_message"
+    }
+
+    public init(
+        rid: String,
+        status: CLIStatus,
+        pid: Int32? = nil,
+        targetURL: String? = nil,
+        sessionPath: String? = nil,
+        updatedAt: Date? = nil,
+        serverURL: String? = nil,
+        transport: Transport? = nil,
+        errorMessage: String? = nil
+    ) {
+        self.rid = rid
+        self.status = status
+        self.pid = pid
+        self.targetURL = targetURL
+        self.sessionPath = sessionPath
+        self.updatedAt = updatedAt
+        self.serverURL = serverURL
+        self.transport = transport
+        self.errorMessage = errorMessage
     }
 }

@@ -162,7 +162,7 @@ enum HelpMeInCLI {
         let ridArgument = arguments.first(where: { !$0.hasPrefix("-") })
         let context = try ConfigStore.bootstrap()
 
-        if let ridArgument, latest {
+        if ridArgument != nil, latest {
             throw CLIError.usage("Use either [rid] or --latest, not both.")
         }
 
@@ -176,7 +176,7 @@ enum HelpMeInCLI {
             return
         }
 
-        guard let rid = ridArgument ?? ConfigStore.latestRID(in: context.paths) else {
+        guard let rid = ridArgument ?? (try ConfigStore.latestRID(in: context.paths)) else {
             throw CLIError.invalidValue("No local requests found.")
         }
 
@@ -246,16 +246,20 @@ enum HelpMeInCLI {
         }
 
         let status = CLIStatus(rawValue: remote.status?.lowercased() ?? "") ?? .missing
+        let pid: Int32? = nil
+        let sessionPath: String? = nil
+        let transport: Transport? = nil
+        let errorMessage: String? = nil
         return StatusSnapshot(
             rid: remote.rid ?? rid,
             status: status,
-            pid: nil,
+            pid: pid,
             targetURL: remote.targetURL,
-            sessionPath: nil,
+            sessionPath: sessionPath,
             updatedAt: remote.expiresAt,
             serverURL: serverURL.absoluteString,
-            transport: nil,
-            errorMessage: nil
+            transport: transport,
+            errorMessage: errorMessage
         )
     }
 

@@ -52,9 +52,13 @@ public struct StoredRequest: Codable, Sendable {
 }
 
 /// Encrypted session payload from mobile
+public enum SessionEncryptionAlgorithm: String, Codable, Sendable {
+    case x25519XSalsa20Poly1305 = "x25519-xsalsa20poly1305"
+}
+
 public struct EncryptedSession: Codable, Sendable {
     public let version: Int
-    public let algorithm: String
+    public let algorithm: SessionEncryptionAlgorithm
     public let ephemeralPublicKey: String
     public let nonce: String
     public let ciphertext: String
@@ -118,6 +122,13 @@ public struct RequestWaitResponse: Codable, Sendable {
         self.rid = rid
         self.status = status
         self.encryptedSession = encryptedSession
+        self.deliveredAt = deliveredAt
+    }
+
+    public init(from stored: StoredRequest, deliveredAt: Date? = nil) {
+        self.rid = stored.rid
+        self.status = stored.status
+        self.encryptedSession = stored.encryptedSession
         self.deliveredAt = deliveredAt
     }
 }

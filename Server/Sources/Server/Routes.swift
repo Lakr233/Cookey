@@ -54,11 +54,17 @@ public struct Routes: Sendable {
     }
     
     // MARK: - POST /v1/requests
-    
+
     private func createRequest(request: Request, context: BasicRequestContext) async throws -> Response {
-        // Decode request body
-        let body = try await request.body.collect(upTo: 1024 * 10) // 10KB limit for manifest
-        let loginRequest = try JSONDecoder().decode(LoginRequest.self, from: body)
+        let loginRequest: LoginRequest
+        do {
+            loginRequest = try await self.decodeJSONBody(LoginRequest.self, from: request, limit: 1024 * 10)
+        } catch {
+            return self.jsonResponse(
+                status: .badRequest,
+                payload: ["error": "Invalid request payload"]
+            )
+        }
         
         // Validate expiration
         guard loginRequest.expiresAt > Date() else {
@@ -114,16 +120,11 @@ public struct Routes: Sendable {
         }
         
         // If already ready, return immediately
-        if stored.status == .ready, let session = stored.encryptedSession {
+        if stored.status == .ready, stored.encryptedSession != nil {
             _ = await storage.markDelivered(rid: rid)
             return self.jsonResponse(
                 status: .ok,
-                payload: RequestWaitResponse(
-                    rid: rid,
-                    status: .ready,
-                    encryptedSession: session,
-                    deliveredAt: Date()
-                )
+                payload: RequestWaitResponse(from: stored, deliveredAt: Date())
             )
         }
 
@@ -212,15 +213,13 @@ public struct Routes: Sendable {
             return self.jsonResponse(status: .conflict, payload: ["error": "Session already uploaded"])
         }
         
-        // Decode session
-        let body = try await request.body.collect(upTo: config.maxPayloadSize)
-        let session = try JSONDecoder().decode(EncryptedSession.self, from: body)
-        
-        // Validate algorithm
-        guard session.algorithm == "x25519-xsalsa20poly1305" else {
-            return self.jsonResponse(status: .badRequest, payload: ["error": "Unsupported algorithm"])
+        let session: EncryptedSession
+        do {
+            session = try await self.decodeJSONBody(EncryptedSession.self, from: request, limit: config.maxPayloadSize)
+        } catch {
+            return self.jsonResponse(status: .badRequest, payload: ["error": "Invalid session payload"])
         }
-        
+
         // Store session
         guard let _ = await storage.storeSession(rid: rid, session: session) else {
             return self.jsonResponse(status: .badRequest, payload: ["error": "Failed to store session"])
@@ -298,6 +297,7 @@ public struct Routes: Sendable {
             // Task 2: Wait for session updates
             group.addTask {
                 let message = await self.storage.waitForMessage(rid: rid)
+                try Task.checkCancellation()
                 try await outbound.write(.text(self.encodeJSON(message)))
                 
                 // If session delivered, mark and close
@@ -328,6 +328,13 @@ public struct Routes: Sendable {
         } catch {
             return "{}"
         }
+    }
+
+    private func decodeJSONBody<T: Decodable>(_ type: T.Type, from request: Request, limit: Int) async throws -> T {
+        let buffer = try await request.body.collect(upTo: limit)
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return try decoder.decode(T.self, from: Data(buffer.readableBytesView))
     }
 
     private func jsonResponse<T: Encodable>(status: HTTPResponse.Status, payload: T) -> Response {

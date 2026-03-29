@@ -3,12 +3,17 @@ import Foundation
 /// In-memory storage for pending requests and encrypted sessions
 public actor RequestStorage {
     private var requests: [RequestID: StoredRequest] = [:]
-    private var webSocketContinuations: [RequestID: [UUID: CheckedContinuation<WebSocketMessage, Never>]] = [:]
+    private var messageWaiters: [RequestID: [UUID: MessageWaiter]] = [:]
     
     private let maxPayloadSize: Int
     
     public init(maxPayloadSize: Int = 1 * 1024 * 1024) {
         self.maxPayloadSize = maxPayloadSize
+    }
+
+    private struct MessageWaiter {
+        let continuation: CheckedContinuation<WebSocketMessage, Never>
+        let timeoutTask: Task<Void, Never>?
     }
     
     // MARK: - Request Management
@@ -107,9 +112,24 @@ public actor RequestStorage {
             return message
         }
 
-        let continuationID = UUID()
-        return await withCheckedContinuation { continuation in
-            storeContinuation(rid: rid, id: continuationID, continuation: continuation)
+        let waiterID = UUID()
+        return await withTaskCancellationHandler {
+            await withCheckedContinuation { continuation in
+                storeWaiter(
+                    rid: rid,
+                    id: waiterID,
+                    continuation: continuation,
+                    timeoutTask: nil
+                )
+            }
+        } onCancel: {
+            Task {
+                await self.resumeWaiterIfPresent(
+                    rid: rid,
+                    id: waiterID,
+                    with: .error(ErrorPayload(code: "cancelled", message: "Waiting cancelled"))
+                )
+            }
         }
     }
 
@@ -119,26 +139,41 @@ public actor RequestStorage {
             return message
         }
 
-        let continuationID = UUID()
-        let message = await withCheckedContinuation { continuation in
-            storeContinuation(rid: rid, id: continuationID, continuation: continuation)
+        let waiterID = UUID()
+        let message = await withTaskCancellationHandler {
+            await withCheckedContinuation { continuation in
+                let timeoutTask = Task {
+                    do {
+                        try await Task.sleep(for: .seconds(timeoutSeconds))
+                    } catch {
+                        return
+                    }
 
-            Task {
-                do {
-                    try await Task.sleep(for: .seconds(timeoutSeconds))
-                } catch {
-                    return
+                    await self.resumeWaiterIfPresent(
+                        rid: rid,
+                        id: waiterID,
+                        with: .error(ErrorPayload(code: "timeout", message: "Waiting timed out"))
+                    )
                 }
 
-                await self.resumeContinuationIfPresent(
+                storeWaiter(
                     rid: rid,
-                    id: continuationID,
-                    with: .error(ErrorPayload(code: "timeout", message: "Waiting timed out"))
+                    id: waiterID,
+                    continuation: continuation,
+                    timeoutTask: timeoutTask
+                )
+            }
+        } onCancel: {
+            Task {
+                await self.resumeWaiterIfPresent(
+                    rid: rid,
+                    id: waiterID,
+                    with: .error(ErrorPayload(code: "cancelled", message: "Waiting cancelled"))
                 )
             }
         }
 
-        if case .error(let payload) = message, payload.code == "timeout" {
+        if case .error(let payload) = message, payload.code == "timeout" || payload.code == "cancelled" {
             return nil
         }
 
@@ -147,24 +182,24 @@ public actor RequestStorage {
     
     /// Notify WebSocket listeners for a request
     private func notifyWebSocketListeners(rid: RequestID, message: WebSocketMessage) {
-        if let continuations = webSocketContinuations[rid] {
-            for continuation in continuations.values {
-                continuation.resume(returning: message)
+        if let waiters = messageWaiters.removeValue(forKey: rid) {
+            for waiter in waiters.values {
+                waiter.timeoutTask?.cancel()
+                waiter.continuation.resume(returning: message)
             }
-            webSocketContinuations[rid] = nil
         }
     }
     
     /// Cancel waiting for a request
     public func cancelWait(rid: RequestID) {
-        if let continuations = webSocketContinuations[rid] {
-            for continuation in continuations.values {
-                continuation.resume(returning: .error(ErrorPayload(
+        if let waiters = messageWaiters.removeValue(forKey: rid) {
+            for waiter in waiters.values {
+                waiter.timeoutTask?.cancel()
+                waiter.continuation.resume(returning: .error(ErrorPayload(
                     code: "cancelled",
                     message: "Waiting cancelled"
                 )))
             }
-            webSocketContinuations[rid] = nil
         }
     }
 
@@ -192,29 +227,31 @@ public actor RequestStorage {
         return nil
     }
 
-    private func storeContinuation(
+    private func storeWaiter(
         rid: RequestID,
         id: UUID,
-        continuation: CheckedContinuation<WebSocketMessage, Never>
+        continuation: CheckedContinuation<WebSocketMessage, Never>,
+        timeoutTask: Task<Void, Never>?
     ) {
-        var continuations = webSocketContinuations[rid] ?? [:]
-        continuations[id] = continuation
-        webSocketContinuations[rid] = continuations
+        var waiters = messageWaiters[rid] ?? [:]
+        waiters[id] = MessageWaiter(continuation: continuation, timeoutTask: timeoutTask)
+        messageWaiters[rid] = waiters
     }
 
-    private func resumeContinuationIfPresent(rid: RequestID, id: UUID, with message: WebSocketMessage) {
-        guard var continuations = webSocketContinuations[rid],
-              let continuation = continuations.removeValue(forKey: id)
+    private func resumeWaiterIfPresent(rid: RequestID, id: UUID, with message: WebSocketMessage) {
+        guard var waiters = messageWaiters[rid],
+              let waiter = waiters.removeValue(forKey: id)
         else {
             return
         }
 
-        if continuations.isEmpty {
-            webSocketContinuations[rid] = nil
+        if waiters.isEmpty {
+            messageWaiters[rid] = nil
         } else {
-            webSocketContinuations[rid] = continuations
+            messageWaiters[rid] = waiters
         }
 
-        continuation.resume(returning: message)
+        waiter.timeoutTask?.cancel()
+        waiter.continuation.resume(returning: message)
     }
 }

@@ -52,8 +52,26 @@ public struct StoredRequest: Codable, Sendable {
 }
 
 /// Encrypted session payload from mobile
-public enum SessionEncryptionAlgorithm: String, Codable, Sendable {
+public enum SessionEncryptionAlgorithm: String, Codable, CaseIterable, Sendable, CustomStringConvertible {
     case x25519XSalsa20Poly1305 = "x25519-xsalsa20poly1305"
+
+    public var stringValue: String {
+        rawValue
+    }
+
+    public var description: String {
+        rawValue
+    }
+
+    public init?(stringValue: String) {
+        guard let algorithm = Self.allCases.first(where: {
+            $0.rawValue.caseInsensitiveCompare(stringValue) == .orderedSame
+        }) else {
+            return nil
+        }
+
+        self = algorithm
+    }
 }
 
 public struct EncryptedSession: Codable, Sendable {

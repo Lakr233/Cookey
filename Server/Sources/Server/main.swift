@@ -3,54 +3,7 @@ import Hummingbird
 import HummingbirdWebSocket
 import Logging
 
-@main
-struct HelpMeInServer {
-    static func main() async throws {
-        // Parse command line arguments
-        let config = parseArguments()
-        
-        // Setup logging
-        LoggingSystem.bootstrap {
-            var handler = StreamLogHandler.standardOutput(label: $0)
-            handler.logLevel = .info
-            return handler
-        }
-        let logger = Logger(label: "HelpMeInServer")
-        
-        logger.info("🚀 HelpMeIn Relay Server starting...")
-        logger.info("   Host: \(config.host)")
-        logger.info("   Port: \(config.port)")
-        logger.info("   Public URL: \(config.publicURL)")
-        logger.info("   Default TTL: \(config.defaultTTL)s")
-        logger.info("   Max Payload: \(config.maxPayloadSize / 1024)KB")
-        
-        // Create storage
-        let storage = RequestStorage(maxPayloadSize: config.maxPayloadSize)
-        
-        // Setup routes
-        let routes = Routes(storage: storage, config: config)
-        let router = routes.setupRouter()
-        
-        // Create application
-        let app = Application(
-            router: router,
-            configuration: .init(
-                address: .hostname(config.host, port: config.port),
-                serverName: "HelpMeIn-Relay/1.0"
-            ),
-            logger: logger
-        )
-        
-        // Start cleanup task
-        Task {
-            await runCleanupTask(storage: storage, logger: logger)
-        }
-        
-        // Start server
-        logger.info("✅ Server ready")
-        try await app.run()
-    }
-    
+enum HelpMeInServer {
     // MARK: - Argument Parsing
     
     static func parseArguments() -> ServerConfig {
@@ -179,18 +132,45 @@ struct HelpMeInServer {
     }
 }
 
-// MARK: - WebSocket Route Extension
+func runServer() async throws {
+    let config = HelpMeInServer.parseArguments()
 
-extension Router {
-    func ws(
-        _ path: RouterPath,
-        shouldUpgrade: @escaping @Sendable (Request, Context) async throws -> HTTPResponseHead? = { _, _ in
-            var headers = HTTPFields()
-            headers[.contentType] = "text/plain"
-            return .init(status: .ok, headers: headers)
-        },
-        onUpgrade: @escaping @Sendable (Request, Context, WebSocketInboundStream, WebSocketOutboundWriter) async throws -> ()
-    ) -> Self {
-        self.webSocket(path, shouldUpgrade: shouldUpgrade, onUpgrade: onUpgrade)
+    LoggingSystem.bootstrap {
+        var handler = StreamLogHandler.standardOutput(label: $0)
+        handler.logLevel = .info
+        return handler
     }
+    let logger = Logger(label: "HelpMeInServer")
+
+    logger.info("🚀 HelpMeIn Relay Server starting...")
+    logger.info("   Host: \(config.host)")
+    logger.info("   Port: \(config.port)")
+    logger.info("   Public URL: \(config.publicURL)")
+    logger.info("   Default TTL: \(config.defaultTTL)s")
+    logger.info("   Max Payload: \(config.maxPayloadSize / 1024)KB")
+
+    let storage = RequestStorage(maxPayloadSize: config.maxPayloadSize)
+    let routes = Routes(storage: storage, config: config)
+    let router = routes.setupRouter()
+    let webSocketRouter = routes.setupWebSocketRouter()
+
+    let app = Application(
+        router: router,
+        server: .http1WebSocketUpgrade(webSocketRouter: webSocketRouter),
+        configuration: .init(
+            address: .hostname(config.host, port: config.port),
+            serverName: "HelpMeIn-Relay/1.0"
+        ),
+        logger: logger
+    )
+
+    let cleanupTask = Task {
+        await HelpMeInServer.runCleanupTask(storage: storage, logger: logger)
+    }
+    defer { cleanupTask.cancel() }
+
+    logger.info("✅ Server ready")
+    try await app.runService()
 }
+
+try await runServer()

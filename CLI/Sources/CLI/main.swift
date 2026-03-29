@@ -176,7 +176,8 @@ enum HelpMeInCLI {
             return
         }
 
-        guard let rid = ridArgument ?? (try ConfigStore.latestRID(in: context.paths)) else {
+        let latestRID = try? ConfigStore.latestRID(in: context.paths)
+        guard let rid = ridArgument ?? latestRID else {
             throw CLIError.invalidValue("No local requests found.")
         }
 

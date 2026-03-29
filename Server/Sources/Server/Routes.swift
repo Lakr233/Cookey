@@ -40,16 +40,22 @@ public struct Routes: Sendable {
             try await self.uploadSession(request: request, context: context)
         }
         
-        // WebSocket endpoint
-        router.ws("/v1/requests/:rid/ws") { [self] request, context, inbound, outbound in
+        return router
+    }
+
+    public func setupWebSocketRouter() -> Router<BasicWebSocketRequestContext> {
+        var router = Router(context: BasicWebSocketRequestContext.self)
+
+        router.ws("/v1/requests/:rid/ws") { _, _ in
+            .upgrade()
+        } onUpgrade: { [self] inbound, outbound, context in
             try await self.handleWebSocket(
-                request: request,
-                context: context,
+                rid: context.requestContext.parameters.get("rid"),
                 inbound: inbound,
                 outbound: outbound
             )
         }
-        
+
         return router
     }
     
@@ -111,7 +117,7 @@ public struct Routes: Sendable {
         }
         
         // Get timeout from query parameter (default 30s)
-        let timeoutSeconds = context.uri.queryParameters.get("timeout").flatMap { Int($0) } ?? 30
+        let timeoutSeconds = request.uri.queryParameters.get("timeout").flatMap { Int($0) } ?? 30
         let timeout = min(timeoutSeconds, 60) // Cap at 60 seconds
         
         // Check if request exists
@@ -124,7 +130,12 @@ public struct Routes: Sendable {
             _ = await storage.markDelivered(rid: rid)
             return self.jsonResponse(
                 status: .ok,
-                payload: RequestWaitResponse(from: stored, deliveredAt: Date())
+                payload: RequestWaitResponse(
+                    rid: stored.rid,
+                    status: stored.status,
+                    encryptedSession: stored.encryptedSession,
+                    deliveredAt: Date()
+                )
             )
         }
 
@@ -167,7 +178,7 @@ public struct Routes: Sendable {
             )
 
         case .status(let payload):
-            if payload.status == .expired {
+            if payload.status == RequestStatus.expired {
                 return self.jsonResponse(status: .gone, payload: ["error": "Request expired"])
             }
             return self.jsonResponse(
@@ -176,11 +187,12 @@ public struct Routes: Sendable {
             )
 
         case .error(let error):
+            let errorPayload: [String: String] = ["error": error.message]
             switch error.code {
             case "expired":
-                return self.jsonResponse(status: .gone, payload: ["error": error.message])
+                return self.jsonResponse(status: .gone, payload: errorPayload)
             case "missing":
-                return self.jsonResponse(status: .notFound, payload: ["error": error.message])
+                return self.jsonResponse(status: .notFound, payload: errorPayload)
             default:
                 return self.jsonResponse(
                     status: .ok,
@@ -231,12 +243,11 @@ public struct Routes: Sendable {
     // MARK: - WebSocket /v1/requests/:rid/ws
     
     private func handleWebSocket(
-        request: Request,
-        context: BasicRequestContext,
+        rid: RequestID?,
         inbound: WebSocketInboundStream,
         outbound: WebSocketOutboundWriter
     ) async throws {
-        guard let rid = context.parameters.get("rid") else {
+        guard let rid else {
             try await outbound.write(.text("{\"error\":\"Missing request ID\"}"))
             return
         }
@@ -279,15 +290,16 @@ public struct Routes: Sendable {
             // Task 1: Handle incoming client messages
             group.addTask {
                 for try await frame in inbound {
-                    switch frame {
-                    case .text(let text):
+                    switch frame.opcode {
+                    case .text:
                         // Handle client messages (ping, etc.)
-                        if text == "ping" {
+                        var data = frame.data
+                        if let text = data.readString(length: data.readableBytes), text == "ping" {
                             try await outbound.write(.text("pong"))
                         }
-                    case .binary(_):
+                    case .binary:
                         break
-                    case .close:
+                    default:
                         await self.storage.cancelWait(rid: rid)
                         return
                     }
@@ -305,8 +317,6 @@ public struct Routes: Sendable {
                     _ = await self.storage.markDelivered(rid: rid)
                 }
                 
-                // Close connection after sending message
-                try await outbound.write(.close())
             }
             
             // Wait for either task to complete

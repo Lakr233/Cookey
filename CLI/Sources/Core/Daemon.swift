@@ -168,6 +168,11 @@ public enum Daemon {
         keypair: KeypairFile,
         deviceFingerprint: String
     ) throws -> SessionFile {
+        let algorithm = envelope.algorithm.stringValue
+        guard SessionEncryptionAlgorithm(stringValue: algorithm) == .x25519XSalsa20Poly1305 else {
+            throw KeyManagerError.invalidAlgorithm(algorithm)
+        }
+
         let decoder = JSONDecoder()
         let session = try decoder.decode(
             SessionFile.self,

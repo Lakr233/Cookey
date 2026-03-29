@@ -128,7 +128,7 @@ public struct RelayClient {
                 case "expired":
                     throw RelayClientError.expired(rid)
                 case "ready":
-                    if let envelope = waitResponse.session ?? waitResponse.payload {
+                    if let envelope = waitResponse.encryptedSession {
                         return envelope
                     }
                     throw RelayClientError.invalidResponse

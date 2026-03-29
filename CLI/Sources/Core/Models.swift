@@ -210,11 +210,93 @@ public struct RelayStatusResponse: Codable {
     }
 }
 
-public struct RelayWaitResponse: Codable {
+public struct RelayWaitResponse: Decodable {
     public let rid: String?
     public let status: String
-    public let session: EncryptedSessionEnvelope?
-    public let payload: EncryptedSessionEnvelope?
+    public let encryptedSession: EncryptedSessionEnvelope?
+    public let deliveredAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case rid
+        case status
+        case session
+        case payload
+        case encryptedSession = "encrypted_session"
+        case deliveredAt = "delivered_at"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.rid = try container.decodeIfPresent(String.self, forKey: .rid)
+        self.status = try container.decode(String.self, forKey: .status)
+        let topLevelDeliveredAt = try container.decodeIfPresent(Date.self, forKey: .deliveredAt)
+
+        if let session = try Self.decodeEnvelope(from: container, forKey: .encryptedSession) {
+            self.encryptedSession = session
+            self.deliveredAt = topLevelDeliveredAt
+        } else if let payload = try Self.decodeDeliveryPayload(from: container, forKey: .session) {
+            self.encryptedSession = payload.encryptedSession
+            self.deliveredAt = topLevelDeliveredAt ?? payload.deliveredAt
+        } else if let payload = try Self.decodeDeliveryPayload(from: container, forKey: .payload) {
+            self.encryptedSession = payload.encryptedSession
+            self.deliveredAt = topLevelDeliveredAt ?? payload.deliveredAt
+        } else if let session = try Self.decodeEnvelope(from: container, forKey: .session) {
+            self.encryptedSession = session
+            self.deliveredAt = topLevelDeliveredAt
+        } else if let session = try Self.decodeEnvelope(from: container, forKey: .payload) {
+            self.encryptedSession = session
+            self.deliveredAt = topLevelDeliveredAt
+        } else {
+            self.encryptedSession = nil
+            self.deliveredAt = topLevelDeliveredAt
+        }
+    }
+
+    private static func decodeEnvelope(
+        from container: KeyedDecodingContainer<CodingKeys>,
+        forKey key: CodingKeys
+    ) throws -> EncryptedSessionEnvelope? {
+        do {
+            return try container.decodeIfPresent(EncryptedSessionEnvelope.self, forKey: key)
+        } catch let error as DecodingError {
+            switch error {
+            case .typeMismatch, .keyNotFound, .valueNotFound:
+                return nil
+            default:
+                throw error
+            }
+        } catch {
+            throw error
+        }
+    }
+
+    private static func decodeDeliveryPayload(
+        from container: KeyedDecodingContainer<CodingKeys>,
+        forKey key: CodingKeys
+    ) throws -> SessionDeliveryPayload? {
+        do {
+            return try container.decodeIfPresent(SessionDeliveryPayload.self, forKey: key)
+        } catch let error as DecodingError {
+            switch error {
+            case .typeMismatch, .keyNotFound, .valueNotFound:
+                return nil
+            default:
+                throw error
+            }
+        } catch {
+            throw error
+        }
+    }
+}
+
+private struct SessionDeliveryPayload: Decodable {
+    let encryptedSession: EncryptedSessionEnvelope
+    let deliveredAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case encryptedSession = "encrypted_session"
+        case deliveredAt = "delivered_at"
+    }
 }
 
 public struct EncryptedSessionEnvelope: Codable {

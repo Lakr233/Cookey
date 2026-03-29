@@ -77,6 +77,8 @@ enum HelpMeInCLI {
             try handleLogin(arguments: args)
         case "status":
             try handleStatus(arguments: args)
+        case "__daemon":
+            try handleDaemon(arguments: args)
         case "help", "--help", "-h":
             printUsage()
         default:
@@ -184,6 +186,16 @@ enum HelpMeInCLI {
             let snapshot = try resolveStatus(rid: rid, context: context)
             try emit(snapshot, asJSON: jsonOutput)
         }
+    }
+
+    private static func handleDaemon(arguments: [String]) throws {
+        guard let encodedPayload = arguments.first else {
+            throw CLIError.invalidValue("Missing daemon payload.")
+        }
+
+        let payload = try Daemon.decodeLaunchPayload(encodedPayload)
+        let context = try ConfigStore.bootstrap()
+        try Daemon.runInline(context: context, manifest: payload.manifest, timeoutSeconds: payload.timeoutSeconds)
     }
 
     private static func latestSummary(context: BootstrapContext) throws -> StatusSummary {

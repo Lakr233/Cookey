@@ -95,6 +95,33 @@ public struct RequestStatusResponse: Codable, Sendable {
     }
 }
 
+/// Long-poll wait response
+public struct RequestWaitResponse: Codable, Sendable {
+    public let rid: RequestID
+    public let status: RequestStatus
+    public let encryptedSession: EncryptedSession?
+    public let deliveredAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case rid
+        case status
+        case encryptedSession = "encrypted_session"
+        case deliveredAt = "delivered_at"
+    }
+
+    public init(
+        rid: RequestID,
+        status: RequestStatus,
+        encryptedSession: EncryptedSession? = nil,
+        deliveredAt: Date? = nil
+    ) {
+        self.rid = rid
+        self.status = status
+        self.encryptedSession = encryptedSession
+        self.deliveredAt = deliveredAt
+    }
+}
+
 /// WebSocket message types
 public enum WebSocketMessage: Codable, Sendable {
     case status(StatusPayload)

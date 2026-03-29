@@ -6,7 +6,7 @@ import Darwin
 #endif
 
 public enum DaemonError: Error, LocalizedError {
-    case forkFailed
+    case invalidDaemonPayload
     case detachFailed(String)
     case daemonDescriptorTimeout(String)
     case sessionDecryptionUnsupported(String)
@@ -14,8 +14,8 @@ public enum DaemonError: Error, LocalizedError {
 
     public var errorDescription: String? {
         switch self {
-        case .forkFailed:
-            return "fork() failed"
+        case .invalidDaemonPayload:
+            return "Invalid daemon launch payload"
         case .detachFailed(let reason):
             return "Daemon detach failed: \(reason)"
         case .daemonDescriptorTimeout(let rid):
@@ -32,31 +32,34 @@ private struct DaemonExit: Error {
     let code: Int32
 }
 
+public struct DaemonLaunchPayload: Codable {
+    public let manifest: LoginManifest
+    public let timeoutSeconds: Int
+
+    public init(manifest: LoginManifest, timeoutSeconds: Int) {
+        self.manifest = manifest
+        self.timeoutSeconds = timeoutSeconds
+    }
+}
+
 public enum Daemon {
     public static func launchDetached(
         context: BootstrapContext,
         manifest: LoginManifest,
         timeoutSeconds: Int
     ) throws -> Int32 {
-        let pid = fork()
-        if pid < 0 {
-            throw DaemonError.forkFailed
-        }
+        let payload = DaemonLaunchPayload(manifest: manifest, timeoutSeconds: timeoutSeconds)
+        let process = Process()
+        process.executableURL = try resolveExecutableURL()
+        process.arguments = ["__daemon", try encodeLaunchPayload(payload)]
+        process.currentDirectoryURL = URL(fileURLWithPath: FileManager.default.currentDirectoryPath, isDirectory: true)
+        process.standardInput = try devNullHandle(forReading: true)
+        process.standardOutput = try devNullHandle(forReading: false)
+        process.standardError = try devNullHandle(forReading: false)
 
-        if pid > 0 {
-            try waitForDescriptor(rid: manifest.rid, expectedPID: pid, paths: context.paths)
-            return pid
-        }
-
-        do {
-            try detachFromTerminal()
-            try runChild(context: context, manifest: manifest, timeoutSeconds: timeoutSeconds)
-            _exit(0)
-        } catch let exit as DaemonExit {
-            _exit(exit.code)
-        } catch {
-            _exit(1)
-        }
+        try process.run()
+        try waitForDescriptor(rid: manifest.rid, expectedPID: process.processIdentifier, paths: context.paths)
+        return process.processIdentifier
     }
 
     public static func runInline(
@@ -112,6 +115,7 @@ public enum Daemon {
                 envelope: envelope,
                 rid: manifest.rid,
                 manifest: manifest,
+                keypair: context.keypair,
                 deviceFingerprint: context.deviceFingerprint
             )
 
@@ -150,51 +154,84 @@ public enum Daemon {
         throw DaemonError.daemonDescriptorTimeout(rid)
     }
 
-    private static func detachFromTerminal() throws {
-        if setsid() < 0 {
-            throw DaemonError.detachFailed("setsid() returned an error")
+    public static func decodeLaunchPayload(_ encoded: String) throws -> DaemonLaunchPayload {
+        guard let data = Data(base64Encoded: encoded) else {
+            throw DaemonError.invalidDaemonPayload
         }
 
-        let devNull = open("/dev/null", O_RDWR)
-        if devNull < 0 {
-            throw DaemonError.detachFailed("unable to open /dev/null")
-        }
-
-        for handle in [STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO] {
-            if dup2(devNull, handle) < 0 {
-                close(devNull)
-                throw DaemonError.detachFailed("dup2() failed")
-            }
-        }
-
-        if devNull > STDERR_FILENO {
-            close(devNull)
-        }
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return try decoder.decode(DaemonLaunchPayload.self, from: data)
     }
 
     private static func decodeSession(
         envelope: EncryptedSessionEnvelope,
         rid: String,
         manifest: LoginManifest,
+        keypair: KeypairFile,
         deviceFingerprint: String
     ) throws -> SessionFile {
+        let raw: Data
         if envelope.algorithm.lowercased() == "plaintext-json",
-           let raw = Data(base64Encoded: envelope.ciphertext) {
-            let decoder = JSONDecoder()
-            let session = try decoder.decode(SessionFile.self, from: raw)
-            return SessionFile(
-                cookies: session.cookies,
-                origins: session.origins,
-                metadata: SessionMetadata(
-                    rid: rid,
-                    receivedAt: Date(),
-                    serverURL: manifest.serverURL,
-                    targetURL: manifest.targetURL,
-                    deviceFingerprint: deviceFingerprint
-                )
-            )
+           let plaintext = Data(base64Encoded: envelope.ciphertext) {
+            raw = plaintext
+        } else if envelope.algorithm.lowercased() == "x25519-xsalsa20poly1305" {
+            raw = try KeyManager.decryptSessionEnvelope(envelope, using: keypair)
+        } else {
+            throw DaemonError.sessionDecryptionUnsupported(envelope.algorithm)
         }
 
-        throw DaemonError.sessionDecryptionUnsupported(envelope.algorithm)
+        let decoder = JSONDecoder()
+        let session = try decoder.decode(SessionFile.self, from: raw)
+        return SessionFile(
+            cookies: session.cookies,
+            origins: session.origins,
+            metadata: SessionMetadata(
+                rid: rid,
+                receivedAt: Date(),
+                serverURL: manifest.serverURL,
+                targetURL: manifest.targetURL,
+                deviceFingerprint: deviceFingerprint
+            )
+        )
+    }
+
+    private static func encodeLaunchPayload(_ payload: DaemonLaunchPayload) throws -> String {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        return try encoder.encode(payload).base64EncodedString()
+    }
+
+    private static func resolveExecutableURL() throws -> URL {
+        if let executableURL = Bundle.main.executableURL {
+            return executableURL
+        }
+
+        let executable = CommandLine.arguments[0]
+        if executable.contains("/") {
+            let baseURL = URL(fileURLWithPath: FileManager.default.currentDirectoryPath, isDirectory: true)
+            return URL(fileURLWithPath: executable, relativeTo: baseURL).standardizedFileURL
+        }
+
+        let searchPaths = (ProcessInfo.processInfo.environment["PATH"] ?? "")
+            .split(separator: ":")
+            .map(String.init)
+
+        for path in searchPaths {
+            let candidate = URL(fileURLWithPath: path, isDirectory: true).appendingPathComponent(executable)
+            if FileManager.default.isExecutableFile(atPath: candidate.path) {
+                return candidate
+            }
+        }
+
+        throw DaemonError.detachFailed("unable to resolve current executable")
+    }
+
+    private static func devNullHandle(forReading: Bool) throws -> FileHandle {
+        let handle = forReading ? FileHandle(forReadingAtPath: "/dev/null") : FileHandle(forWritingAtPath: "/dev/null")
+        guard let handle else {
+            throw DaemonError.detachFailed("unable to open /dev/null")
+        }
+        return handle
     }
 }

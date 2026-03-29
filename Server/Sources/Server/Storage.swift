@@ -3,7 +3,7 @@ import Foundation
 /// In-memory storage for pending requests and encrypted sessions
 public actor RequestStorage {
     private var requests: [RequestID: StoredRequest] = [:]
-    private var webSocketContinuations: [RequestID: [CheckedContinuation<WebSocketMessage, Never>]] = [:]
+    private var webSocketContinuations: [RequestID: [UUID: CheckedContinuation<WebSocketMessage, Never>]] = [:]
     
     private let maxPayloadSize: Int
     
@@ -103,29 +103,52 @@ public actor RequestStorage {
     
     /// Wait for WebSocket message for a specific request
     public func waitForMessage(rid: RequestID) async -> WebSocketMessage {
-        // Check if request already has session ready
-        if let request = requests[rid], request.status == .ready, let session = request.encryptedSession {
-            return .session(SessionPayload(encryptedSession: session, deliveredAt: Date()))
+        if let message = immediateMessage(rid: rid) {
+            return message
         }
-        
-        // Check if request is expired
-        if let request = requests[rid], request.expiresAt < Date() {
-            return .error(ErrorPayload(code: "expired", message: "Request has expired"))
-        }
-        
-        // Wait for message
+
+        let continuationID = UUID()
         return await withCheckedContinuation { continuation in
-            if webSocketContinuations[rid] == nil {
-                webSocketContinuations[rid] = []
-            }
-            webSocketContinuations[rid]?.append(continuation)
+            storeContinuation(rid: rid, id: continuationID, continuation: continuation)
         }
+    }
+
+    /// Wait for WebSocket message for a specific request with timeout
+    public func waitForMessage(rid: RequestID, timeoutSeconds: Int) async -> WebSocketMessage? {
+        if let message = immediateMessage(rid: rid) {
+            return message
+        }
+
+        let continuationID = UUID()
+        let message = await withCheckedContinuation { continuation in
+            storeContinuation(rid: rid, id: continuationID, continuation: continuation)
+
+            Task {
+                do {
+                    try await Task.sleep(for: .seconds(timeoutSeconds))
+                } catch {
+                    return
+                }
+
+                await self.resumeContinuationIfPresent(
+                    rid: rid,
+                    id: continuationID,
+                    with: .error(ErrorPayload(code: "timeout", message: "Waiting timed out"))
+                )
+            }
+        }
+
+        if case .error(let payload) = message, payload.code == "timeout" {
+            return nil
+        }
+
+        return message
     }
     
     /// Notify WebSocket listeners for a request
     private func notifyWebSocketListeners(rid: RequestID, message: WebSocketMessage) {
         if let continuations = webSocketContinuations[rid] {
-            for continuation in continuations {
+            for continuation in continuations.values {
                 continuation.resume(returning: message)
             }
             webSocketContinuations[rid] = nil
@@ -135,7 +158,7 @@ public actor RequestStorage {
     /// Cancel waiting for a request
     public func cancelWait(rid: RequestID) {
         if let continuations = webSocketContinuations[rid] {
-            for continuation in continuations {
+            for continuation in continuations.values {
                 continuation.resume(returning: .error(ErrorPayload(
                     code: "cancelled",
                     message: "Waiting cancelled"
@@ -143,5 +166,55 @@ public actor RequestStorage {
             }
             webSocketContinuations[rid] = nil
         }
+    }
+
+    private func immediateMessage(rid: RequestID) -> WebSocketMessage? {
+        guard let request = requests[rid] else {
+            return .error(ErrorPayload(code: "missing", message: "Request not found"))
+        }
+
+        if request.status == .ready, let session = request.encryptedSession {
+            return .session(SessionPayload(encryptedSession: session, deliveredAt: Date()))
+        }
+
+        if request.status == .expired {
+            return .error(ErrorPayload(code: "expired", message: "Request has expired"))
+        }
+
+        if request.status != .pending {
+            return .status(StatusPayload(status: request.status, timestamp: Date()))
+        }
+
+        if request.expiresAt < Date() {
+            return .error(ErrorPayload(code: "expired", message: "Request has expired"))
+        }
+
+        return nil
+    }
+
+    private func storeContinuation(
+        rid: RequestID,
+        id: UUID,
+        continuation: CheckedContinuation<WebSocketMessage, Never>
+    ) {
+        var continuations = webSocketContinuations[rid] ?? [:]
+        continuations[id] = continuation
+        webSocketContinuations[rid] = continuations
+    }
+
+    private func resumeContinuationIfPresent(rid: RequestID, id: UUID, with message: WebSocketMessage) {
+        guard var continuations = webSocketContinuations[rid],
+              let continuation = continuations.removeValue(forKey: id)
+        else {
+            return
+        }
+
+        if continuations.isEmpty {
+            webSocketContinuations[rid] = nil
+        } else {
+            webSocketContinuations[rid] = continuations
+        }
+
+        continuation.resume(returning: message)
     }
 }

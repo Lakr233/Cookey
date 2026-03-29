@@ -1,6 +1,7 @@
 import Foundation
 import Hummingbird
 import HummingbirdWebSocket
+import NIOCore
 
 /// Route handlers for HelpMeIn Relay Server
 public struct Routes: Sendable {
@@ -19,7 +20,7 @@ public struct Routes: Sendable {
         
         // Health check
         router.get("/health") { _, _ in
-            return Response(status: .ok, body: .init(string: "OK"))
+            return self.textResponse(status: .ok, body: "OK")
         }
         
         // API v1 routes
@@ -61,9 +62,9 @@ public struct Routes: Sendable {
         
         // Validate expiration
         guard loginRequest.expiresAt > Date() else {
-            return Response(
+            return self.jsonResponse(
                 status: .badRequest,
-                body: .init(string: "{\"error\":\"Invalid expiration time\"}")
+                payload: ["error": "Invalid expiration time"]
             )
         }
         
@@ -72,55 +73,35 @@ public struct Routes: Sendable {
         
         // Return response
         let response = RequestStatusResponse(from: stored)
-        var headers = HTTPFields()
-        headers[.contentType] = "application/json"
-        
-        return Response(
-            status: .created,
-            headers: headers,
-            body: .init(string: self.encodeJSON(response))
-        )
+        return self.jsonResponse(status: .created, payload: response)
     }
     
     // MARK: - GET /v1/requests/:rid
     
     private func getRequest(request: Request, context: BasicRequestContext) async throws -> Response {
         guard let rid = context.parameters.get("rid") else {
-            return Response(status: .badRequest, body: .init(string: "Missing request ID"))
+            return self.textResponse(status: .badRequest, body: "Missing request ID")
         }
         
         guard let stored = await storage.getRequest(rid: rid) else {
-            return Response(
-                status: .notFound,
-                body: .init(string: "{\"error\":\"Request not found\"}")
-            )
+            return self.jsonResponse(status: .notFound, payload: ["error": "Request not found"])
         }
         
         // Check if expired
         if stored.expiresAt < Date() {
             _ = await storage.updateStatus(rid: rid, status: .expired)
-            return Response(
-                status: .gone,
-                body: .init(string: "{\"error\":\"Request expired\"}")
-            )
+            return self.jsonResponse(status: .gone, payload: ["error": "Request expired"])
         }
         
         let response = RequestStatusResponse(from: stored)
-        var headers = HTTPFields()
-        headers[.contentType] = "application/json"
-        
-        return Response(
-            status: .ok,
-            headers: headers,
-            body: .init(string: self.encodeJSON(response))
-        )
+        return self.jsonResponse(status: .ok, payload: response)
     }
     
     // MARK: - GET /v1/requests/:rid/wait (Long Polling)
     
     private func waitForRequest(request: Request, context: BasicRequestContext) async throws -> Response {
         guard let rid = context.parameters.get("rid") else {
-            return Response(status: .badRequest, body: .init(string: "Missing request ID"))
+            return self.textResponse(status: .badRequest, body: "Missing request ID")
         }
         
         // Get timeout from query parameter (default 30s)
@@ -129,85 +110,82 @@ public struct Routes: Sendable {
         
         // Check if request exists
         guard let stored = await storage.getRequest(rid: rid) else {
-            return Response(
-                status: .notFound,
-                body: .init(string: "{\"error\":\"Request not found\"}")
-            )
+            return self.jsonResponse(status: .notFound, payload: ["error": "Request not found"])
         }
         
         // If already ready, return immediately
-        if stored.status == .ready {
+        if stored.status == .ready, let session = stored.encryptedSession {
             _ = await storage.markDelivered(rid: rid)
-            var headers = HTTPFields()
-            headers[.contentType] = "application/json"
-            return Response(
+            return self.jsonResponse(
                 status: .ok,
-                headers: headers,
-                body: .init(string: self.encodeJSON(["status": "ready", "rid": rid]))
+                payload: RequestWaitResponse(
+                    rid: rid,
+                    status: .ready,
+                    encryptedSession: session,
+                    deliveredAt: Date()
+                )
+            )
+        }
+
+        if stored.status == .expired {
+            return self.jsonResponse(status: .gone, payload: ["error": "Request expired"])
+        }
+
+        if stored.status != .pending {
+            return self.jsonResponse(
+                status: .ok,
+                payload: RequestWaitResponse(rid: rid, status: stored.status)
             )
         }
         
         // If expired, return error
         if stored.expiresAt < Date() {
             _ = await storage.updateStatus(rid: rid, status: .expired)
-            return Response(
-                status: .gone,
-                body: .init(string: "{\"error\":\"Request expired\"}")
-            )
+            return self.jsonResponse(status: .gone, payload: ["error": "Request expired"])
         }
         
         // Wait for session with timeout
-        let result = await withTimeout(seconds: timeout) {
-            await storage.waitForMessage(rid: rid)
+        guard let message = await storage.waitForMessage(rid: rid, timeoutSeconds: timeout) else {
+            return self.jsonResponse(
+                status: .ok,
+                payload: RequestWaitResponse(rid: rid, status: .pending)
+            )
         }
-        
-        var headers = HTTPFields()
-        headers[.contentType] = "application/json"
-        
-        switch result {
-        case .success(let message):
-            switch message {
-            case .session(_):
-                _ = await storage.markDelivered(rid: rid)
-                return Response(
-                    status: .ok,
-                    headers: headers,
-                    body: .init(string: "{\"status\":\"ready\",\"rid\":\"\(rid)\"}")
+
+        switch message {
+        case .session(let payload):
+            _ = await storage.markDelivered(rid: rid)
+            return self.jsonResponse(
+                status: .ok,
+                payload: RequestWaitResponse(
+                    rid: rid,
+                    status: .ready,
+                    encryptedSession: payload.encryptedSession,
+                    deliveredAt: payload.deliveredAt
                 )
-            case .status(let payload):
-                if payload.status == .expired {
-                    return Response(
-                        status: .gone,
-                        headers: headers,
-                        body: .init(string: "{\"error\":\"Request expired\"}")
-                    )
-                }
-                return Response(
+            )
+
+        case .status(let payload):
+            if payload.status == .expired {
+                return self.jsonResponse(status: .gone, payload: ["error": "Request expired"])
+            }
+            return self.jsonResponse(
+                status: .ok,
+                payload: RequestWaitResponse(rid: rid, status: payload.status)
+            )
+
+        case .error(let error):
+            switch error.code {
+            case "expired":
+                return self.jsonResponse(status: .gone, payload: ["error": error.message])
+            case "missing":
+                return self.jsonResponse(status: .notFound, payload: ["error": error.message])
+            default:
+                return self.jsonResponse(
                     status: .ok,
-                    headers: headers,
-                    body: .init(string: "{\"status\":\"\(payload.status.rawValue)\",\"rid\":\"\(rid)\"}")
-                )
-            case .error(let error):
-                if error.code == "expired" {
-                    return Response(
-                        status: .gone,
-                        headers: headers,
-                        body: .init(string: "{\"error\":\"\(error.message)\"}")
-                    )
-                }
-                return Response(
-                    status: .ok,
-                    headers: headers,
-                    body: .init(string: "{\"status\":\"pending\",\"rid\":\"\(rid)\"}")
+                    payload: RequestWaitResponse(rid: rid, status: .pending)
                 )
             }
-            
-        case .timeout:
-            return Response(
-                status: .ok,
-                headers: headers,
-                body: .init(string: "{\"status\":\"pending\",\"rid\":\"\(rid)\"}")
-            )
         }
     }
     
@@ -215,32 +193,23 @@ public struct Routes: Sendable {
     
     private func uploadSession(request: Request, context: BasicRequestContext) async throws -> Response {
         guard let rid = context.parameters.get("rid") else {
-            return Response(status: .badRequest, body: .init(string: "Missing request ID"))
+            return self.textResponse(status: .badRequest, body: "Missing request ID")
         }
         
         // Check if request exists
         guard let stored = await storage.getRequest(rid: rid) else {
-            return Response(
-                status: .notFound,
-                body: .init(string: "{\"error\":\"Request not found\"}")
-            )
+            return self.jsonResponse(status: .notFound, payload: ["error": "Request not found"])
         }
         
         // Check if expired
         if stored.expiresAt < Date() {
             _ = await storage.updateStatus(rid: rid, status: .expired)
-            return Response(
-                status: .gone,
-                body: .init(string: "{\"error\":\"Request expired\"}")
-            )
+            return self.jsonResponse(status: .gone, payload: ["error": "Request expired"])
         }
         
         // Check if already has session
         guard stored.status == .pending else {
-            return Response(
-                status: .conflict,
-                body: .init(string: "{\"error\":\"Session already uploaded\"}")
-            )
+            return self.jsonResponse(status: .conflict, payload: ["error": "Session already uploaded"])
         }
         
         // Decode session
@@ -249,28 +218,15 @@ public struct Routes: Sendable {
         
         // Validate algorithm
         guard session.algorithm == "x25519-xsalsa20poly1305" else {
-            return Response(
-                status: .badRequest,
-                body: .init(string: "{\"error\":\"Unsupported algorithm\"}")
-            )
+            return self.jsonResponse(status: .badRequest, payload: ["error": "Unsupported algorithm"])
         }
         
         // Store session
         guard let _ = await storage.storeSession(rid: rid, session: session) else {
-            return Response(
-                status: .badRequest,
-                body: .init(string: "{\"error\":\"Failed to store session\"}")
-            )
+            return self.jsonResponse(status: .badRequest, payload: ["error": "Failed to store session"])
         }
-        
-        var headers = HTTPFields()
-        headers[.contentType] = "application/json"
-        
-        return Response(
-            status: .created,
-            headers: headers,
-            body: .init(string: "{\"status\":\"uploaded\",\"rid\":\"\(rid)\"}")
-        )
+
+        return self.jsonResponse(status: .created, payload: ["status": "uploaded", "rid": rid])
     }
     
     // MARK: - WebSocket /v1/requests/:rid/ws
@@ -373,31 +329,23 @@ public struct Routes: Sendable {
             return "{}"
         }
     }
-    
-    private func withTimeout<T>(seconds: Int, operation: @escaping () async -> T) async -> Result<T, TimeoutError> {
-        await withTaskGroup(of: Result<T, TimeoutError>.self) { group in
-            group.addTask {
-                let result = await operation()
-                return .success(result)
-            }
-            
-            group.addTask {
-                try? await Task.sleep(for: .seconds(seconds))
-                return .failure(.timeout)
-            }
-            
-            let result = await group.next()!
-            group.cancelAll()
-            return result
-        }
+
+    private func jsonResponse<T: Encodable>(status: HTTPResponse.Status, payload: T) -> Response {
+        self.textResponse(status: status, body: self.encodeJSON(payload), contentType: "application/json")
     }
-}
 
-enum TimeoutError: Error {
-    case timeout
-}
+    private func textResponse(
+        status: HTTPResponse.Status,
+        body: String,
+        contentType: String = "text/plain; charset=utf-8"
+    ) -> Response {
+        var headers = HTTPFields()
+        headers[.contentType] = contentType
 
-enum Result<T, E: Error> {
-    case success(T)
-    case failure(E)
+        return Response(
+            status: status,
+            headers: headers,
+            body: .init(byteBuffer: ByteBuffer(string: body))
+        )
+    }
 }

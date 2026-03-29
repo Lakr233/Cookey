@@ -1,0 +1,33 @@
+# Xcode
+*.xcodeproj
+*.xcworkspace
+DerivedData/
+build/
+
+# Swift Package Manager
+.build/
+Package.resolved
+*.swiftpm
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets
+*.pem
+*.key
+.env
+.env.local
+
+# Logs
+*.log
+logs/
+
+# Temporary
+tmp/
+temp/
+*.tmp

@@ -3,7 +3,7 @@ services:
     build:
       context: ./Server
       dockerfile: Dockerfile
-    container_name: helpmein-api
+    container_name: cookey-api
     environment:
       HELPMEIN_HOST: 0.0.0.0
       HELPMEIN_PORT: 5800
@@ -22,7 +22,7 @@ services:
     build:
       context: ./Web
       dockerfile: Dockerfile
-    container_name: helpmein-web
+    container_name: cookey-web
     depends_on:
       api:
         condition: service_healthy

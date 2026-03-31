@@ -3,7 +3,7 @@ import Hummingbird
 import HummingbirdWebSocket
 import Logging
 
-enum HelpMeInServer {
+enum CookeyServer {
     // MARK: - Argument Parsing
     
     static func parseArguments() -> ServerConfig {
@@ -91,9 +91,9 @@ enum HelpMeInServer {
     
     static func printHelp() {
         print("""
-        HelpMeIn Relay Server
+        Cookey Relay Server
         
-        Usage: HelpMeInServer [OPTIONS]
+        Usage: CookeyServer [OPTIONS]
         
         Options:
           -h, --host <host>         Bind host (default: 0.0.0.0)
@@ -109,9 +109,9 @@ enum HelpMeInServer {
           HELPMEIN_PUBLIC_URL       Public URL
         
         Examples:
-          HelpMeInServer
-          HelpMeInServer --port 3000
-          HelpMeInServer --host 127.0.0.1 --port 8080
+          CookeyServer
+          CookeyServer --port 3000
+          CookeyServer --host 127.0.0.1 --port 8080
         """)
     }
     
@@ -133,16 +133,16 @@ enum HelpMeInServer {
 }
 
 func runServer() async throws {
-    let config = HelpMeInServer.parseArguments()
+    let config = CookeyServer.parseArguments()
 
     LoggingSystem.bootstrap {
         var handler = StreamLogHandler.standardOutput(label: $0)
         handler.logLevel = .info
         return handler
     }
-    let logger = Logger(label: "HelpMeInServer")
+    let logger = Logger(label: "CookeyServer")
 
-    logger.info("🚀 HelpMeIn Relay Server starting...")
+    logger.info("🚀 Cookey Relay Server starting...")
     logger.info("   Host: \(config.host)")
     logger.info("   Port: \(config.port)")
     logger.info("   Public URL: \(config.publicURL)")
@@ -159,13 +159,13 @@ func runServer() async throws {
         server: .http1WebSocketUpgrade(webSocketRouter: webSocketRouter),
         configuration: .init(
             address: .hostname(config.host, port: config.port),
-            serverName: "HelpMeIn-Relay/1.0"
+            serverName: "Cookey-Relay/1.0"
         ),
         logger: logger
     )
 
     let cleanupTask = Task {
-        await HelpMeInServer.runCleanupTask(storage: storage, logger: logger)
+        await CookeyServer.runCleanupTask(storage: storage, logger: logger)
     }
     defer { cleanupTask.cancel() }
 

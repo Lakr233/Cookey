@@ -19,7 +19,7 @@ struct APIClient {
 
         guard (200 ..< 300).contains(httpResponse.statusCode) else {
             throw NSError(
-                domain: "HelpMeIn.APIClient",
+                domain: "Cookey.APIClient",
                 code: httpResponse.statusCode,
                 userInfo: [NSLocalizedDescriptionKey: "Unexpected status code \(httpResponse.statusCode)"]
             )

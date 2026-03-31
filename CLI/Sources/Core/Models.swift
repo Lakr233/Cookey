@@ -347,7 +347,7 @@ public struct SessionFile: Codable {
     enum CodingKeys: String, CodingKey {
         case cookies
         case origins
-        case metadata = "_helpmein"
+        case metadata = "_cookey"
     }
 }
 

@@ -3,7 +3,7 @@ import Foundation
 public enum TerminalQRCode {
     public static func deepLink(for manifest: LoginManifest) -> String {
         var components = URLComponents()
-        components.scheme = "helpmein"
+        components.scheme = "cookey"
         components.host = "login"
         components.queryItems = [
             URLQueryItem(name: "rid", value: manifest.rid),
@@ -12,7 +12,7 @@ public enum TerminalQRCode {
             URLQueryItem(name: "pubkey", value: manifest.cliPublicKey)
         ]
 
-        return components.string ?? "helpmein://login?rid=\(manifest.rid)"
+        return components.string ?? "cookey://login?rid=\(manifest.rid)"
     }
 
     public static func render(link: String) -> String {

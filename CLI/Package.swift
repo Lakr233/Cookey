@@ -2,12 +2,12 @@
 import PackageDescription
 
 let package = Package(
-    name: "HelpMeIn",
+    name: "Cookey",
     platforms: [
         .macOS(.v13)
     ],
     products: [
-        .executable(name: "helpmein", targets: ["CLI"]),
+        .executable(name: "cookey", targets: ["CLI"]),
         .library(name: "Core", targets: ["Core"])
     ],
     dependencies: [

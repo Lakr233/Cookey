@@ -54,7 +54,7 @@ struct StatusSummary: Codable {
 }
 
 @main
-enum HelpMeInCLI {
+enum CookeyCLI {
     static func main() {
         do {
             try run()
@@ -88,7 +88,7 @@ enum HelpMeInCLI {
 
     private static func handleLogin(arguments: [String]) throws {
         guard let targetURL = arguments.first, !targetURL.hasPrefix("-") else {
-            throw CLIError.usage("Usage: helpmein login <target_url> [--server URL] [--timeout 300] [--transport ws|poll] [--json] [--no-detach]")
+            throw CLIError.usage("Usage: cookey login <target_url> [--server URL] [--timeout 300] [--transport ws|poll] [--json] [--no-detach]")
         }
 
         let flags = try parseFlags(from: Array(arguments.dropFirst()))
@@ -167,7 +167,7 @@ enum HelpMeInCLI {
         }
 
         if watch, ridArgument == nil, !latest {
-            throw CLIError.usage("helpmein status --watch requires a rid or --latest.")
+            throw CLIError.usage("cookey status --watch requires a rid or --latest.")
         }
 
         if ridArgument == nil, !latest {
@@ -398,8 +398,8 @@ enum HelpMeInCLI {
         print(
             """
             Usage:
-              helpmein login <target_url> [--server URL] [--timeout 300] [--transport ws|poll] [--json] [--no-detach]
-              helpmein status [rid] [--latest] [--watch] [--json]
+              cookey login <target_url> [--server URL] [--timeout 300] [--transport ws|poll] [--json] [--no-detach]
+              cookey status [rid] [--latest] [--watch] [--json]
             """
         )
     }

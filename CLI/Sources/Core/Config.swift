@@ -14,7 +14,7 @@ public struct AppPaths {
     public let daemons: URL
 
     public init(homeDirectory: URL) {
-        let root = homeDirectory.appendingPathComponent(".helpmein", isDirectory: true)
+        let root = homeDirectory.appendingPathComponent(".cookey", isDirectory: true)
         self.root = root
         self.keypair = root.appendingPathComponent("keypair.json")
         self.config = root.appendingPathComponent("config.json")

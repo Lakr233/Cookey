@@ -3,7 +3,7 @@ import Hummingbird
 import HummingbirdWebSocket
 import NIOCore
 
-/// Route handlers for HelpMeIn Relay Server
+/// Route handlers for Cookey Relay Server
 public struct Routes: Sendable {
     let storage: RequestStorage
     let config: ServerConfig

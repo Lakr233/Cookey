@@ -1,6 +1,6 @@
-# HelpMeIn Relay Server
+# Cookey Relay Server
 
-A lightweight, zero-knowledge relay server for HelpMeIn - built with Swift and Hummingbird.
+A lightweight, zero-knowledge relay server for Cookey - built with Swift and Hummingbird.
 
 ## Features
 
@@ -51,7 +51,7 @@ Upload encrypted session (Mobile → Server)
 ## Building
 
 ```bash
-cd /data/projects/HelpMeIn-server
+cd /data/projects/Cookey-server
 swift build
 ```
 
@@ -76,7 +76,7 @@ swift run Server --host 0.0.0.0 --port 8080 --public-url https://relay.example.c
 
 ## Architecture
 
-Based on HelpMeIn Architecture Document sections 6-8 and 11:
+Based on Cookey Architecture Document sections 6-8 and 11:
 
 1. **Zero-Knowledge Design**: Server never sees plaintext cookies/session data
 2. **Ephemeral Storage**: All data expires after TTL (default 5 minutes)
@@ -93,4 +93,4 @@ Based on HelpMeIn Architecture Document sections 6-8 and 11:
 
 ## License
 
-MIT License - Part of the HelpMeIn project
+MIT License - Part of the Cookey project

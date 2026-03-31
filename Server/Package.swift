@@ -2,7 +2,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "HelpMeInServer",
+    name: "CookeyServer",
     platforms: [.macOS(.v14), .iOS(.v17), .tvOS(.v17)],
     dependencies: [
         .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.0.0"),

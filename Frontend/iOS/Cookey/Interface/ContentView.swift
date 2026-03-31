@@ -1,6 +1,6 @@
 //
 //  ContentView.swift
-//  HelpMeIn
+//  Cookey
 //
 //  Created by qaq on 26/3/2026.
 //
@@ -19,7 +19,7 @@ struct ContentView: View {
                 .foregroundStyle(.primary)
                 .padding(.bottom, 36)
 
-            Text("HelpMeIn")
+            Text("Cookey")
                 .font(.system(size: 36, weight: .bold, design: .default))
                 .padding(.bottom, 14)
 
@@ -61,7 +61,7 @@ private struct ScannerPlaceholderView: View {
                     .foregroundStyle(.secondary)
                 Text("Camera scanner coming soon")
                     .font(.title3.weight(.medium))
-                Text("Point your camera at a\n`helpmein login` QR code.")
+                Text("Point your camera at a\n`cookey login` QR code.")
                     .font(.body)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)

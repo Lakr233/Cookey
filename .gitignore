@@ -139,3 +139,4 @@ Temporary Items
 # Local production secrets
 .env.production.local
 *.resolved
+.env

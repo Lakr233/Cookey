@@ -35,3 +35,21 @@ services:
       retries: 5
       start_period: 5s
     restart: unless-stopped
+
+  web-tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: cookey-web-tunnel
+    command: tunnel --no-autoupdate run --token ${CF_WEB_TUNNEL_TOKEN}
+    depends_on:
+      web:
+        condition: service_healthy
+    restart: unless-stopped
+
+  api-tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: cookey-api-tunnel
+    command: tunnel --no-autoupdate run --token ${CF_API_TUNNEL_TOKEN}
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped

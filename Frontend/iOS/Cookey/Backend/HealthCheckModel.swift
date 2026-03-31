@@ -10,7 +10,11 @@ final class HealthCheckModel {
         case failed(String)
     }
 
-    private let client = APIClient(baseURL: AppEnvironment.productionAPIBaseURL)
+    private let client: APIClient
+
+    init(client: APIClient = APIClient(baseURL: AppEnvironment.current)) {
+        self.client = client
+    }
 
     var status: Status = .idle
 

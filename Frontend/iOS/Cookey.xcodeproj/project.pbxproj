@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		A1E8472E0D4E4F8FA8A0B5E1 /* CryptoBox in Frameworks */ = {isa = PBXBuildFile; productRef = A1E8472D0D4E4F8FA8A0B5E1 /* CryptoBox */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		505FF5EA2F756F77005371A1 /* Cookey.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Cookey.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -13,16 +17,34 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		505FF5EC2F756F77005371A1 /* Cookey */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				A1E8472F0D4E4F8FA8A0B5E1 /* Exceptions for "Cookey" folder in "Cookey" target */,
+			);
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
 			path = Cookey;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		A1E8472F0D4E4F8FA8A0B5E1 /* Exceptions for "Cookey" folder in "Cookey" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Resources/Info.plist,
+			);
+			target = 505FF5E92F756F77005371A1 /* Cookey */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		505FF5E72F756F77005371A1 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A1E8472E0D4E4F8FA8A0B5E1 /* CryptoBox in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +87,7 @@
 			);
 			name = Cookey;
 			packageProductDependencies = (
+				A1E8472D0D4E4F8FA8A0B5E1 /* CryptoBox */,
 			);
 			productName = Cookey;
 			productReference = 505FF5EA2F756F77005371A1 /* Cookey.app */;
@@ -94,6 +117,9 @@
 			);
 			mainGroup = 505FF5E12F756F77005371A1;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				A1E8472C0D4E4F8FA8A0B5E1 /* XCLocalSwiftPackageReference "../../Packages/CryptoBox" */,
+			);
 			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
@@ -267,7 +293,8 @@
 				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
 				ENABLE_RESOURCE_ACCESS_USB = NO;
 				ENABLE_USER_SELECTED_FILES = readwrite;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Cookey/Resources/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Help Me In";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
@@ -326,7 +353,8 @@
 				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
 				ENABLE_RESOURCE_ACCESS_USB = NO;
 				ENABLE_USER_SELECTED_FILES = readwrite;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Cookey/Resources/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Help Me In";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
@@ -382,6 +410,21 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		A1E8472C0D4E4F8FA8A0B5E1 /* XCLocalSwiftPackageReference "../../Packages/CryptoBox" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../../Packages/CryptoBox;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A1E8472D0D4E4F8FA8A0B5E1 /* CryptoBox */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1E8472C0D4E4F8FA8A0B5E1 /* XCLocalSwiftPackageReference "../../Packages/CryptoBox" */;
+			productName = CryptoBox;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 505FF5E22F756F77005371A1 /* Project object */;
 }

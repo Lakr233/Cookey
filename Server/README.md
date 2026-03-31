@@ -70,9 +70,9 @@ swift run Server --host 0.0.0.0 --port 8080 --public-url https://relay.example.c
 
 ## Environment Variables
 
-- `HELPMEIN_HOST` - Bind host
-- `HELPMEIN_PORT` - Bind port
-- `HELPMEIN_PUBLIC_URL` - Public URL for QR codes
+- `COOKEY_HOST` - Bind host
+- `COOKEY_PORT` - Bind port
+- `COOKEY_PUBLIC_URL` - Public URL for QR codes
 
 ## Architecture
 

@@ -5,9 +5,9 @@ services:
       dockerfile: Dockerfile
     container_name: cookey-api
     environment:
-      HELPMEIN_HOST: 0.0.0.0
-      HELPMEIN_PORT: 5800
-      HELPMEIN_PUBLIC_URL: https://api.cookey.sh
+      COOKEY_HOST: 0.0.0.0
+      COOKEY_PORT: 5800
+      COOKEY_PUBLIC_URL: https://api.cookey.sh
     ports:
       - "5800:5800"
     healthcheck:

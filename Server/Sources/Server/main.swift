@@ -70,13 +70,13 @@ enum CookeyServer {
         }
         
         // Use environment variables as fallback
-        if let envHost = ProcessInfo.processInfo.environment["HELPMEIN_HOST"] {
+        if let envHost = ProcessInfo.processInfo.environment["COOKEY_HOST"] {
             host = envHost
         }
-        if let envPort = ProcessInfo.processInfo.environment["HELPMEIN_PORT"], let p = Int(envPort) {
+        if let envPort = ProcessInfo.processInfo.environment["COOKEY_PORT"], let p = Int(envPort) {
             port = p
         }
-        if let envPublicURL = ProcessInfo.processInfo.environment["HELPMEIN_PUBLIC_URL"] {
+        if let envPublicURL = ProcessInfo.processInfo.environment["COOKEY_PUBLIC_URL"] {
             publicURL = envPublicURL
         }
         
@@ -104,9 +104,9 @@ enum CookeyServer {
           --help                    Show this help message
         
         Environment Variables:
-          HELPMEIN_HOST             Bind host
-          HELPMEIN_PORT             Bind port
-          HELPMEIN_PUBLIC_URL       Public URL
+          COOKEY_HOST             Bind host
+          COOKEY_PORT             Bind port
+          COOKEY_PUBLIC_URL       Public URL
         
         Examples:
           CookeyServer

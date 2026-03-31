@@ -1,43 +1,40 @@
-# Cookey 架构设计
+# Cookey Architecture
 
-## 1. 设计目标
+## 1. Goals
 
-Cookey 的目标不是做一个通用账号系统，而是做一个极简、可自托管、以 CLI 为中心的“扫码登录并回收浏览器会话”工具。
+Cookey is not a general-purpose authentication system. It is a minimal, self-hostable, CLI-first tool for scanning a QR code on mobile, logging in to a target website, and delivering the resulting browser session back to the local terminal.
 
-核心约束如下：
+Core constraints:
 
-- 无 APNs 依赖，无设备注册流程。
-- 服务端零知识，只中转加密后的 session。
-- 默认单机内存存储，可选长轮询或 WebSocket。
-- 单次 session 负载上限 1 MB。
-- CLI 本地持久化最少，但必须可恢复、可检查、可导出。
-
----
-
-## 2. 组件与职责
-
-系统由三部分组成：
-
-1. CLI
-   运行在用户终端，负责生成身份、公钥发布、等待 session、解密并落盘。
-
-2. Mobile App
-   扫码后在移动端完成目标网站登录，提取 cookies 和 localStorage，再使用 CLI 公钥加密上传。
-
-3. Relay Server
-   只保存短时元数据和加密 session，不理解明文 session 内容，不持久化到数据库。
-
-信任边界：
-
-- 用户信任本地 CLI 机器。
-- 用户信任自己的移动端设备。
-- 不信任 Relay Server。
+- No APNs dependency. No device registration flow.
+- Zero-knowledge relay. The server only forwards encrypted session data.
+- In-memory storage by default. Optional long-polling or WebSocket transport.
+- Single session payload capped at 1 MB.
+- CLI local state is minimal but must be recoverable, inspectable, and exportable.
 
 ---
 
-## 3. 本地目录结构
+## 2. Components
 
-CLI 的所有本地状态放在 `~/.cookey/` 下：
+The system has three parts:
+
+1. **CLI** — runs on the user's terminal. Generates the identity keypair, publishes the public key, waits for the session, decrypts it, and writes it to disk.
+
+2. **Mobile App** — after scanning the QR code, opens the target website in an in-app browser, extracts cookies and `localStorage`, encrypts the session with the CLI's public key, and uploads it to the relay.
+
+3. **Relay Server** — stores only short-lived metadata and the encrypted session blob. Never interprets plaintext session content. Never persists to a database.
+
+Trust boundaries:
+
+- The user trusts their local CLI machine.
+- The user trusts their own mobile device.
+- The relay server is untrusted.
+
+---
+
+## 3. Local Directory Layout
+
+All CLI state lives under `~/.cookey/`:
 
 ```text
 ~/.cookey/
@@ -49,16 +46,16 @@ CLI 的所有本地状态放在 `~/.cookey/` 下：
     └── {rid}.json
 ```
 
-权限要求：
+Permission requirements:
 
-- `~/.cookey/` 为 `0700`
-- `keypair.json` 为 `0600`
-- `sessions/*.json` 为 `0600`
-- `daemons/*.json` 为 `0600`
+- `~/.cookey/` — `0700`
+- `keypair.json` — `0600`
+- `sessions/*.json` — `0600`
+- `daemons/*.json` — `0600`
 
 ### 3.1 keypair.json
 
-首次启动生成长期身份密钥，保存为 `~/.cookey/keypair.json`：
+A long-term identity keypair is generated on first run and saved to `~/.cookey/keypair.json`:
 
 ```json
 {
@@ -70,15 +67,15 @@ CLI 的所有本地状态放在 `~/.cookey/` 下：
 }
 ```
 
-说明：
+Notes:
 
-- 这里保存的是 CLI 的长期 `ed25519` 身份密钥。
-- 在会话加密时，运行时将该密钥按标准方式转换为 `x25519` 用于 ECDH。
-- 这样本地只需要一个稳定身份文件，不需要为每次 `login` 单独持久化私钥。
+- This stores the CLI's long-term `ed25519` identity key.
+- At session encryption time, the runtime converts this key to an `x25519` key for ECDH.
+- This way only one stable identity file is needed locally; no per-`login` private key persistence is required.
 
 ### 3.2 config.json
 
-可选配置文件：
+Optional configuration file:
 
 ```json
 {
@@ -91,7 +88,7 @@ CLI 的所有本地状态放在 `~/.cookey/` 下：
 
 ### 3.3 daemons/{rid}.json
 
-后台等待进程的描述文件：
+Descriptor file for a background waiting process:
 
 ```json
 {
@@ -109,85 +106,83 @@ CLI 的所有本地状态放在 `~/.cookey/` 下：
 
 ---
 
-## 4. CLI 启动流程
+## 4. CLI Bootstrap
 
-每次 CLI 入口启动时都执行同一套 bootstrap 逻辑：
+Every CLI entry point runs the same bootstrap sequence:
 
-1. 创建 `~/.cookey/` 根目录，权限设为 `0700`。
-2. 检查 `~/.cookey/keypair.json` 是否存在。
-3. 如果不存在，生成 `ed25519 keypair`，写入 `~/.cookey/keypair.json`。
-4. 生成设备指纹。
-5. 创建 `~/.cookey/sessions/` 目录。
-6. 创建 `~/.cookey/daemons/` 目录。
-7. 读取 `config.json`，加载默认 server、transport、timeout。
-8. 清理明显失效的 daemon 描述文件，例如 PID 不存在且状态仍为 `waiting`。
+1. Create `~/.cookey/` with permissions `0700`.
+2. Check whether `~/.cookey/keypair.json` exists.
+3. If not, generate an `ed25519` keypair and write it to `~/.cookey/keypair.json`.
+4. Generate the device fingerprint.
+5. Create `~/.cookey/sessions/`.
+6. Create `~/.cookey/daemons/`.
+7. Read `config.json` and load defaults for server, transport, and timeout.
+8. Clean up obviously stale daemon descriptors (e.g. PID no longer exists but status is still `waiting`).
 
-### 4.1 设备指纹
+### 4.1 Device Fingerprint
 
-设备指纹用于诊断、审计和多设备区分，不用于加密主流程，不应作为认证因子。
+The device fingerprint is used for diagnostics, auditing, and multi-device differentiation. It is not used in the encryption flow and must not be treated as an authentication factor.
 
-推荐输入：
+Recommended inputs:
 
 - `public_key`
 - `hostname`
 - `os`
 - `arch`
-- 可用时的 `machine-id`
+- `machine-id` when available
 
-推荐算法：
+Recommended algorithm:
 
 ```text
 fingerprint = base64url(sha256(public_key || hostname || os || arch || machine_id))
 ```
 
-要求：
+Requirements:
 
-- 设备指纹稳定但不需要保密。
-- 缺少 `machine-id` 时允许退化到 `public_key + hostname + os + arch`。
-- 设备指纹进入 login manifest，并写入 session 元数据。
+- The fingerprint must be stable but does not need to be secret.
+- When `machine-id` is unavailable, fall back to `public_key + hostname + os + arch`.
+- The fingerprint is included in the login manifest and written to session metadata.
 
 ---
 
-## 5. login 命令
+## 5. login Command
 
-`login` 是主入口，负责发起一次新的会话接收流程。
-
-建议命令行：
+`login` is the main entry point. It initiates a new session-receive flow.
 
 ```bash
 cookey login <target_url> [--server URL] [--timeout 300] [--transport ws|poll] [--json] [--no-detach]
 ```
 
-### 5.1 login 命令职责
+### 5.1 Responsibilities
 
-执行 `cookey login` 时，CLI 需要完成以下动作：
+When `cookey login` is run, the CLI must:
 
-1. 运行启动 bootstrap。
-2. 生成新的请求 ID，记为 `rid`。
-3. 读取本地 `ed25519` 公钥，并转换出本次会话可用的 `x25519` 公钥。
-4. 构造 login manifest。
-5. 将 manifest 注册到 Relay Server。
-6. 输出二维码、深链接或可手输短码。
-7. fork 子进程在后台等待 session。
-8. 父进程立即退出。
+1. Run bootstrap.
+2. Generate a new request ID (`rid`).
+3. Read the local `ed25519` public key and derive the `x25519` public key for this session.
+4. Build the login manifest.
+5. Register the manifest with the relay server.
+6. Output a QR code, deep link, or manually-typeable short code.
+7. Fork a child process to wait for the session in the background.
+8. Exit the parent process immediately.
 
-### 5.2 rid 生成
+### 5.2 rid Generation
 
-`rid` 必须高熵且不可预测，建议：
+`rid` must be high-entropy and unpredictable:
 
-- 128 bit 随机数
-- 使用 `base62` 或 `base32 crockford` 编码
-- 长度控制在 20 到 26 个字符之间
+- 128-bit random value
+- Encoded with `base62` or `base32 crockford`
+- 20–26 characters long
 
-示例：
+Example:
 
 ```text
 r_8GQx8tY0j8x3Yw2N
 ```
 
-### 5.3 login manifest
+### 5.3 Login Manifest
 
-CLI 发送到 Relay Server 的 pending request 元数据：
+Metadata sent by the CLI to the relay when registering a pending request:
 
 ```json
 {
@@ -202,59 +197,59 @@ CLI 发送到 Relay Server 的 pending request 元数据：
 }
 ```
 
-说明：
+Notes:
 
-- `target_url` 可以直接放进二维码，也可以只在 server 侧保留短时元数据。
-- `cli_public_key` 是移动端加密 session 时使用的接收方公钥。
-- `device_fingerprint` 只用于识别请求来自哪个 CLI 设备。
+- `target_url` may be embedded directly in the QR code or kept only as short-lived server-side metadata.
+- `cli_public_key` is the recipient public key the mobile app uses to encrypt the session.
+- `device_fingerprint` identifies which CLI device the request originated from.
 
-### 5.4 用户可见输出
+### 5.4 User-Visible Output
 
-`login` 至少输出以下信息：
+`login` must output at minimum:
 
 - `rid`
 - `target_url`
 - `server_url`
-- 二维码内容
-- 手动输入码或深链接
-- 后台 daemon PID
+- QR code content
+- Deep link or manually-typeable code
+- Background daemon PID
 
-建议二维码内容：
+Recommended QR code content:
 
 ```text
 cookey://login?rid=<rid>&server=<server_url>&target=<target_url>&pubkey=<cli_public_key>
 ```
 
-### 5.5 父进程行为
+### 5.5 Parent Process Behaviour
 
-父进程只负责“发起”和“交出控制权”：
+The parent process is only responsible for initiating the request and handing off control:
 
-1. 完成 bootstrap。
-2. 生成并注册 pending request。
-3. fork 子进程。
-4. 确认子进程 PID 已写入 `~/.cookey/daemons/{rid}.json`。
-5. 打印 `rid` 和 PID。
-6. 立即退出，退出码为 `0`。
+1. Complete bootstrap.
+2. Generate and register the pending request.
+3. Fork the child process.
+4. Confirm the child PID has been written to `~/.cookey/daemons/{rid}.json`.
+5. Print `rid` and PID.
+6. Exit with code `0`.
 
-如果 fork、注册或 PID 文件写入失败，父进程必须直接返回非零退出码。
+If fork, registration, or PID file write fails, the parent must exit with a non-zero code.
 
 ---
 
-## 6. 后台进程 fork/detach
+## 6. Background Process fork/detach
 
-这是 `login` 的核心运行模型。
+This is the core execution model for `login`.
 
-### 6.1 进程模型
+### 6.1 Process Model
 
-要求如下：
+Requirements:
 
-- 主进程 fork 子进程后立即退出。
-- 子进程调用 `setsid()` 脱离控制终端。
-- 子进程关闭或重定向标准输入输出。
-- 子进程进入后台等待 session。
-- 子进程 PID 写入 `~/.cookey/daemons/`。
+- The parent process exits immediately after forking.
+- The child process calls `setsid()` to detach from the controlling terminal.
+- The child process closes or redirects stdio.
+- The child process enters a background wait for the session.
+- The child PID is written to `~/.cookey/daemons/`.
 
-推荐流程：
+Recommended flow:
 
 ```text
 CLI parent
@@ -268,7 +263,7 @@ CLI child
   -> setsid()
   -> redirect stdio
   -> write daemon descriptor
-  -> connect server
+  -> connect to server
   -> wait for encrypted session
   -> decrypt
   -> write ~/.cookey/sessions/{rid}.json
@@ -276,11 +271,11 @@ CLI child
   -> exit(0)
 ```
 
-### 6.2 daemon 描述文件语义
+### 6.2 Daemon Descriptor Semantics
 
-`~/.cookey/daemons/{rid}.json` 不是日志，而是状态单据。
+`~/.cookey/daemons/{rid}.json` is not a log file — it is a state receipt.
 
-允许的 `status`：
+Allowed `status` values:
 
 - `waiting`
 - `receiving`
@@ -288,111 +283,104 @@ CLI child
 - `expired`
 - `error`
 
-状态更新规则：
+State transition rules:
 
-- 启动后立刻写 `waiting`
-- 收到服务器推送但尚未落盘时写 `receiving`
-- `sessions/{rid}.json` 原子写入成功后写 `ready`
-- 超时后写 `expired`
-- 任意失败写 `error`
+- Write `waiting` immediately on startup.
+- Write `receiving` when a server push has been received but not yet flushed to disk.
+- Write `ready` after `sessions/{rid}.json` has been atomically written.
+- Write `expired` on timeout.
+- Write `error` on any failure.
 
-### 6.3 等待 session 的传输方式
+### 6.3 Transport
 
-后台子进程通过以下两种方式之一等待 session：
+The background child process waits for the session using one of two transports:
 
-1. WebSocket
-   连接 `GET /v1/requests/{rid}/ws`，等待服务器推送状态与加密 payload。
+1. **WebSocket** — connect to `GET /v1/requests/{rid}/ws` and wait for server-pushed status and encrypted payload.
+2. **Long polling** — loop on `GET /v1/requests/{rid}/wait?timeout=30` until `ready`, `expired`, or a timeout is returned.
 
-2. 长轮询
-   循环请求 `GET /v1/requests/{rid}/wait?timeout=30`，直到返回 `ready`、`expired` 或超时。
+Requirements:
 
-要求：
+- WebSocket is preferred.
+- Long polling is the compatibility fallback.
+- Both transports must return the same final payload structure.
 
-- WebSocket 是首选。
-- 长轮询是兼容回退。
-- 两种模式返回的最终 payload 结构必须一致。
+### 6.4 Local Processing After Session Receipt
 
-### 6.4 收到 session 后的本地处理
+After the background child receives the encrypted session:
 
-后台子进程在收到加密 session 后执行：
+1. Validate `rid`, version, and payload size.
+2. Decrypt the session using the local private key.
+3. Verify the decrypted result contains valid Playwright `cookies` and `origins`.
+4. Atomically write the session to `~/.cookey/sessions/{rid}.json`.
+5. Update daemon status to `ready`.
+6. Delete the consumed encrypted payload from the relay, or confirm the server has already deleted it.
 
-1. 校验 `rid`、版本号、payload 大小。
-2. 使用本地私钥解密 session。
-3. 校验解密结果是否包含合法的 Playwright `cookies` 和 `origins`。
-4. 将 session 原子写入 `~/.cookey/sessions/{rid}.json`。
-5. 更新 daemon 状态为 `ready`。
-6. 从 Relay Server 删除已消费的加密包，或确认服务端已自动删除。
+Atomic write requirements:
 
-原子写入要求：
+- Write to `~/.cookey/sessions/{rid}.json.tmp`.
+- `fsync`.
+- `rename` to the final filename.
 
-- 先写 `~/.cookey/sessions/{rid}.json.tmp`
-- `fsync`
-- `rename` 到最终文件名
+### 6.5 Timeout and Exit
 
-### 6.5 超时与退出
+The child process lifetime matches `login --timeout` (default 300 seconds).
 
-子进程的默认生命周期与 `login --timeout` 一致，建议默认 300 秒。
+Exit codes:
 
-退出条件：
-
-- 成功落盘 session 后退出 `0`
-- 请求过期后退出 `3`
-- 网络错误重试耗尽后退出 `4`
-- 解密或格式校验失败后退出 `5`
+- `0` — session successfully written to disk.
+- `3` — request expired.
+- `4` — network errors exhausted all retries.
+- `5` — decryption or format validation failed.
 
 ---
 
-## 7. status 命令
+## 7. status Command
 
-`status` 用于查询请求或 session 的当前状态。
-
-建议命令行：
+`status` queries the current state of a request or session.
 
 ```bash
 cookey status [rid] [--latest] [--watch] [--json]
 ```
 
-### 7.1 status 行为
+### 7.1 Behaviour
 
-如果提供 `rid`：
+If `rid` is provided:
 
-1. 先检查 `~/.cookey/sessions/{rid}.json` 是否存在。
-2. 如果存在，状态为 `ready`。
-3. 否则检查 `~/.cookey/daemons/{rid}.json`。
-4. 如果 daemon 文件存在，再检查 PID 是否还活着。
-5. 必要时向 server 查询远端状态。
+1. Check whether `~/.cookey/sessions/{rid}.json` exists.
+2. If it does, status is `ready`.
+3. Otherwise check `~/.cookey/daemons/{rid}.json`.
+4. If the daemon file exists, check whether the PID is still alive.
+5. Query the server for remote status if needed.
 
-如果不提供 `rid`：
+If `rid` is not provided:
 
-- 默认显示最近的 pending daemon 和 ready session 摘要。
+- Show a summary of the most recent pending daemon and ready sessions.
 
-### 7.2 状态判定
+### 7.2 Status Values
 
-建议对外暴露以下状态：
+| Status | Meaning |
+|--------|---------|
+| `waiting` | Daemon started, waiting for mobile upload |
+| `receiving` | Server payload received; decrypting or writing to disk |
+| `ready` | Local session file exists |
+| `expired` | Request expired; no session received |
+| `orphaned` | Daemon descriptor exists but PID is gone and session does not exist |
+| `error` | Background process failed |
+| `missing` | Not found locally or on the server |
 
-| 状态 | 含义 |
-|------|------|
-| `waiting` | daemon 已启动，正在等待移动端上传 |
-| `receiving` | server 已返回 payload，正在解密或落盘 |
-| `ready` | 本地 session 文件已存在 |
-| `expired` | 请求已过期，未收到 session |
-| `orphaned` | daemon 描述文件存在，但 PID 不存在且 session 也不存在 |
-| `error` | 后台流程失败 |
-| `missing` | 本地和服务端都找不到该 rid |
+### 7.3 Watch Mode
 
-### 7.3 watch 模式
+`cookey status <rid> --watch` replaces manual polling.
 
-`cookey status <rid> --watch` 的目标是替代用户自己轮询。
+Behaviour:
 
-行为：
+- Refresh local state every 1–2 seconds.
+- If transport is WebSocket, subscribe to server status directly.
+- Exit when status reaches `ready`, `expired`, or `error`.
 
-- 每 1 到 2 秒刷新一次本地状态。
-- 如果 transport 为 WebSocket，也可以直接订阅 server 状态。
-- 当状态到达 `ready`、`expired` 或 `error` 时退出。
+### 7.4 Machine-Readable Output
 
-### 7.4 机器可读输出
-
-`--json` 输出建议：
+`--json` output:
 
 ```json
 {
@@ -407,43 +395,39 @@ cookey status [rid] [--latest] [--watch] [--json]
 
 ---
 
-## 8. export 命令
+## 8. export Command
 
-`export` 用于将本地 session 导出为 Playwright 直接可用的 `storageState` 文件，或导出完整原始 envelope。
-
-建议命令行：
+`export` writes the local session as a Playwright-ready `storageState` file, or dumps the full raw envelope.
 
 ```bash
 cookey export <rid> [--format playwright|raw] [--out FILE|-] [--pretty]
 ```
 
-### 8.1 默认行为
+### 8.1 Default Behaviour
 
-默认格式为 `playwright`。
+Default format is `playwright`:
 
-也就是说：
+- Read `~/.cookey/sessions/{rid}.json`.
+- Output only top-level `cookies` and `origins`.
+- Strip `_cookey` metadata.
 
-- 读取 `~/.cookey/sessions/{rid}.json`
-- 只输出顶层 `cookies` 和 `origins`
-- 丢弃 `_cookey` 元数据
-
-默认输出文件建议：
+Default output filename:
 
 ```text
 ./storage-state.<rid>.json
 ```
 
-### 8.2 raw 行为
+### 8.2 Raw Behaviour
 
-`--format raw` 导出 session 文件的完整 JSON，包括：
+`--format raw` exports the full session JSON, including:
 
-- Playwright 兼容会话体
-- Cookey 元数据
-- 来源、时间戳、设备指纹、server 信息
+- Playwright-compatible session body.
+- Cookey metadata.
+- Origin, timestamps, device fingerprint, server info.
 
-### 8.3 Playwright 集成方式
+### 8.3 Playwright Integration
 
-导出的 `playwright` 文件应可直接用于：
+The exported `playwright` file can be used directly:
 
 ```ts
 import { chromium } from '@playwright/test';
@@ -454,26 +438,26 @@ const context = await browser.newContext({
 });
 ```
 
-### 8.4 export 失败条件
+### 8.4 Failure Conditions
 
-以下情况返回非零退出码：
+Non-zero exit code when:
 
-- `rid` 对应 session 不存在
-- session JSON 非法
-- 缺少 `cookies` 或 `origins`
-- 输出路径不可写
+- No session found for the given `rid`.
+- Session JSON is malformed.
+- `cookies` or `origins` fields are missing.
+- Output path is not writable.
 
 ---
 
-## 9. Session JSON 格式
+## 9. Session JSON Format
 
-本地 session 文件路径固定为：
+Local session files are stored at:
 
 ```text
 ~/.cookey/sessions/{rid}.json
 ```
 
-该文件必须对 Playwright 友好。推荐格式为“Playwright 顶层结构 + Cookey 元数据命名空间”：
+The file must be Playwright-compatible. Recommended format: Playwright top-level structure plus a `_cookey` metadata namespace:
 
 ```json
 {
@@ -493,14 +477,8 @@ const context = await browser.newContext({
     {
       "origin": "https://example.com",
       "localStorage": [
-        {
-          "name": "authToken",
-          "value": "secret-token"
-        },
-        {
-          "name": "theme",
-          "value": "dark"
-        }
+        { "name": "authToken", "value": "secret-token" },
+        { "name": "theme", "value": "dark" }
       ]
     }
   ],
@@ -519,27 +497,27 @@ const context = await browser.newContext({
 }
 ```
 
-### 9.1 兼容性规则
+### 9.1 Compatibility Rules
 
-- `cookies` 和 `origins` 字段的结构必须与 Playwright `storageState` 一致。
-- Cookey 自有元数据必须放在 `_cookey` 下，避免和 Playwright 字段冲突。
-- `export --format playwright` 时必须剥离 `_cookey`。
+- `cookies` and `origins` must match the Playwright `storageState` structure exactly.
+- All Cookey-specific metadata must be placed under `_cookey` to avoid conflicting with Playwright fields.
+- `export --format playwright` must strip `_cookey`.
 
-### 9.2 字段约束
+### 9.2 Field Constraints
 
-| 字段 | 要求 |
-|------|------|
-| `cookies` | 数组，可为空，不可缺省 |
-| `origins` | 数组，可为空，不可缺省 |
-| `_cookey.version` | 整数，当前为 `1` |
-| `_cookey.rid` | 与文件名一致 |
-| `_cookey.device_fingerprint` | 启动阶段生成 |
-| `_cookey.captured_at` | 移动端抓取完成时间 |
-| `_cookey.received_at` | CLI 落盘时间 |
+| Field | Requirement |
+|-------|-------------|
+| `cookies` | Array; may be empty; must be present |
+| `origins` | Array; may be empty; must be present |
+| `_cookey.version` | Integer; currently `1` |
+| `_cookey.rid` | Must match the filename |
+| `_cookey.device_fingerprint` | Generated during bootstrap |
+| `_cookey.captured_at` | Timestamp when mobile finished capturing |
+| `_cookey.received_at` | Timestamp when CLI wrote the file |
 
 ---
 
-## 10. 完整 CLI 命令参考
+## 10. CLI Command Reference
 
 ### 10.1 login
 
@@ -547,11 +525,7 @@ const context = await browser.newContext({
 cookey login <target_url> [--server URL] [--timeout SEC] [--transport ws|poll] [--json] [--no-detach]
 ```
 
-作用：
-
-- 创建一次新的登录接收请求
-- 启动后台 daemon 等待 session
-- 输出 `rid`、二维码和 PID
+Creates a new login-receive request, starts a background daemon to wait for the session, and outputs the `rid`, QR code, and daemon PID.
 
 ### 10.2 status
 
@@ -559,10 +533,7 @@ cookey login <target_url> [--server URL] [--timeout SEC] [--transport ws|poll] [
 cookey status [rid] [--latest] [--watch] [--json]
 ```
 
-作用：
-
-- 查询某个 `rid` 的状态
-- 或列出最近请求状态摘要
+Queries the status of a specific `rid`, or shows a summary of recent requests.
 
 ### 10.3 export
 
@@ -570,10 +541,7 @@ cookey status [rid] [--latest] [--watch] [--json]
 cookey export <rid> [--format playwright|raw] [--out FILE|-] [--pretty]
 ```
 
-作用：
-
-- 导出 Playwright `storageState`
-- 或导出本地完整 session 文件
+Exports a Playwright `storageState` file, or the full raw local session.
 
 ### 10.4 list
 
@@ -581,15 +549,7 @@ cookey export <rid> [--format playwright|raw] [--out FILE|-] [--pretty]
 cookey list [--sessions] [--daemons] [--state waiting|ready|expired|error] [--json]
 ```
 
-作用：
-
-- 列出本地 session 文件
-- 列出后台 daemon 单据
-- 支持按状态过滤
-
-默认行为：
-
-- 同时显示最近 session 与 daemon
+Lists local session files and/or daemon descriptors, with optional state filtering. Default: show both sessions and daemons.
 
 ### 10.5 rm
 
@@ -599,16 +559,7 @@ cookey rm --expired
 cookey rm --all
 ```
 
-作用：
-
-- 删除本地 session 文件
-- 删除 daemon 描述文件
-- 必要时杀掉对应后台进程
-
-规则：
-
-- `--kill` 用于结束仍在运行的 daemon
-- 没有 `--force` 时，不删除运行中的 daemon
+Deletes a local session file and/or daemon descriptor. `--kill` terminates a still-running daemon. Without `--force`, running daemons are not deleted.
 
 ### 10.6 config
 
@@ -618,12 +569,7 @@ cookey config set <key> <value>
 cookey config list
 ```
 
-建议支持的 key：
-
-- `default_server`
-- `transport`
-- `timeout_seconds`
-- `session_retention_days`
+Supported keys: `default_server`, `transport`, `timeout_seconds`, `session_retention_days`.
 
 ### 10.7 server
 
@@ -631,34 +577,23 @@ cookey config list
 cookey server [--listen 0.0.0.0:8080] [--public-url URL] [--ttl 300] [--max-payload 1048576]
 ```
 
-作用：
-
-- 启动自托管 Relay Server
-- 使用内存保存 pending request 和加密 session
-
-要求：
-
-- 默认 TTL 300 秒
-- 默认最大 payload 1 MB
-- 支持 WebSocket 和长轮询
+Starts a self-hosted relay server with in-memory storage. Default TTL: 300 s. Default max payload: 1 MB. Supports WebSocket and long polling.
 
 ---
 
-## 11. Relay Server 协议
+## 11. Relay Server Protocol
 
-服务端协议只解决三件事：
+The server protocol handles exactly three things:
 
-1. 注册 pending request
-2. 接收移动端上传的加密 session
-3. 将加密 session 交付给等待中的 CLI daemon
+1. Register a pending request.
+2. Accept an encrypted session upload from mobile.
+3. Deliver the encrypted session to the waiting CLI daemon.
 
-### 11.1 API 设计
+### 11.1 API
 
 #### `POST /v1/requests`
 
-注册一个 pending request。
-
-请求体：
+Register a pending request.
 
 ```json
 {
@@ -672,21 +607,19 @@ cookey server [--listen 0.0.0.0:8080] [--public-url URL] [--ttl 300] [--max-payl
 
 #### `GET /v1/requests/{rid}`
 
-查询 request 是否存在，以及当前状态。
+Query whether the request exists and its current status.
 
 #### `GET /v1/requests/{rid}/ws`
 
-CLI daemon 使用 WebSocket 等待状态变化和 session 交付。
+CLI daemon connects via WebSocket to wait for status changes and session delivery.
 
 #### `GET /v1/requests/{rid}/wait?timeout=30`
 
-CLI daemon 使用长轮询等待 session。
+CLI daemon long-polls for the session.
 
 #### `POST /v1/requests/{rid}/session`
 
-移动端上传加密 session。
-
-请求体：
+Mobile uploads the encrypted session.
 
 ```json
 {
@@ -699,86 +632,86 @@ CLI daemon 使用长轮询等待 session。
 }
 ```
 
-### 11.2 服务端存储约束
+### 11.2 Server Storage Constraints
 
-服务端只保留：
+The server stores only:
 
-- pending request 元数据
-- 加密后的 session payload
-- 过期时间
+- Pending request metadata.
+- The encrypted session payload.
+- Expiry timestamps.
 
-服务端不保留：
+The server never stores:
 
-- 明文 cookies
-- 明文 localStorage
-- CLI 私钥
-- 用户密码
+- Plaintext cookies.
+- Plaintext `localStorage`.
+- CLI private keys.
+- User passwords.
 
-### 11.3 交付语义
+### 11.3 Delivery Semantics
 
-要求使用“一次上传，一次交付”模型：
+One-upload, one-delivery model:
 
-- 移动端上传成功后，server 将状态切到 `ready`
-- CLI daemon 成功收到 payload 后，server 立即删除加密 session
-- 超时未消费则 TTL 到期自动删除
+- After a successful mobile upload the server transitions status to `ready`.
+- After the CLI daemon successfully receives the payload, the server immediately deletes the encrypted session.
+- If not consumed before TTL, the session is automatically deleted.
 
 ---
 
-## 12. 安全与实现约束
+## 12. Security and Implementation Constraints
 
-### 12.1 加密模型
+### 12.1 Encryption Model
 
-推荐模型：
+Recommended model:
 
-- CLI 长期保存 `ed25519` 身份密钥
-- 运行时转换为 `x25519` 密钥用于 ECDH
-- 移动端为每次上传生成临时 `x25519` 密钥
-- 使用共享密钥加密 session payload
+- CLI stores a long-term `ed25519` identity key.
+- At runtime, convert to `x25519` for ECDH.
+- Mobile generates an ephemeral `x25519` keypair per upload.
+- Encrypt the session payload with the ECDH shared secret.
 
-这样可以同时满足：
+This achieves:
 
-- CLI 身份稳定
-- 每次上传前向隔离
-- 服务端无法解密
+- Stable CLI identity.
+- Per-upload forward secrecy.
+- Server-side zero knowledge.
 
-### 12.2 明文落盘边界
+### 12.2 Plaintext Storage Boundary
 
-只有本地 CLI 主机允许保存明文 session，且只保存到：
+Only the local CLI machine may store plaintext sessions, and only at:
 
 ```text
 ~/.cookey/sessions/{rid}.json
 ```
 
-服务端绝不保存明文。
+The server must never store plaintext.
 
-### 12.3 容错原则
+### 12.3 Fault Tolerance
 
-- daemon 文件损坏时，`status` 必须返回 `error` 或 `orphaned`，不能静默忽略。
-- session 文件写入失败时，不得把 daemon 状态更新为 `ready`。
-- `export` 只依赖本地 session 文件，不依赖 server 在线。
+- If a daemon descriptor is corrupt, `status` must return `error` or `orphaned`; it must not fail silently.
+- If writing the session file fails, the daemon status must not be updated to `ready`.
+- `export` depends only on the local session file; it must not require the server to be online.
 
-### 12.4 清理策略
+### 12.4 Cleanup Policy
 
-建议提供以下清理能力：
+Recommended cleanup capabilities:
 
 - `cookey rm --expired`
-- 启动时清理孤儿 daemon 描述文件
-- 按 `session_retention_days` 清理旧 session
+- Clean up orphaned daemon descriptors on startup.
+- Purge old sessions based on `session_retention_days`.
 
 ---
 
-## 13. 结论
+## 13. Summary
 
-这个版本的 Cookey 架构以 CLI 为核心，重点不是“浏览器自动化能力”，而是“可靠地把一次移动端登录结果送回本地终端，并以 Playwright 可消费的格式保存下来”。
+This version of Cookey's architecture is CLI-first. The goal is not "browser automation capabilities" — it is "reliably deliver a mobile login result to the local terminal and save it in a Playwright-consumable format."
 
-关键决策如下：
+Key decisions:
 
-- CLI 首次启动生成长期 `ed25519` 身份密钥。
-- 每次启动生成设备指纹，并确保 `sessions/` 与 `daemons/` 目录存在。
-- `login` 只负责发起请求并后台等待，不阻塞前台终端。
-- 后台子进程通过 WebSocket 或长轮询接收 session。
-- 收到 session 后固定写入 `~/.cookey/sessions/{rid}.json`。
-- session 文件顶层保持 Playwright 兼容，CLI 元数据放在 `_cookey` 命名空间。
-- `status`、`export`、`list`、`rm`、`config`、`server` 构成完整的 CLI 可操作面。
+- CLI generates a long-term `ed25519` identity key on first run.
+- Each run generates a device fingerprint and ensures `sessions/` and `daemons/` directories exist.
+- `login` only initiates the request and waits in the background; it does not block the foreground terminal.
+- The background child receives the session via WebSocket or long polling.
+- Sessions are always written to `~/.cookey/sessions/{rid}.json`.
+- Session files are Playwright-compatible at the top level; CLI metadata lives in `_cookey`.
+- `status`, `export`, `list`, `rm`, `config`, and `server` form the complete CLI surface.
 
-这套设计保持了极简、零知识和可自托管三个目标，同时把 CLI 的本地状态管理定义清楚，便于后续直接实现。
+This design preserves the three core goals — minimal, zero-knowledge, self-hostable — while defining CLI local state management clearly enough to implement directly.

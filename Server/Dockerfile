@@ -18,9 +18,9 @@ RUN apt-get update \
 
 COPY --from=build /app/.build/release/Server /usr/local/bin/Server
 
-ENV HELPMEIN_HOST=0.0.0.0
-ENV HELPMEIN_PORT=5800
-ENV HELPMEIN_PUBLIC_URL=https://api.cookey.sh
+ENV COOKEY_HOST=0.0.0.0
+ENV COOKEY_PORT=5800
+ENV COOKEY_PUBLIC_URL=https://api.cookey.sh
 
 EXPOSE 5800
 

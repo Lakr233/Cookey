@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cookey — Give Your Agents the Cookey, Help Them In.</title>
+    <meta
+      name="description"
+      content="Scan a QR code with your iPhone to log in on mobile, then get the browser session delivered encrypted to your terminal."
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --bg: #0a0a0a;
+        --surface: #111111;
+        --border: rgba(255, 255, 255, 0.08);
+        --ink: #f0f0f0;
+        --muted: #888;
+        --tag-bg: rgba(255, 255, 255, 0.06);
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--ink);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .container {
+        width: min(760px, calc(100vw - 40px));
+        margin: 0 auto;
+      }
+
+      /* Nav */
+      nav {
+        padding: 24px 0;
+        border-bottom: 1px solid var(--border);
+      }
+      nav .container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .logo {
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        color: var(--ink);
+        text-decoration: none;
+      }
+      .nav-links {
+        display: flex;
+        gap: 28px;
+        list-style: none;
+      }
+      .nav-links a {
+        font-size: 14px;
+        color: var(--muted);
+        text-decoration: none;
+        transition: color 0.15s;
+      }
+      .nav-links a:hover {
+        color: var(--ink);
+      }
+
+      /* Hero */
+      .hero {
+        padding: 96px 0 80px;
+        text-align: center;
+      }
+      .hero-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 14px;
+        background: var(--tag-bg);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        font-size: 13px;
+        color: var(--muted);
+        margin-bottom: 32px;
+      }
+      .hero-tag span {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #4ade80;
+        display: inline-block;
+      }
+      h1 {
+        font-size: clamp(2.2rem, 6vw, 3.6rem);
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        line-height: 1.1;
+        color: var(--ink);
+        margin-bottom: 20px;
+      }
+      h1 em {
+        font-style: normal;
+        color: var(--muted);
+      }
+      .hero-sub {
+        font-size: 1.05rem;
+        color: var(--muted);
+        max-width: 480px;
+        margin: 0 auto 40px;
+      }
+      .cta-row {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 11px 22px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: opacity 0.15s;
+      }
+      .btn:hover {
+        opacity: 0.8;
+      }
+      .btn-primary {
+        background: var(--ink);
+        color: #000;
+      }
+      .btn-secondary {
+        background: transparent;
+        color: var(--muted);
+        border: 1px solid var(--border);
+      }
+
+      /* Terminal */
+      .terminal-wrap {
+        margin: 64px 0 0;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+        text-align: left;
+      }
+      .terminal-bar {
+        background: #1a1a1a;
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border-bottom: 1px solid var(--border);
+      }
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+      }
+      .dot-r {
+        background: #ff5f57;
+      }
+      .dot-y {
+        background: #febc2e;
+      }
+      .dot-g {
+        background: #28c840;
+      }
+      .terminal-title {
+        flex: 1;
+        text-align: center;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .terminal-body {
+        background: #0d0d0d;
+        padding: 24px 20px;
+        font-family: "SF Mono", "JetBrains Mono", "Fira Code", monospace;
+        font-size: 13px;
+        line-height: 1.8;
+        overflow-x: auto;
+      }
+      .prompt {
+        color: #4ade80;
+      }
+      .cmd {
+        color: var(--ink);
+      }
+      .out {
+        color: var(--muted);
+      }
+      .rid {
+        color: #a78bfa;
+      }
+      .url {
+        color: #60a5fa;
+      }
+
+      /* Sections */
+      .section {
+        padding: 96px 0;
+        border-top: 1px solid var(--border);
+      }
+      .section-label {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 16px;
+      }
+      h2 {
+        font-size: clamp(1.6rem, 4vw, 2.2rem);
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        margin-bottom: 56px;
+      }
+
+      /* Steps */
+      .steps {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 2px;
+      }
+      .step {
+        background: var(--surface);
+        padding: 28px 24px;
+        border: 1px solid var(--border);
+      }
+      .step:first-child {
+        border-radius: 12px 0 0 12px;
+      }
+      .step:last-child {
+        border-radius: 0 12px 12px 0;
+      }
+      .step-num {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 16px;
+      }
+      .step h3 {
+        font-size: 15px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        letter-spacing: -0.01em;
+      }
+      .step p {
+        font-size: 13.5px;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      code {
+        font-family: "SF Mono", "JetBrains Mono", monospace;
+        font-size: 0.88em;
+        background: var(--tag-bg);
+        padding: 1px 6px;
+        border-radius: 4px;
+        border: 1px solid var(--border);
+      }
+
+      /* Props */
+      .props {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 24px;
+      }
+      .prop {
+        padding: 24px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+      }
+      .prop-icon {
+        font-size: 22px;
+        margin-bottom: 12px;
+      }
+      .prop h3 {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 6px;
+      }
+      .prop p {
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.55;
+      }
+
+      /* Footer */
+      footer {
+        border-top: 1px solid var(--border);
+        padding: 32px 0;
+      }
+      footer .container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+      footer p {
+        font-size: 13px;
+        color: var(--muted);
+      }
+      footer a {
+        color: var(--muted);
+        text-decoration: none;
+      }
+      footer a:hover {
+        color: var(--ink);
+      }
+
+      @media (max-width: 600px) {
+        .step:first-child {
+          border-radius: 10px 10px 0 0;
+        }
+        .step:last-child {
+          border-radius: 0 0 10px 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <div class="container">
+        <a href="/" class="logo">Cookey</a>
+        <ul class="nav-links">
+          <li><a href="https://github.com/Lakr233/Cookey">GitHub</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <main>
+      <section class="hero">
+        <div class="container">
+          <div class="hero-tag">
+            <span></span> Open source &middot; Self-hostable
+          </div>
+          <h1>Give Your Agents<br /><em>the Cookey, Help Them In.</em></h1>
+          <p class="hero-sub">
+            Scan a QR code with your iPhone, log in on mobile, and your browser
+            session lands encrypted in your terminal &mdash; ready for
+            Playwright and AI agents.
+          </p>
+          <div class="cta-row">
+            <a
+              href="https://github.com/Lakr233/Cookey"
+              class="btn btn-primary"
+              >Get started &rarr;</a
+            >
+            <a
+              href="https://github.com/Lakr233/Cookey#readme"
+              class="btn btn-secondary"
+              >Read the docs</a
+            >
+          </div>
+
+          <div class="terminal-wrap">
+            <div class="terminal-bar">
+              <span class="dot dot-r"></span>
+              <span class="dot dot-y"></span>
+              <span class="dot dot-g"></span>
+              <span class="terminal-title">zsh</span>
+            </div>
+            <div class="terminal-body">
+              <div>
+                <span class="prompt">❯</span>
+                <span class="cmd"
+                  >cookey login
+                  <span class="url">https://github.com/login</span></span
+                >
+              </div>
+              <div class="out">&nbsp;</div>
+              <div class="out">
+                &nbsp; Registered &nbsp;<span class="rid"
+                  >r_8GQx8tY0j8x3Yw2N</span
+                >
+              </div>
+              <div class="out">
+                &nbsp; Target URL &nbsp;<span class="url"
+                  >https://github.com/login</span
+                >
+              </div>
+              <div class="out">&nbsp; Expires in &nbsp;5m 00s</div>
+              <div class="out">&nbsp;</div>
+              <!-- QR code rendered as SVG so it actually looks right -->
+              <div style="padding: 0 0 8px 18px">
+                <svg
+                  width="120"
+                  height="120"
+                  viewBox="0 0 21 21"
+                  shape-rendering="crispEdges"
+                  xmlns="http://www.w3.org/2000/svg"
+                  style="display: block"
+                >
+                  <rect width="21" height="21" fill="#0d0d0d" />
+                  <!-- top-left finder -->
+                  <rect x="1" y="1" width="7" height="7" fill="#e8e8e8" />
+                  <rect x="2" y="2" width="5" height="5" fill="#0d0d0d" />
+                  <rect x="3" y="3" width="3" height="3" fill="#e8e8e8" />
+                  <!-- top-right finder -->
+                  <rect x="13" y="1" width="7" height="7" fill="#e8e8e8" />
+                  <rect x="14" y="2" width="5" height="5" fill="#0d0d0d" />
+                  <rect x="15" y="3" width="3" height="3" fill="#e8e8e8" />
+                  <!-- bottom-left finder -->
+                  <rect x="1" y="13" width="7" height="7" fill="#e8e8e8" />
+                  <rect x="2" y="14" width="5" height="5" fill="#0d0d0d" />
+                  <rect x="3" y="15" width="3" height="3" fill="#e8e8e8" />
+                  <!-- timing + data modules (decorative) -->
+                  <rect x="9" y="1" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="11" y="1" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="8" y="3" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="10" y="3" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="12" y="3" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="9" y="5" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="8" y="8" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="10" y="8" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="12" y="8" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="1" y="9" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="3" y="9" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="5" y="9" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="9" y="9" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="11" y="9" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="13" y="9" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="15" y="9" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="17" y="9" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="19" y="9" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="1" y="11" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="5" y="11" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="8" y="11" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="10" y="11" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="14" y="11" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="16" y="11" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="18" y="11" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="9" y="13" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="11" y="13" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="13" y="13" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="17" y="13" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="19" y="13" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="8" y="15" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="12" y="15" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="14" y="15" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="16" y="15" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="18" y="15" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="9" y="17" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="11" y="17" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="15" y="17" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="19" y="17" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="8" y="19" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="10" y="19" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="13" y="19" width="1" height="1" fill="#e8e8e8" />
+                  <rect x="17" y="19" width="1" height="1" fill="#e8e8e8" />
+                </svg>
+              </div>
+              <div class="out">
+                &nbsp; Scan with the Cookey app. Waiting for session&hellip;
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <p class="section-label">How it works</p>
+          <h2>Three steps, that&rsquo;s it.</h2>
+          <div class="steps">
+            <div class="step">
+              <p class="step-num">01</p>
+              <h3>Run the CLI</h3>
+              <p>
+                Run <code>cookey login &lt;url&gt;</code>. A QR code appears
+                in your terminal immediately.
+              </p>
+            </div>
+            <div class="step">
+              <p class="step-num">02</p>
+              <h3>Scan &amp; log in</h3>
+              <p>
+                Open Cookey on your iPhone, scan the code, and log in to the
+                site in the in-app browser.
+              </p>
+            </div>
+            <div class="step">
+              <p class="step-num">03</p>
+              <h3>Session arrives</h3>
+              <p>
+                Cookies and storage are encrypted end-to-end and delivered to
+                the CLI. Use <code>cookey export</code> for Playwright.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <p class="section-label">Design</p>
+          <h2>Built to stay out of the way.</h2>
+          <div class="props">
+            <div class="prop">
+              <div class="prop-icon">🔒</div>
+              <h3>End-to-end encrypted</h3>
+              <p>
+                Session data is encrypted with your CLI public key before it
+                leaves your phone. The relay never sees plaintext.
+              </p>
+            </div>
+            <div class="prop">
+              <div class="prop-icon">☁️</div>
+              <h3>Zero registration</h3>
+              <p>
+                No accounts, no device enrollment, no push tokens. The CLI
+                generates its own key pair on first run.
+              </p>
+            </div>
+            <div class="prop">
+              <div class="prop-icon">🖥</div>
+              <h3>Self-hostable relay</h3>
+              <p>
+                Run your own relay with a single Docker image. Nothing is stored
+                in a database &mdash; memory only, auto-expiring.
+              </p>
+            </div>
+            <div class="prop">
+              <div class="prop-icon">⚡️</div>
+              <h3>Playwright-ready</h3>
+              <p>
+                Export directly to a <code>storageState.json</code> you can pass
+                into Playwright or Puppeteer with one command.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="container">
+        <p>Cookey &mdash; MIT license</p>
+        <p><a href="https://github.com/Lakr233/Cookey">GitHub</a></p>
+      </div>
+    </footer>
+  </body>
+</html>

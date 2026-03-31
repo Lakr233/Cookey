@@ -1,0 +1,37 @@
+services:
+  api:
+    build:
+      context: ./Server
+      dockerfile: Dockerfile
+    container_name: cookey-api
+    environment:
+      HELPMEIN_HOST: 0.0.0.0
+      HELPMEIN_PORT: 5800
+      HELPMEIN_PUBLIC_URL: https://api.cookey.sh
+    ports:
+      - "5800:5800"
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:5800/health >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./Web
+      dockerfile: Dockerfile
+    container_name: cookey-web
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:3000/ >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    restart: unless-stopped

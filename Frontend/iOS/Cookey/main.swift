@@ -1,13 +1,13 @@
 //
-//  HelpMeInApp.swift
-//  HelpMeIn
+//  CookeyApp.swift
+//  Cookey
 //
 //  Created by qaq on 26/3/2026.
 //
 
 import SwiftUI
 
-struct HelpMeIn: App {
+struct Cookey: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
@@ -15,4 +15,4 @@ struct HelpMeIn: App {
     }
 }
 
-HelpMeIn.main()
+Cookey.main()

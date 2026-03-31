@@ -7,13 +7,13 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		505FF5EA2F756F77005371A1 /* HelpMeIn.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HelpMeIn.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		505FF5EA2F756F77005371A1 /* Cookey.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Cookey.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		505FF5EC2F756F77005371A1 /* HelpMeIn */ = {
+		505FF5EC2F756F77005371A1 /* Cookey */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = HelpMeIn;
+			path = Cookey;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -32,7 +32,7 @@
 		505FF5E12F756F77005371A1 = {
 			isa = PBXGroup;
 			children = (
-				505FF5EC2F756F77005371A1 /* HelpMeIn */,
+				505FF5EC2F756F77005371A1 /* Cookey */,
 				505FF5EB2F756F77005371A1 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -40,7 +40,7 @@
 		505FF5EB2F756F77005371A1 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				505FF5EA2F756F77005371A1 /* HelpMeIn.app */,
+				505FF5EA2F756F77005371A1 /* Cookey.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,9 +48,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		505FF5E92F756F77005371A1 /* HelpMeIn */ = {
+		505FF5E92F756F77005371A1 /* Cookey */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 505FF5F52F756F78005371A1 /* Build configuration list for PBXNativeTarget "HelpMeIn" */;
+			buildConfigurationList = 505FF5F52F756F78005371A1 /* Build configuration list for PBXNativeTarget "Cookey" */;
 			buildPhases = (
 				505FF5E62F756F77005371A1 /* Sources */,
 				505FF5E72F756F77005371A1 /* Frameworks */,
@@ -61,13 +61,13 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				505FF5EC2F756F77005371A1 /* HelpMeIn */,
+				505FF5EC2F756F77005371A1 /* Cookey */,
 			);
-			name = HelpMeIn;
+			name = Cookey;
 			packageProductDependencies = (
 			);
-			productName = HelpMeIn;
-			productReference = 505FF5EA2F756F77005371A1 /* HelpMeIn.app */;
+			productName = Cookey;
+			productReference = 505FF5EA2F756F77005371A1 /* Cookey.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -85,7 +85,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 505FF5E52F756F77005371A1 /* Build configuration list for PBXProject "HelpMeIn" */;
+			buildConfigurationList = 505FF5E52F756F77005371A1 /* Build configuration list for PBXProject "Cookey" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -98,7 +98,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				505FF5E92F756F77005371A1 /* HelpMeIn */,
+				505FF5E92F756F77005371A1 /* Cookey */,
 			);
 		};
 /* End PBXProject section */
@@ -247,7 +247,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = HelpMeIn/Resources/Entitlement.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Cookey/Resources/Entitlement.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 964G86XT2P;
@@ -285,7 +285,7 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.2;
 				MARKETING_VERSION = 0.1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = wiki.qaq.HelpMeIn;
+				PRODUCT_BUNDLE_IDENTIFIER = wiki.qaq.Cookey;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
@@ -306,7 +306,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = HelpMeIn/Resources/Entitlement.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Cookey/Resources/Entitlement.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 964G86XT2P;
@@ -344,7 +344,7 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.2;
 				MARKETING_VERSION = 0.1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = wiki.qaq.HelpMeIn;
+				PRODUCT_BUNDLE_IDENTIFIER = wiki.qaq.Cookey;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
@@ -363,7 +363,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		505FF5E52F756F77005371A1 /* Build configuration list for PBXProject "HelpMeIn" */ = {
+		505FF5E52F756F77005371A1 /* Build configuration list for PBXProject "Cookey" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				505FF5F32F756F78005371A1 /* Debug */,
@@ -372,7 +372,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		505FF5F52F756F78005371A1 /* Build configuration list for PBXNativeTarget "HelpMeIn" */ = {
+		505FF5F52F756F78005371A1 /* Build configuration list for PBXNativeTarget "Cookey" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				505FF5F62F756F78005371A1 /* Debug */,

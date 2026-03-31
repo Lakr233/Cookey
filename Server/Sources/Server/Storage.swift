@@ -4,6 +4,7 @@ import Foundation
 public actor RequestStorage {
     private var requests: [RequestID: StoredRequest] = [:]
     private var messageWaiters: [RequestID: [UUID: MessageWaiter]] = [:]
+    private var apnRegistrations: [String: APNRegistration] = [:]
     
     private let maxPayloadSize: Int
     
@@ -103,6 +104,30 @@ public actor RequestStorage {
     public func getAllRequestIDs() -> [RequestID] {
         return Array(requests.keys)
     }
+
+    public func storeAPNRegistration(
+        deviceID: String,
+        token: String,
+        environment: String
+    ) {
+        let now = Date()
+        let registeredAt = apnRegistrations[deviceID]?.registeredAt ?? now
+        apnRegistrations[deviceID] = APNRegistration(
+            deviceID: deviceID,
+            token: token,
+            environment: environment,
+            registeredAt: registeredAt,
+            updatedAt: now
+        )
+    }
+
+    public func apnRegistration(deviceID: String) -> APNRegistration? {
+        apnRegistrations[deviceID]
+    }
+
+    public func removeAPNRegistration(deviceID: String) {
+        apnRegistrations.removeValue(forKey: deviceID)
+    }
     
     // MARK: - WebSocket Management
     
@@ -149,7 +174,7 @@ public actor RequestStorage {
                         return
                     }
 
-                    await self.resumeWaiterIfPresent(
+                    self.resumeWaiterIfPresent(
                         rid: rid,
                         id: waiterID,
                         with: .error(ErrorPayload(code: "timeout", message: "Waiting timed out"))

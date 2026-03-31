@@ -79,13 +79,16 @@ enum CookeyServer {
         if let envPublicURL = ProcessInfo.processInfo.environment["COOKEY_PUBLIC_URL"] {
             publicURL = envPublicURL
         }
+
+        let apnsConfiguration = loadAPNSConfiguration()
         
         return ServerConfig(
             host: host,
             port: port,
             defaultTTL: defaultTTL,
             maxPayloadSize: maxPayloadSize,
-            publicURL: publicURL
+            publicURL: publicURL,
+            apnsConfiguration: apnsConfiguration
         )
     }
     
@@ -107,12 +110,35 @@ enum CookeyServer {
           COOKEY_HOST             Bind host
           COOKEY_PORT             Bind port
           COOKEY_PUBLIC_URL       Public URL
+          COOKEY_APNS_TEAM_ID     Apple Developer team ID
+          COOKEY_APNS_KEY_ID      APNs key ID
+          COOKEY_APNS_BUNDLE_ID   App bundle identifier
+          COOKEY_APNS_PRIVATE_KEY_PATH Path to APNs .p8 key
         
         Examples:
           CookeyServer
           CookeyServer --port 3000
           CookeyServer --host 127.0.0.1 --port 8080
         """)
+    }
+
+    static func loadAPNSConfiguration() -> APNSConfiguration? {
+        let environment = ProcessInfo.processInfo.environment
+        guard
+            let teamID = environment["COOKEY_APNS_TEAM_ID"],
+            let keyID = environment["COOKEY_APNS_KEY_ID"],
+            let bundleID = environment["COOKEY_APNS_BUNDLE_ID"],
+            let privateKeyPath = environment["COOKEY_APNS_PRIVATE_KEY_PATH"]
+        else {
+            return nil
+        }
+
+        return APNSConfiguration(
+            teamID: teamID,
+            keyID: keyID,
+            bundleID: bundleID,
+            privateKeyPath: privateKeyPath
+        )
     }
     
     // MARK: - Cleanup Task
@@ -148,9 +174,16 @@ func runServer() async throws {
     logger.info("   Public URL: \(config.publicURL)")
     logger.info("   Default TTL: \(config.defaultTTL)s")
     logger.info("   Max Payload: \(config.maxPayloadSize / 1024)KB")
+    logger.info("   APNs: \(config.apnsConfiguration == nil ? "disabled" : "enabled")")
 
     let storage = RequestStorage(maxPayloadSize: config.maxPayloadSize)
-    let routes = Routes(storage: storage, config: config)
+    let apnsClient: APNSClient?
+    if let apnsConfiguration = config.apnsConfiguration {
+        apnsClient = APNSClient(configuration: apnsConfiguration)
+    } else {
+        apnsClient = nil
+    }
+    let routes = Routes(storage: storage, config: config, apnsClient: apnsClient)
     let router = routes.setupRouter()
     let webSocketRouter = routes.setupWebSocketRouter()
 

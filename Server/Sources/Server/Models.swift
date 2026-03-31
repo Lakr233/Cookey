@@ -16,6 +16,7 @@ public struct LoginRequest: Codable, Sendable {
     public let rid: RequestID
     public let targetUrl: String
     public let cliPublicKey: String
+    public let deviceID: String
     public let deviceFingerprint: String
     public let expiresAt: Date
     
@@ -23,6 +24,7 @@ public struct LoginRequest: Codable, Sendable {
         case rid
         case targetUrl = "target_url"
         case cliPublicKey = "cli_public_key"
+        case deviceID = "device_id"
         case deviceFingerprint = "device_fingerprint"
         case expiresAt = "expires_at"
     }
@@ -33,6 +35,7 @@ public struct StoredRequest: Codable, Sendable {
     public let rid: RequestID
     public let targetUrl: String
     public let cliPublicKey: String
+    public let deviceID: String
     public let deviceFingerprint: String
     public let createdAt: Date
     public let expiresAt: Date
@@ -43,6 +46,7 @@ public struct StoredRequest: Codable, Sendable {
         self.rid = request.rid
         self.targetUrl = request.targetUrl
         self.cliPublicKey = request.cliPublicKey
+        self.deviceID = request.deviceID
         self.deviceFingerprint = request.deviceFingerprint
         self.createdAt = Date()
         self.expiresAt = request.expiresAt
@@ -90,6 +94,26 @@ public struct EncryptedSession: Codable, Sendable {
         case ciphertext
         case capturedAt = "captured_at"
     }
+}
+
+public struct APNRegistration: Codable, Sendable {
+    public let deviceID: String
+    public let token: String
+    public let environment: String
+    public let registeredAt: Date
+    public let updatedAt: Date
+}
+
+public struct APNSConfiguration: Sendable {
+    public let teamID: String
+    public let keyID: String
+    public let bundleID: String
+    public let privateKeyPath: String
+}
+
+public struct APNTokenRegistrationRequest: Codable, Sendable {
+    public let token: String
+    public let environment: String
 }
 
 /// Request status response
@@ -229,18 +253,21 @@ public struct ServerConfig: Sendable {
     public let defaultTTL: TimeInterval
     public let maxPayloadSize: Int
     public let publicURL: String
+    public let apnsConfiguration: APNSConfiguration?
     
     public init(
         host: String = "0.0.0.0",
         port: Int = 8080,
         defaultTTL: TimeInterval = 300,
         maxPayloadSize: Int = 1 * 1024 * 1024, // 1MB
-        publicURL: String? = nil
+        publicURL: String? = nil,
+        apnsConfiguration: APNSConfiguration? = nil
     ) {
         self.host = host
         self.port = port
         self.defaultTTL = defaultTTL
         self.maxPayloadSize = maxPayloadSize
         self.publicURL = publicURL ?? "http://\(host):\(port)"
+        self.apnsConfiguration = apnsConfiguration
     }
 }

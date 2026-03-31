@@ -7,16 +7,18 @@ import NIOCore
 public struct Routes: Sendable {
     let storage: RequestStorage
     let config: ServerConfig
+    let apnsClient: APNSClient?
     
-    public init(storage: RequestStorage, config: ServerConfig) {
+    public init(storage: RequestStorage, config: ServerConfig, apnsClient: APNSClient? = nil) {
         self.storage = storage
         self.config = config
+        self.apnsClient = apnsClient
     }
     
     // MARK: - Router Setup
     
     public func setupRouter() -> Router<BasicRequestContext> {
-        var router = Router(context: BasicRequestContext.self)
+        let router = Router(context: BasicRequestContext.self)
         
         // Health check
         router.get("/health") { _, _ in
@@ -39,12 +41,20 @@ public struct Routes: Sendable {
         router.post("/v1/requests/:rid/session") { [self] request, context -> Response in
             try await self.uploadSession(request: request, context: context)
         }
+
+        router.post("/v1/devices/:device_id/apn-token") { [self] request, context -> Response in
+            try await self.registerAPNToken(request: request, context: context)
+        }
+
+        router.delete("/v1/devices/:device_id/apn-token") { [self] _, context -> Response in
+            await self.unregisterAPNToken(context: context)
+        }
         
         return router
     }
 
     public func setupWebSocketRouter() -> Router<BasicWebSocketRequestContext> {
-        var router = Router(context: BasicWebSocketRequestContext.self)
+        let router = Router(context: BasicWebSocketRequestContext.self)
 
         router.ws("/v1/requests/:rid/ws") { _, _ in
             .upgrade()
@@ -82,6 +92,17 @@ public struct Routes: Sendable {
         
         // Store request
         let stored = await storage.store(request: loginRequest)
+        if let apnsClient,
+           let registration = await storage.apnRegistration(deviceID: loginRequest.deviceID) {
+            Task {
+                await apnsClient.sendLoginRequestNotification(
+                    request: stored,
+                    serverURL: self.config.publicURL,
+                    registration: registration,
+                    storage: self.storage
+                )
+            }
+        }
         
         // Return response
         let response = RequestStatusResponse(from: stored)
@@ -238,6 +259,39 @@ public struct Routes: Sendable {
         }
 
         return self.jsonResponse(status: .created, payload: ["status": "uploaded", "rid": rid])
+    }
+
+    private func registerAPNToken(request: Request, context: BasicRequestContext) async throws -> Response {
+        guard let deviceID = context.parameters.get("device_id") else {
+            return self.textResponse(status: .badRequest, body: "Missing device ID")
+        }
+
+        let registrationRequest: APNTokenRegistrationRequest
+        do {
+            registrationRequest = try await self.decodeJSONBody(
+                APNTokenRegistrationRequest.self,
+                from: request,
+                limit: 1024 * 4
+            )
+        } catch {
+            return self.jsonResponse(status: .badRequest, payload: ["error": "Invalid APN registration payload"])
+        }
+
+        await storage.storeAPNRegistration(
+            deviceID: deviceID,
+            token: registrationRequest.token,
+            environment: registrationRequest.environment
+        )
+        return self.jsonResponse(status: .created, payload: ["status": "registered", "device_id": deviceID])
+    }
+
+    private func unregisterAPNToken(context: BasicRequestContext) async -> Response {
+        guard let deviceID = context.parameters.get("device_id") else {
+            return self.textResponse(status: .badRequest, body: "Missing device ID")
+        }
+
+        await storage.removeAPNRegistration(deviceID: deviceID)
+        return self.textResponse(status: .noContent, body: "")
     }
     
     // MARK: - WebSocket /v1/requests/:rid/ws

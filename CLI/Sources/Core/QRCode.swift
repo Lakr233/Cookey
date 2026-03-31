@@ -9,7 +9,8 @@ public enum TerminalQRCode {
             URLQueryItem(name: "rid", value: manifest.rid),
             URLQueryItem(name: "server", value: manifest.serverURL),
             URLQueryItem(name: "target", value: manifest.targetURL),
-            URLQueryItem(name: "pubkey", value: manifest.cliPublicKey)
+            URLQueryItem(name: "pubkey", value: manifest.cliPublicKey),
+            URLQueryItem(name: "device_id", value: manifest.deviceID),
         ]
 
         return components.string ?? "cookey://login?rid=\(manifest.rid)"

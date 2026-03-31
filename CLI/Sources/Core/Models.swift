@@ -78,6 +78,7 @@ public struct LoginManifest: Codable {
     public let targetURL: String
     public let serverURL: String
     public let cliPublicKey: String
+    public let deviceID: String
     public let deviceFingerprint: String
     public let transportHint: Transport
     public let createdAt: Date
@@ -88,6 +89,7 @@ public struct LoginManifest: Codable {
         case targetURL = "target_url"
         case serverURL = "server_url"
         case cliPublicKey = "cli_public_key"
+        case deviceID = "device_id"
         case deviceFingerprint = "device_fingerprint"
         case transportHint = "transport_hint"
         case createdAt = "created_at"
@@ -99,6 +101,7 @@ public struct LoginManifest: Codable {
         targetURL: String,
         serverURL: String,
         cliPublicKey: String,
+        deviceID: String,
         deviceFingerprint: String,
         transportHint: Transport,
         createdAt: Date,
@@ -108,6 +111,7 @@ public struct LoginManifest: Codable {
         self.targetURL = targetURL
         self.serverURL = serverURL
         self.cliPublicKey = cliPublicKey
+        self.deviceID = deviceID
         self.deviceFingerprint = deviceFingerprint
         self.transportHint = transportHint
         self.createdAt = createdAt
@@ -184,6 +188,7 @@ public struct RelayRegisterRequest: Codable {
     public let rid: String
     public let targetURL: String
     public let cliPublicKey: String
+    public let deviceID: String
     public let deviceFingerprint: String
     public let expiresAt: Date
 
@@ -191,6 +196,7 @@ public struct RelayRegisterRequest: Codable {
         case rid
         case targetURL = "target_url"
         case cliPublicKey = "cli_public_key"
+        case deviceID = "device_id"
         case deviceFingerprint = "device_fingerprint"
         case expiresAt = "expires_at"
     }

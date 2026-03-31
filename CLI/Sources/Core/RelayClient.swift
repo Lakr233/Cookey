@@ -58,6 +58,7 @@ public struct RelayClient {
             rid: manifest.rid,
             targetURL: manifest.targetURL,
             cliPublicKey: manifest.cliPublicKey,
+            deviceID: manifest.deviceID,
             deviceFingerprint: manifest.deviceFingerprint,
             expiresAt: manifest.expiresAt
         )

@@ -53,6 +53,11 @@ struct StatusSummary: Codable {
     }
 }
 
+private struct PlaywrightStorageState: Encodable {
+    let cookies: [BrowserCookie]
+    let origins: [OriginState]
+}
+
 @main
 enum CookeyCLI {
     static func main() {
@@ -75,6 +80,8 @@ enum CookeyCLI {
         switch command {
         case "login":
             try handleLogin(arguments: args)
+        case "export":
+            try handleExport(arguments: args)
         case "status":
             try handleStatus(arguments: args)
         case "__daemon":
@@ -110,6 +117,7 @@ enum CookeyCLI {
             targetURL: targetURL,
             serverURL: serverURL.absoluteString,
             cliPublicKey: try KeyManager.x25519PublicKeyBase64(from: context.keypair),
+            deviceID: context.deviceIdentifier,
             deviceFingerprint: context.deviceFingerprint,
             transportHint: transport,
             createdAt: createdAt,
@@ -186,6 +194,41 @@ enum CookeyCLI {
         } else {
             let snapshot = try resolveStatus(rid: rid, context: context)
             try emit(snapshot, asJSON: jsonOutput)
+        }
+    }
+
+    private static func handleExport(arguments: [String]) throws {
+        let flags = try parseFlags(from: arguments)
+        let context = try ConfigStore.bootstrap()
+        let ridArgument = arguments.first(where: { !$0.hasPrefix("-") })
+
+        let rid = if let ridArgument {
+            ridArgument
+        } else if let latestRID = try ConfigStore.latestSessionRID(in: context.paths) {
+            latestRID
+        } else {
+            throw CLIError.invalidValue("No local sessions found.")
+        }
+
+        let sessionURL = context.paths.sessionURL(for: rid)
+        guard FileManager.default.fileExists(atPath: sessionURL.path) else {
+            throw CLIError.invalidValue("Session not found for rid: \(rid)")
+        }
+
+        let session = try ConfigStore.readJSON(SessionFile.self, from: sessionURL)
+        let storageState = PlaywrightStorageState(cookies: session.cookies, origins: session.origins)
+        let pretty = flags["pretty"] != nil
+        let data = try encode(storageState, pretty: pretty)
+
+        if let outputPath = flags["out"] {
+            let outputURL = URL(fileURLWithPath: outputPath, relativeTo: URL(fileURLWithPath: FileManager.default.currentDirectoryPath))
+                .standardizedFileURL
+            try data.write(to: outputURL, options: .atomic)
+        } else {
+            FileHandle.standardOutput.write(data)
+            if data.last != 0x0a {
+                FileHandle.standardOutput.write(Data([0x0a]))
+            }
         }
     }
 
@@ -291,10 +334,7 @@ enum CookeyCLI {
 
     private static func render<T: Encodable>(_ value: T, asJSON: Bool) throws -> String {
         if asJSON {
-            let encoder = JSONEncoder()
-            encoder.dateEncodingStrategy = .iso8601
-            encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-            let data = try encoder.encode(value)
+            let data = try encode(value, pretty: true)
             return String(decoding: data, as: UTF8.self)
         }
 
@@ -359,10 +399,10 @@ enum CookeyCLI {
 
             let flag = String(token.dropFirst(2))
             switch flag {
-            case "json", "no-detach", "latest", "watch":
+            case "json", "no-detach", "latest", "watch", "pretty":
                 result[flag] = "true"
                 index += 1
-            case "server", "timeout", "transport":
+            case "server", "timeout", "transport", "out":
                 let valueIndex = index + 1
                 guard valueIndex < arguments.count else {
                     throw CLIError.missingValue("Missing value for --\(flag)")
@@ -394,11 +434,19 @@ enum CookeyCLI {
         return transport
     }
 
+    private static func encode<T: Encodable>(_ value: T, pretty: Bool) throws -> Data {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        encoder.outputFormatting = pretty ? [.prettyPrinted, .sortedKeys] : [.sortedKeys]
+        return try encoder.encode(value)
+    }
+
     private static func printUsage() {
         print(
             """
             Usage:
               cookey login <target_url> [--server URL] [--timeout 300] [--transport ws|poll] [--json] [--no-detach]
+              cookey export [rid] [--out FILE] [--pretty]
               cookey status [rid] [--latest] [--watch] [--json]
             """
         )

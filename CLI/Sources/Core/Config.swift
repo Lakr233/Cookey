@@ -10,6 +10,7 @@ public struct AppPaths {
     public let root: URL
     public let keypair: URL
     public let config: URL
+    public let deviceIdentifier: URL
     public let sessions: URL
     public let daemons: URL
 
@@ -18,6 +19,7 @@ public struct AppPaths {
         self.root = root
         self.keypair = root.appendingPathComponent("keypair.json")
         self.config = root.appendingPathComponent("config.json")
+        self.deviceIdentifier = root.appendingPathComponent("device_id")
         self.sessions = root.appendingPathComponent("sessions", isDirectory: true)
         self.daemons = root.appendingPathComponent("daemons", isDirectory: true)
     }
@@ -35,12 +37,20 @@ public struct BootstrapContext {
     public let paths: AppPaths
     public let keypair: KeypairFile
     public let config: AppConfig
+    public let deviceIdentifier: String
     public let deviceFingerprint: String
 
-    public init(paths: AppPaths, keypair: KeypairFile, config: AppConfig, deviceFingerprint: String) {
+    public init(
+        paths: AppPaths,
+        keypair: KeypairFile,
+        config: AppConfig,
+        deviceIdentifier: String,
+        deviceFingerprint: String
+    ) {
         self.paths = paths
         self.keypair = keypair
         self.config = config
+        self.deviceIdentifier = deviceIdentifier
         self.deviceFingerprint = deviceFingerprint
     }
 }
@@ -55,11 +65,18 @@ public enum ConfigStore {
 
         let keypair = try KeyManager.loadOrCreate(at: paths.keypair)
         let config = try loadConfig(from: paths.config)
+        let deviceIdentifier = try loadOrCreateDeviceIdentifier(at: paths.deviceIdentifier)
         let fingerprint = try deviceFingerprint(for: keypair)
 
         try cleanupStaleDaemonFiles(in: paths)
 
-        return BootstrapContext(paths: paths, keypair: keypair, config: config, deviceFingerprint: fingerprint)
+        return BootstrapContext(
+            paths: paths,
+            keypair: keypair,
+            config: config,
+            deviceIdentifier: deviceIdentifier,
+            deviceFingerprint: fingerprint
+        )
     }
 
     public static func loadConfig(from url: URL) throws -> AppConfig {
@@ -88,6 +105,24 @@ public enum ConfigStore {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         return try decoder.decode(T.self, from: Data(contentsOf: url))
+    }
+
+    public static func loadOrCreateDeviceIdentifier(at url: URL) throws -> String {
+        if FileManager.default.fileExists(atPath: url.path) {
+            let data = try Data(contentsOf: url)
+            var value = String(decoding: data, as: UTF8.self)
+            while let last = value.last, last.isWhitespace {
+                value.removeLast()
+            }
+            if !value.isEmpty {
+                return value
+            }
+        }
+
+        let identifier = UUID().uuidString.lowercased()
+        try identifier.write(to: url, atomically: true, encoding: .utf8)
+        try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
+        return identifier
     }
 
     public static func deviceFingerprint(for keypair: KeypairFile) throws -> String {

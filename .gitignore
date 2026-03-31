@@ -135,3 +135,6 @@ Icon[
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# Local production secrets
+.env.production.local

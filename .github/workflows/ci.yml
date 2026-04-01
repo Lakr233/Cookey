@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ios:
+    name: iOS Build
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode 15
+        run: sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
+
+      - name: Build iOS App
+        run: |
+          xcodebuild build \
+            -project Frontend/iOS/Cookey.xcodeproj \
+            -scheme Cookey \
+            -destination 'platform=iOS Simulator,name=iPhone 15' \
+            -configuration Debug \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty || xcodebuild build \
+              -project Frontend/iOS/Cookey.xcodeproj \
+              -scheme Cookey \
+              -destination 'platform=iOS Simulator,name=iPhone 15' \
+              -configuration Debug \
+              CODE_SIGNING_ALLOWED=NO
+
+  cli:
+    name: CLI Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Swift packages
+        uses: actions/cache@v4
+        with:
+          path: CLI/.build
+          key: cli-spm-${{ runner.os }}-${{ hashFiles('CLI/Package.resolved') }}
+          restore-keys: cli-spm-${{ runner.os }}-
+
+      - name: Setup Swift
+        uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: "6.0"
+
+      - name: Build CLI
+        working-directory: CLI
+        run: swift build -c release
+
+  server:
+    name: Server Docker Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: docker-server-${{ runner.os }}-${{ hashFiles('Server/Dockerfile', 'Server/Package.resolved') }}
+          restore-keys: docker-server-${{ runner.os }}-
+
+      - name: Build Server Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./Server
+          push: false
+          tags: cookey-server:${{ github.sha }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache

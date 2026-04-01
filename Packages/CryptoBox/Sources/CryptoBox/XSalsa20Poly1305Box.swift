@@ -1,6 +1,8 @@
 import Crypto
 import Foundation
+#if canImport(Security)
 import Security
+#endif
 
 public enum CryptoBoxError: Error {
     case invalidNonce
@@ -54,9 +56,7 @@ public enum XSalsa20Poly1305Box {
         ciphertext: Data
     ) {
         var nonceBytes = [UInt8](repeating: 0, count: 24)
-        guard SecRandomCopyBytes(kSecRandomDefault, nonceBytes.count, &nonceBytes) == errSecSuccess else {
-            throw CryptoBoxError.randomGenerationFailed
-        }
+        try fillRandomBytes(&nonceBytes)
 
         let ephemeralPrivateKey = Curve25519.KeyAgreement.PrivateKey()
         let recipientKey: Curve25519.KeyAgreement.PublicKey
@@ -354,6 +354,19 @@ public enum XSalsa20Poly1305Box {
             diff |= lhs[index] ^ rhs[index]
         }
         return diff == 0
+    }
+
+    private static func fillRandomBytes(_ bytes: inout [UInt8]) throws {
+#if canImport(Security)
+        guard SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes) == errSecSuccess else {
+            throw CryptoBoxError.randomGenerationFailed
+        }
+#else
+        var generator = SystemRandomNumberGenerator()
+        for index in bytes.indices {
+            bytes[index] = UInt8.random(in: UInt8.min ... UInt8.max, using: &generator)
+        }
+#endif
     }
 
     private static let sigma: [UInt32] = [

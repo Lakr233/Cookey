@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Get Started with Cookey</title>
+    <meta
+      name="description"
+      content="Install Cookey on macOS or Linux, capture a session from iPhone, and export a Playwright-compatible storageState file."
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --bg: #0a0a0a;
+        --surface: #111111;
+        --border: rgba(255, 255, 255, 0.08);
+        --ink: #f0f0f0;
+        --muted: #888;
+        --tag-bg: rgba(255, 255, 255, 0.06);
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--ink);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .container {
+        width: min(760px, calc(100vw - 40px));
+        margin: 0 auto;
+      }
+
+      nav {
+        padding: 24px 0;
+        border-bottom: 1px solid var(--border);
+      }
+
+      nav .container,
+      footer .container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .logo {
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        color: var(--ink);
+        text-decoration: none;
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 28px;
+        list-style: none;
+      }
+
+      .nav-links a,
+      footer a {
+        font-size: 14px;
+        color: var(--muted);
+        text-decoration: none;
+        transition: color 0.15s;
+      }
+
+      .nav-links a:hover,
+      footer a:hover {
+        color: var(--ink);
+      }
+
+      .hero {
+        padding: 96px 0 72px;
+      }
+
+      .hero-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 14px;
+        background: var(--tag-bg);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        font-size: 13px;
+        color: var(--muted);
+        margin-bottom: 28px;
+      }
+
+      .hero-tag span {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #4ade80;
+        display: inline-block;
+      }
+
+      h1 {
+        font-size: clamp(2.2rem, 6vw, 3.3rem);
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        line-height: 1.1;
+        margin-bottom: 18px;
+      }
+
+      .hero p,
+      .copy-block,
+      .section-copy,
+      .command-table td {
+        color: var(--muted);
+      }
+
+      .hero p {
+        max-width: 600px;
+        font-size: 1.02rem;
+      }
+
+      .section {
+        padding: 72px 0;
+        border-top: 1px solid var(--border);
+      }
+
+      .section-label {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 14px;
+      }
+
+      h2 {
+        font-size: clamp(1.6rem, 4vw, 2.2rem);
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        margin-bottom: 18px;
+      }
+
+      .section-copy {
+        margin-bottom: 28px;
+      }
+
+      .tab-row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+      }
+
+      .tab-button {
+        appearance: none;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--muted);
+        padding: 10px 16px;
+        border-radius: 999px;
+        font: inherit;
+        cursor: pointer;
+      }
+
+      .tab-button.active {
+        background: var(--ink);
+        color: #000;
+      }
+
+      .install-panel {
+        display: none;
+      }
+
+      .install-panel.active {
+        display: block;
+      }
+
+      .code-block,
+      .copy-block,
+      .terminal-wrap,
+      .command-table {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+        background: var(--surface);
+      }
+
+      .code-block pre,
+      .copy-block pre,
+      .terminal-body {
+        padding: 22px 20px;
+        overflow-x: auto;
+        font-family: "SF Mono", "JetBrains Mono", "Fira Code", monospace;
+        font-size: 13px;
+        line-height: 1.8;
+        background: #0d0d0d;
+      }
+
+      .copy-block pre {
+        white-space: pre-wrap;
+      }
+
+      .terminal-wrap {
+        margin-top: 0;
+      }
+
+      .terminal-bar {
+        background: #1a1a1a;
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+      }
+
+      .dot-r {
+        background: #ff5f57;
+      }
+
+      .dot-y {
+        background: #febc2e;
+      }
+
+      .dot-g {
+        background: #28c840;
+      }
+
+      .terminal-title {
+        flex: 1;
+        text-align: center;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .prompt {
+        color: #4ade80;
+      }
+
+      .cmd {
+        color: var(--ink);
+      }
+
+      .out {
+        color: var(--muted);
+      }
+
+      .rid {
+        color: #a78bfa;
+      }
+
+      .url {
+        color: #60a5fa;
+      }
+
+      code {
+        font-family: "SF Mono", "JetBrains Mono", monospace;
+        font-size: 0.88em;
+        background: var(--tag-bg);
+        padding: 1px 6px;
+        border-radius: 4px;
+        border: 1px solid var(--border);
+      }
+
+      .command-table table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .command-table th,
+      .command-table td {
+        text-align: left;
+        padding: 16px 18px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+      }
+
+      .command-table th {
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      .command-table tr:last-child td {
+        border-bottom: 0;
+      }
+
+      footer {
+        border-top: 1px solid var(--border);
+        padding: 32px 0;
+      }
+
+      footer p {
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      @media (max-width: 640px) {
+        .command-table table,
+        .command-table thead,
+        .command-table tbody,
+        .command-table tr,
+        .command-table th,
+        .command-table td {
+          display: block;
+        }
+
+        .command-table thead {
+          display: none;
+        }
+
+        .command-table td {
+          padding-top: 10px;
+          padding-bottom: 10px;
+        }
+
+        .command-table td:first-child {
+          padding-top: 18px;
+        }
+
+        .command-table td:last-child {
+          padding-bottom: 18px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <div class="container">
+        <a href="/" class="logo">Cookey</a>
+        <ul class="nav-links">
+          <li><a href="/">Home</a></li>
+          <li><a href="/get-started">Get Started</a></li>
+          <li><a href="https://github.com/Lakr233/Cookey">GitHub</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <main>
+      <section class="hero">
+        <div class="container">
+          <div class="hero-tag"><span></span> Install in one command sequence</div>
+          <h1>Get started with Cookey.</h1>
+          <p>
+            Install the CLI, scan the QR code with your iPhone, and export a
+            Playwright-compatible <code>storageState.json</code> when the session
+            lands.
+          </p>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <p class="section-label">Install</p>
+          <h2>Download the latest binary for your platform.</h2>
+          <p class="section-copy">
+            The release assets keep stable names so these commands always target
+            the latest release without hard-coding a version.
+          </p>
+          <div class="tab-row">
+            <button class="tab-button active" type="button" data-platform="macos">
+              macOS
+            </button>
+            <button class="tab-button" type="button" data-platform="linux">
+              Linux
+            </button>
+          </div>
+          <div class="install-panel active" data-platform="macos">
+            <div class="code-block">
+              <pre><code>curl -fsSL https://github.com/Lakr233/Cookey/releases/latest/download/cookey-macOS.zip -o /tmp/cookey.zip \
+  &amp;&amp; unzip -oq /tmp/cookey.zip -d /tmp/cookey-install \
+  &amp;&amp; install -m 755 /tmp/cookey-install/cookey /usr/local/bin/cookey \
+  &amp;&amp; rm -rf /tmp/cookey.zip /tmp/cookey-install</code></pre>
+            </div>
+          </div>
+          <div class="install-panel" data-platform="linux">
+            <div class="code-block">
+              <pre><code>ARCH="$(uname -m)"
+case "$ARCH" in
+  x86_64|amd64) ASSET_ARCH="x86_64" ;;
+  aarch64|arm64) ASSET_ARCH="aarch64" ;;
+  *) echo "Unsupported architecture: $ARCH" &gt;&amp;2; exit 1 ;;
+esac
+curl -fsSL "https://github.com/Lakr233/Cookey/releases/latest/download/cookey-linux-${ASSET_ARCH}.zip" -o /tmp/cookey.zip \
+  &amp;&amp; unzip -oq /tmp/cookey.zip -d /tmp/cookey-install \
+  &amp;&amp; install -m 755 /tmp/cookey-install/cookey /usr/local/bin/cookey \
+  &amp;&amp; rm -rf /tmp/cookey.zip /tmp/cookey-install</code></pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <p class="section-label">Quick Start</p>
+          <h2>Capture a session and export it for Playwright.</h2>
+          <div class="terminal-wrap">
+            <div class="terminal-bar">
+              <span class="dot dot-r"></span>
+              <span class="dot dot-y"></span>
+              <span class="dot dot-g"></span>
+              <span class="terminal-title">zsh</span>
+            </div>
+            <div class="terminal-body">
+              <div>
+                <span class="prompt">❯</span>
+                <span class="cmd"
+                  >cookey login
+                  <span class="url">https://example.com/login</span></span
+                >
+              </div>
+              <div class="out">&nbsp; rid: <span class="rid">r_8GQx8tY0j8x3Yw2N</span></div>
+              <div class="out">
+                &nbsp; Scan with the Cookey iPhone app and complete login.
+              </div>
+              <div class="out">&nbsp;</div>
+              <div>
+                <span class="prompt">❯</span>
+                <span class="cmd"
+                  >cookey export <span class="rid">r_8GQx8tY0j8x3Yw2N</span> &gt;
+                  storageState.json</span
+                >
+              </div>
+              <div class="out">
+                &nbsp; Playwright storage state written to
+                <span class="url">storageState.json</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <p class="section-label">For LLM Agents</p>
+          <h2>Register Cookey as a browser-session capture tool.</h2>
+          <div class="copy-block">
+            <pre>Cookey is a CLI tool that captures browser sessions from iPhone and delivers
+them as Playwright-compatible storageState files. Install it from
+https://github.com/Lakr233/Cookey/releases/latest — download the binary for
+your platform (cookey-macOS.zip, cookey-linux-x86_64.zip, or
+cookey-linux-aarch64.zip). For the full tool description, fetch
+https://cookey.sh/llms.txt and add it to your skills or tools file.</pre>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <p class="section-label">Commands</p>
+          <h2>CLI reference.</h2>
+          <div class="command-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Command</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>cookey login &lt;url&gt;</code></td>
+                  <td>Start session capture and print a QR code in the terminal.</td>
+                </tr>
+                <tr>
+                  <td><code>cookey status [rid]</code></td>
+                  <td>Check whether a session is waiting, ready, expired, or missing.</td>
+                </tr>
+                <tr>
+                  <td><code>cookey export &lt;rid&gt;</code></td>
+                  <td>Export a Playwright-compatible <code>storageState.json</code> to stdout.</td>
+                </tr>
+                <tr>
+                  <td><code>cookey list</code></td>
+                  <td>List local sessions and daemons.</td>
+                </tr>
+                <tr>
+                  <td><code>cookey rm &lt;rid&gt;</code></td>
+                  <td>Delete a saved session.</td>
+                </tr>
+                <tr>
+                  <td><code>cookey config</code></td>
+                  <td>Manage defaults such as server, transport, and timeout.</td>
+                </tr>
+                <tr>
+                  <td><code>cookey server</code></td>
+                  <td>Run a self-hosted relay server.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="container">
+        <p>Cookey for humans and agents.</p>
+        <a href="/llms.txt">llms.txt</a>
+      </div>
+    </footer>
+
+    <script>
+      const buttons = document.querySelectorAll(".tab-button");
+      const panels = document.querySelectorAll(".install-panel");
+
+      buttons.forEach((button) => {
+        button.addEventListener("click", () => {
+          const platform = button.dataset.platform;
+
+          buttons.forEach((item) => item.classList.toggle("active", item === button));
+          panels.forEach((panel) =>
+            panel.classList.toggle("active", panel.dataset.platform === platform)
+          );
+        });
+      });
+    </script>
+  </body>
+</html>

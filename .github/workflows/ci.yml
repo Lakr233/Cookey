@@ -2,13 +2,9 @@ name: CI
 
 on:
   push:
-    branches:
-      - main
-      - master
+    branches: [main, master]
   pull_request:
-    branches:
-      - main
-      - master
+    branches: [main, master]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -25,47 +21,52 @@ jobs:
       run:
         working-directory: Frontend/iOS
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+
+      - name: Install xcbeautify
+        run: brew install xcbeautify
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
 
       - name: Cache Xcode Swift packages
         uses: actions/cache@v4
         with:
           path: Frontend/iOS/.spm
           key: ${{ runner.os }}-xcode-spm-${{ hashFiles('Frontend/iOS/Cookey.xcodeproj/project.pbxproj', 'Frontend/iOS/**/Package.resolved') }}
-          restore-keys: |
-            ${{ runner.os }}-xcode-spm-
+          restore-keys: ${{ runner.os }}-xcode-spm-
 
       - name: Resolve iOS package dependencies
         run: |
+          set -o pipefail
           xcodebuild \
             -resolvePackageDependencies \
             -project Cookey.xcodeproj \
             -scheme Cookey \
-            -clonedSourcePackagesDirPath .spm
+            -clonedSourcePackagesDirPath .spm \
+            | xcbeautify
 
       - name: Build iOS app without code signing
         run: |
+          set -o pipefail
           xcodebuild \
             -project Cookey.xcodeproj \
             -scheme Cookey \
             -configuration Debug \
             -sdk iphonesimulator \
-            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
             -clonedSourcePackagesDirPath .spm \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
-            build
+            build \
+            | xcbeautify
 
   cli:
     name: CLI Build
-    runs-on: ubuntu-latest
-    container:
-      image: swift:5.9
+    runs-on: macos-15
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Cache SwiftPM artifacts
         uses: actions/cache@v4
@@ -73,10 +74,9 @@ jobs:
           path: |
             CLI/.build
             ~/.cache/org.swift.swiftpm
-            ~/.swiftpm/cache
-          key: ${{ runner.os }}-swift-5.9-cli-${{ hashFiles('CLI/Package.swift', 'CLI/Package.resolved', 'Packages/CryptoBox/Package.swift') }}
-          restore-keys: |
-            ${{ runner.os }}-swift-5.9-cli-
+            ~/Library/Caches/org.swift.swiftpm
+          key: ${{ runner.os }}-swift-cli-${{ hashFiles('CLI/Package.swift', 'CLI/Package.resolved', 'Packages/CryptoBox/Package.swift') }}
+          restore-keys: ${{ runner.os }}-swift-cli-
 
       - name: Resolve CLI dependencies
         run: swift package resolve --package-path CLI
@@ -88,8 +88,7 @@ jobs:
     name: Server Docker Build
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3

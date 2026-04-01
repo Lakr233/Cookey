@@ -66,6 +66,7 @@
             }
 
             private func configureSessionIfNeeded() {
+                let delegate: AVCaptureMetadataOutputObjectsDelegate = self
                 queue.async {
                     guard self.session.inputs.isEmpty, self.session.outputs.isEmpty else {
                         if !self.session.isRunning {
@@ -91,7 +92,7 @@
                         }
                         if self.session.canAddOutput(output) {
                             self.session.addOutput(output)
-                            output.setMetadataObjectsDelegate(self, queue: .main)
+                            output.setMetadataObjectsDelegate(delegate, queue: .main)
                             output.metadataObjectTypes = [.qr]
                         }
                         self.session.commitConfiguration()

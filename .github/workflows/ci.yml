@@ -51,7 +51,7 @@ jobs:
             -scheme Cookey \
             -configuration Debug \
             -sdk iphonesimulator \
-            -destination 'generic/platform=iOS Simulator' \
+            -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
             -clonedSourcePackagesDirPath .spm \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
@@ -65,22 +65,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Swift 6.0
+      - name: Set up Swift 5.9
         uses: swift-actions/setup-swift@v2
         with:
-          swift-version: "6.0"
+          swift-version: "5.9"
 
       - name: Cache SwiftPM artifacts
         uses: actions/cache@v4
         with:
           path: |
             CLI/.build
-            CLI/.swiftpm
             ~/.cache/org.swift.swiftpm
             ~/.swiftpm/cache
-          key: ${{ runner.os }}-swift-6.0-cli-${{ hashFiles('CLI/Package.swift', 'CLI/Package.resolved', 'Packages/CryptoBox/Package.swift') }}
+          key: ${{ runner.os }}-swift-5.9-cli-${{ hashFiles('CLI/Package.swift', 'CLI/Package.resolved', 'Packages/CryptoBox/Package.swift') }}
           restore-keys: |
-            ${{ runner.os }}-swift-6.0-cli-
+            ${{ runner.os }}-swift-5.9-cli-
 
       - name: Resolve CLI dependencies
         run: swift package resolve --package-path CLI

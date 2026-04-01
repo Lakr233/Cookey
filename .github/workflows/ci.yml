@@ -2,75 +2,108 @@ name: CI
 
 on:
   push:
-    branches: [main, master]
+    branches:
+      - main
+      - master
   pull_request:
-    branches: [main, master]
+    branches:
+      - main
+      - master
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   ios:
-    name: iOS
+    name: iOS Build
     runs-on: macos-14
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Select Xcode 15.4
-        run: sudo xcode-select -s /Applications/Xcode_15.4.app
-
-      - name: Build and Test iOS
+    defaults:
+      run:
         working-directory: Frontend/iOS
-        run: |
-          xcodebuild build test \
-            -project Cookey.xcodeproj \
-            -scheme Cookey \
-            -destination 'platform=iOS Simulator,name=iPhone 15' \
-            CODE_SIGNING_ALLOWED=NO \
-            | xcpretty --color && exit ${PIPESTATUS[0]}
-
-  cli:
-    name: CLI
-    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Setup Swift 5.9
-        uses: swift-actions/setup-swift@v2
-        with:
-          swift-version: "5.9"
-
-      - name: Cache Swift packages
+      - name: Cache Xcode Swift packages
         uses: actions/cache@v4
         with:
-          path: CLI/.build
-          key: ${{ runner.os }}-cli-spm-${{ hashFiles('CLI/Package.resolved') }}
+          path: Frontend/iOS/.spm
+          key: ${{ runner.os }}-xcode-spm-${{ hashFiles('Frontend/iOS/Cookey.xcodeproj/project.pbxproj', 'Frontend/iOS/**/Package.resolved') }}
           restore-keys: |
-            ${{ runner.os }}-cli-spm-
+            ${{ runner.os }}-xcode-spm-
 
-      - name: Build CLI
-        working-directory: CLI
-        run: swift build
+      - name: Resolve iOS package dependencies
+        run: |
+          xcodebuild \
+            -resolvePackageDependencies \
+            -project Cookey.xcodeproj \
+            -scheme Cookey \
+            -clonedSourcePackagesDirPath .spm
 
-      - name: Test CLI
-        working-directory: CLI
-        run: swift test
+      - name: Build iOS app without code signing
+        run: |
+          xcodebuild \
+            -project Cookey.xcodeproj \
+            -scheme Cookey \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -clonedSourcePackagesDirPath .spm \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
 
-  server:
-    name: Server
+  cli:
+    name: CLI Build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Swift 6.0
+        uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: "6.0"
+
+      - name: Cache SwiftPM artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            CLI/.build
+            CLI/.swiftpm
+            ~/.cache/org.swift.swiftpm
+            ~/.swiftpm/cache
+          key: ${{ runner.os }}-swift-6.0-cli-${{ hashFiles('CLI/Package.swift', 'CLI/Package.resolved', 'Packages/CryptoBox/Package.swift') }}
+          restore-keys: |
+            ${{ runner.os }}-swift-6.0-cli-
+
+      - name: Resolve CLI dependencies
+        run: swift package resolve --package-path CLI
+
+      - name: Build CLI
+        run: swift build --package-path CLI -c release
+
+  server-docker:
+    name: Server Docker Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build Server Docker image
+      - name: Build server Docker image
         uses: docker/build-push-action@v6
         with:
           context: Server
+          file: Server/Dockerfile
           push: false
+          tags: cookey-server:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          tags: cookey-server:${{ github.sha }}

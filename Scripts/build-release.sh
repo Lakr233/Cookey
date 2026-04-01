@@ -255,7 +255,7 @@ init_release_paths() {
     CLI_BINARY="$CLI_BUILD_DIR/cookey"
     CLI_UNSIGNED_DIR="$ARCHIVE_ROOT/unsigned-cli"
     CLI_UNSIGNED_BINARY="$CLI_UNSIGNED_DIR/cookey"
-    CLI_ZIP="$ARCHIVE_ROOT/cookey-${RELEASE_VERSION}-macOS-cli.zip"
+    CLI_ZIP="$ARCHIVE_ROOT/cookey-${RAW_TAG}-macOS-cli.zip"
 }
 
 run_stage() {

@@ -19,10 +19,6 @@ Assets:
   cookey login <url>       Start session capture (prints QR code in terminal)
   cookey status [rid]      Check session status
   cookey export <rid>      Export Playwright storageState.json to stdout
-  cookey list              List all sessions and daemons
-  cookey rm <rid>          Delete a session
-  cookey config            Manage defaults (server, transport, timeout)
-  cookey server            Run a self-hosted relay server
 
 ## Workflow
   cookey login https://example.com/login

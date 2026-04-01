@@ -10,8 +10,6 @@ https://github.com/Lakr233/Cookey/releases/latest
 - `cookey login <url>` — start session capture, shows QR code
 - `cookey status [rid]` — check if session arrived
 - `cookey export <rid>` — print storageState.json to stdout
-- `cookey list` — show all sessions
-- `cookey rm <rid>` — delete a session
 
 ## Usage
 1. `cookey login <target_url>` → QR code appears

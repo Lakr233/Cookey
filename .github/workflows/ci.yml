@@ -16,7 +16,7 @@ permissions:
 jobs:
   ios:
     name: iOS Build
-    runs-on: macos-15
+    runs-on: macos-26
     defaults:
       run:
         working-directory: Frontend/iOS
@@ -26,8 +26,8 @@ jobs:
       - name: Install xcbeautify
         run: brew install xcbeautify
 
-      - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
+      - name: Select Xcode 26.3
+        run: sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
 
       - name: Cache Xcode Swift packages
         uses: actions/cache@v4
@@ -64,9 +64,12 @@ jobs:
 
   cli:
     name: CLI Build
-    runs-on: macos-15
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
+
+      - name: Select Xcode 26.3
+        run: sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
 
       - name: Cache SwiftPM artifacts
         uses: actions/cache@v4

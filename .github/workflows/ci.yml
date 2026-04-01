@@ -1,0 +1,107 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  ios:
+    name: iOS Build
+    runs-on: macos-26
+    defaults:
+      run:
+        working-directory: Frontend/iOS
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install xcbeautify
+        run: brew install xcbeautify
+
+      - name: Select Xcode 26.3
+        run: sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
+
+      - name: Cache Xcode Swift packages
+        uses: actions/cache@v4
+        with:
+          path: Frontend/iOS/.spm
+          key: ${{ runner.os }}-xcode-spm-${{ hashFiles('Frontend/iOS/Cookey.xcodeproj/project.pbxproj', 'Frontend/iOS/**/Package.resolved') }}
+          restore-keys: ${{ runner.os }}-xcode-spm-
+
+      - name: Resolve iOS package dependencies
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -resolvePackageDependencies \
+            -project Cookey.xcodeproj \
+            -scheme Cookey \
+            -clonedSourcePackagesDirPath .spm \
+            | xcbeautify
+
+      - name: Build iOS app without code signing
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project Cookey.xcodeproj \
+            -scheme Cookey \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -clonedSourcePackagesDirPath .spm \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build \
+            | xcbeautify
+
+  cli:
+    name: CLI Build
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode 26.3
+        run: sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
+
+      - name: Cache SwiftPM artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            CLI/.build
+            ~/.cache/org.swift.swiftpm
+            ~/Library/Caches/org.swift.swiftpm
+          key: ${{ runner.os }}-swift-cli-${{ hashFiles('CLI/Package.swift', 'CLI/Package.resolved', 'Packages/CryptoBox/Package.swift') }}
+          restore-keys: ${{ runner.os }}-swift-cli-
+
+      - name: Resolve CLI dependencies
+        run: swift package resolve --package-path CLI
+
+      - name: Build CLI
+        run: swift build --package-path CLI -c release
+
+  server-docker:
+    name: Server Docker Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build server Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: Server
+          file: Server/Dockerfile
+          push: false
+          tags: cookey-server:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

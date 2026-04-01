@@ -1,7 +1,52 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "Hello, world!" : {
+    "Cancel" : {
+
+    },
+    "Cookey" : {
+
+    },
+    "Cookey can send future login requests from %@ directly to this device." : {
+
+    },
+    "Cookey is encrypting your browser session and sending it back to the terminal." : {
+
+    },
+    "Done" : {
+
+    },
+    "Enable login notifications?" : {
+
+    },
+    "Enable Notifications" : {
+
+    },
+    "Not Now" : {
+
+    },
+    "Scan" : {
+
+    },
+    "Scan QR Code" : {
+
+    },
+    "Scan the QR code shown in your terminal\nto transfer a login session to your Mac." : {
+
+    },
+    "Transfer complete" : {
+
+    },
+    "Transfer failed" : {
+
+    },
+    "Transfer Session" : {
+
+    },
+    "Uploading session" : {
+
+    },
+    "Your terminal can export the session now." : {
 
     }
   },

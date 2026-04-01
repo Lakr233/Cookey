@@ -20,7 +20,7 @@ permissions:
 jobs:
   ios:
     name: iOS Build
-    runs-on: macos-14
+    runs-on: macos-15
     defaults:
       run:
         working-directory: Frontend/iOS
@@ -51,7 +51,7 @@ jobs:
             -scheme Cookey \
             -configuration Debug \
             -sdk iphonesimulator \
-            -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
+            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
             -clonedSourcePackagesDirPath .spm \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
@@ -61,14 +61,11 @@ jobs:
   cli:
     name: CLI Build
     runs-on: ubuntu-latest
+    container:
+      image: swift:5.9
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Set up Swift 5.9
-        uses: swift-actions/setup-swift@v2
-        with:
-          swift-version: "5.9"
 
       - name: Cache SwiftPM artifacts
         uses: actions/cache@v4

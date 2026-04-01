@@ -1,90 +1,54 @@
-# Swift Code Style Guidelines
+# Frontend/iOS
 
-## Core Style
+SwiftUI iOS app for Cookey. Scans QR codes, opens target sites in an in-app browser, captures cookies and localStorage, encrypts the session, and uploads it to the relay server.
 
-- **Indentation**: 4 spaces
-- **Braces**: Opening brace on same line
-- **Spacing**: Single space around operators and commas
-- **Naming**: PascalCase for types, camelCase for properties/methods
+## Dependencies
 
-## File Organization
+- `CryptoBox` (local: `../../Packages/CryptoBox`) — XSalsa20-Poly1305 encryption
 
-- Logical directory grouping
-- PascalCase files for types, `+` for extensions
-- Modular design with extensions
+## Source Layout
 
-## Modern Swift Features
+```
+Cookey/
+├── Backend/
+│   ├── APIClient.swift              # URLSession HTTP client (health, upload, APNs)
+│   ├── Models.swift                 # EncryptedSessionEnvelope, CapturedCookie/Origin/Session
+│   ├── SessionUploadModel.swift     # Main @Observable state machine
+│   ├── PushRegistrationCoordinator.swift  # APNs device token handling
+│   ├── DeepLink.swift               # cookey:// URL scheme parsing
+│   └── AppEnvironment.swift         # API endpoint config
+├── Interface/
+│   ├── ContentView.swift            # Root view, UI orchestration
+│   ├── ScannerView.swift            # AVCaptureSession QR scanner (UIViewRepresentable)
+│   ├── InAppBrowserView.swift       # WKWebView cookie/localStorage capture
+│   ├── APNConsentView.swift         # Push notification permission prompt
+│   └── UploadProgressView.swift     # Upload status display
+├── CookeyAppDelegate.swift          # UIApplicationDelegate (push notifications)
+├── main.swift                       # App entry point
+└── Resources/
+```
 
-- **@Observable macro**: Replace `ObservableObject`/`@Published`
-- **Swift concurrency**: `async/await`, `Task`, `actor`, `@MainActor`
-- **Result builders**: Declarative APIs
-- **Property wrappers**: Use line breaks for long declarations
-- **Opaque types**: `some` for protocol returns
+## Key Concepts
 
-## Code Structure
+- **State machine**: `SessionUploadModel` drives the app flow: idle → scanning → browsing → uploading → done/failed
+- **Deep link**: `cookey://login?rid=...&server=...&target=...&pubkey=...&device_id=...`
+- **Capture**: WKWebView JavaScript evaluation extracts cookies and localStorage after user logs in
+- **Encryption**: captured session encrypted with CLI's X25519 public key via CryptoBox before upload
 
-- Early returns to reduce nesting
-- Guard statements for optional unwrapping
-- Single responsibility per type/extension
-- Value types over reference types
+## Build Configuration
 
-## Error Handling
+- **Targets**: iOS 26.2+, macOS 26.2+ (Catalyst), visionOS
+- **Bundle ID**: `wiki.qaq.cookey.app`
+- **Entitlements**: App Sandbox, Hardened Runtime, camera access
+- **API**: `https://api.cookey.sh` (override with `COOKEY_API_URL` env var)
 
-- `Result` enum for typed errors
-- `throws`/`try` for propagation
-- Optional chaining with `guard let`/`if let`
-- Typed error definitions
+## Swift Conventions
 
-## Architecture
-
-- Avoid using protocol-oriented design unless necessary
+- 4-space indentation, opening braces on same line
+- @Observable macro (not ObservableObject/@Published)
+- async/await, @MainActor for UI state
+- Early returns, guard statements
+- PascalCase types, camelCase properties/methods
+- Small focused files, `+Extension.swift` for extensions
 - Dependency injection over singletons
-- Composition over inheritance
-- Factory/Repository patterns
-
-## Debug Assertions
-
-- Use `assert()` for development-time invariant checking
-- Use `assertionFailure()` for unreachable code paths
-- Assertions removed in release builds for performance
-- Precondition checking with `precondition()` for fatal errors
-
-## Memory Management
-
-- `weak` references for cycles
-- `unowned` when guaranteed non-nil
-- Capture lists in closures
-- `deinit` for cleanup
-
-# Shell Script Style
-
-## Core Principles
-
-- **Simplicity**: Keep scripts minimal and focused
-- **No unnecessary complexity**: Avoid features that aren't needed
-- **Visual clarity**: Use line breaks for readability
-- **Failure handling**: Use `set -euo pipefail`
-- **Use shebang for scripts**: Use `#!/bin/zsh`
-
-## Output Guidelines
-
-- Use `[+]` for successful operations
-- Use `[-]` for failed operations (when needed)
-- Keep echo messages lowercase
-- Simple status messages: "building...", "completed successfully"
-
-## Code Style
-
-- Minimal comments - focus on self-evident code
-- No unnecessary color output or visual fluff
-- Line breaks for long command chains
-- Assume required tools are available (e.g., xcbeautify)
-- Don't add if checks when pipefail handles failures
-
-# Code Organization Principles
-
-- **Single Source of Truth**: Maintain one authoritative source for each piece of logic or data
-- **Method Extraction**: Think carefully before extracting logic into methods - avoid unnecessary abstraction
-- **File Splitting**: Split files frequently, maintain small, focused files using `Xxx+Xxx.swift` pattern
-- **File Size**: Keep files small and beautiful, aim for concise, focused implementations
-- **Method Length**: Split long methods and complex logic into smaller, digestible pieces
+- Value types over reference types

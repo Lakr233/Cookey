@@ -233,55 +233,46 @@ public struct RelayWaitResponse: Decodable {
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.rid = try container.decodeIfPresent(String.self, forKey: .rid)
-        self.status = try container.decode(String.self, forKey: .status)
+        rid = try container.decodeIfPresent(String.self, forKey: .rid)
+        status = try container.decode(String.self, forKey: .status)
         let topLevelDeliveredAt = try container.decodeIfPresent(Date.self, forKey: .deliveredAt)
 
-        if let session = try Self.decodeEnvelope(from: container, forKey: .encryptedSession) {
-            self.encryptedSession = session
-            self.deliveredAt = topLevelDeliveredAt
-        } else if let payload = try Self.decodeDeliveryPayload(from: container, forKey: .session) {
-            self.encryptedSession = payload.encryptedSession
-            self.deliveredAt = topLevelDeliveredAt ?? payload.deliveredAt
-        } else if let payload = try Self.decodeDeliveryPayload(from: container, forKey: .payload) {
-            self.encryptedSession = payload.encryptedSession
-            self.deliveredAt = topLevelDeliveredAt ?? payload.deliveredAt
-        } else if let session = try Self.decodeEnvelope(from: container, forKey: .session) {
-            self.encryptedSession = session
-            self.deliveredAt = topLevelDeliveredAt
-        } else if let session = try Self.decodeEnvelope(from: container, forKey: .payload) {
-            self.encryptedSession = session
-            self.deliveredAt = topLevelDeliveredAt
+        // The server response may nest the encrypted session in several layouts
+        // depending on relay version. Try each candidate in priority order.
+        if let session = try Self.lenientDecode(EncryptedSessionEnvelope.self, from: container, forKey: .encryptedSession) {
+            encryptedSession = session
+            deliveredAt = topLevelDeliveredAt
+        } else if let (session, deliveredAt) = try Self.decodeDeliveryPayload(from: container, key: .session) ?? Self.decodeDeliveryPayload(from: container, key: .payload) {
+            encryptedSession = session
+            self.deliveredAt = topLevelDeliveredAt ?? deliveredAt
+        } else if let session = try Self.lenientDecode(EncryptedSessionEnvelope.self, from: container, forKey: .session) ?? Self.lenientDecode(EncryptedSessionEnvelope.self, from: container, forKey: .payload) {
+            encryptedSession = session
+            deliveredAt = topLevelDeliveredAt
         } else {
-            self.encryptedSession = nil
-            self.deliveredAt = topLevelDeliveredAt
-        }
-    }
-
-    private static func decodeEnvelope(
-        from container: KeyedDecodingContainer<CodingKeys>,
-        forKey key: CodingKeys
-    ) throws -> EncryptedSessionEnvelope? {
-        do {
-            return try container.decodeIfPresent(EncryptedSessionEnvelope.self, forKey: key)
-        } catch let error as DecodingError {
-            switch error {
-            case .typeMismatch, .keyNotFound, .valueNotFound:
-                return nil
-            default:
-                throw error
-            }
-        } catch {
-            throw error
+            encryptedSession = nil
+            deliveredAt = topLevelDeliveredAt
         }
     }
 
     private static func decodeDeliveryPayload(
         from container: KeyedDecodingContainer<CodingKeys>,
+        key: CodingKeys
+    ) throws -> (EncryptedSessionEnvelope, Date?)? {
+        guard let payload = try lenientDecode(SessionDeliveryPayload.self, from: container, forKey: key) else {
+            return nil
+        }
+        return (payload.encryptedSession, payload.deliveredAt)
+    }
+
+    /// Attempts to decode a value, returning nil for structural mismatches
+    /// (wrong type, missing key, null value) while propagating data corruption errors.
+    private static func lenientDecode<T: Decodable>(
+        _: T.Type,
+        from container: KeyedDecodingContainer<CodingKeys>,
         forKey key: CodingKeys
-    ) throws -> SessionDeliveryPayload? {
+    ) throws -> T? {
         do {
-            return try container.decodeIfPresent(SessionDeliveryPayload.self, forKey: key)
+            return try container.decodeIfPresent(T.self, forKey: key)
         } catch let error as DecodingError {
             switch error {
             case .typeMismatch, .keyNotFound, .valueNotFound:
@@ -289,8 +280,6 @@ public struct RelayWaitResponse: Decodable {
             default:
                 throw error
             }
-        } catch {
-            throw error
         }
     }
 }
@@ -373,9 +362,9 @@ public struct BrowserCookie: Codable {
         case domain
         case path
         case expires
-        case httpOnly = "httpOnly"
+        case httpOnly
         case secure
-        case sameSite = "sameSite"
+        case sameSite
     }
 }
 

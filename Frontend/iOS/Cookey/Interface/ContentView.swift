@@ -5,8 +5,8 @@
 //  Created by qaq on 26/3/2026.
 //
 
-import SwiftUI
 import Observation
+import SwiftUI
 
 struct ContentView: View {
     @Bindable var model: SessionUploadModel
@@ -44,12 +44,7 @@ struct ContentView: View {
             .padding(.horizontal, 28)
             .padding(.bottom, 52)
         }
-        .sheet(
-            isPresented: Binding(
-                get: { model.phase != .idle },
-                set: { if !$0 { model.dismissSheet() } }
-            )
-        ) {
+        .sheet(isPresented: $model.isShowingSheet) {
             sheetContent
         }
     }
@@ -62,33 +57,33 @@ struct ContentView: View {
         case .scanning:
             NavigationStack {
                 #if os(iOS)
-                ScannerView { model.handleURL($0) }
-                    .navigationTitle("Scan")
-                    .navigationBarTitleDisplayMode(.inline)
+                    ScannerView { model.handleURL($0) }
+                        .navigationTitle("Scan")
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbar {
+                            ToolbarItem(placement: .topBarTrailing) {
+                                Button("Done") { model.dismissSheet() }
+                            }
+                        }
+                #else
+                    VStack(spacing: 20) {
+                        Image(systemName: "link")
+                            .font(.system(size: 52, weight: .light))
+                        Text("Open the Cookey link on this device.")
+                            .font(.title3.weight(.medium))
+                        Text("QR scanning is only available on iPhone and iPad. Open the `cookey://login?...` link directly instead.")
+                            .multilineTextAlignment(.center)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(32)
                     .toolbar {
-                        ToolbarItem(placement: .topBarTrailing) {
+                        ToolbarItem(placement: .primaryAction) {
                             Button("Done") { model.dismissSheet() }
                         }
                     }
-                #else
-                VStack(spacing: 20) {
-                    Image(systemName: "link")
-                        .font(.system(size: 52, weight: .light))
-                    Text("Open the Cookey link on this device.")
-                        .font(.title3.weight(.medium))
-                    Text("QR scanning is only available on iPhone and iPad. Open the `cookey://login?...` link directly instead.")
-                        .multilineTextAlignment(.center)
-                        .foregroundStyle(.secondary)
-                }
-                .padding(32)
-                .toolbar {
-                    ToolbarItem(placement: .primaryAction) {
-                        Button("Done") { model.dismissSheet() }
-                    }
-                }
                 #endif
             }
-        case .browsing(let deepLink):
+        case let .browsing(deepLink):
             InAppBrowserView(deepLink: deepLink) { cookies, origins in
                 await model.captureAndUpload(
                     cookies: cookies,
@@ -100,7 +95,7 @@ struct ContentView: View {
             UploadProgressView(phase: model.phase) {
                 model.dismissSheet()
             }
-        case .apnOptIn(let deepLink):
+        case let .apnOptIn(deepLink):
             APNConsentView(
                 deepLink: deepLink,
                 onAccept: {

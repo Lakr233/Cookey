@@ -1,7 +1,7 @@
 import Crypto
 import Foundation
 #if canImport(FoundationNetworking)
-import FoundationNetworking
+    import FoundationNetworking
 #endif
 
 public actor APNSClient {
@@ -16,9 +16,9 @@ public actor APNSClient {
     public init(configuration: APNSConfiguration, session: URLSession = .shared) {
         self.configuration = configuration
         self.session = session
-        self.encoder = JSONEncoder()
-        self.decoder = JSONDecoder()
-        self.encoder.dateEncodingStrategy = .iso8601
+        encoder = JSONEncoder()
+        decoder = JSONDecoder()
+        encoder.dateEncodingStrategy = .iso8601
     }
 
     public func sendLoginRequestNotification(
@@ -34,8 +34,7 @@ public actor APNSClient {
                 registration: registration,
                 storage: storage
             )
-        } catch {
-        }
+        } catch {}
     }
 
     private func sendNotification(
@@ -55,7 +54,7 @@ public actor APNSClient {
         urlRequest.setValue("alert", forHTTPHeaderField: "apns-push-type")
         urlRequest.setValue("10", forHTTPHeaderField: "apns-priority")
         urlRequest.setValue(configuration.bundleID, forHTTPHeaderField: "apns-topic")
-        urlRequest.setValue("bearer \(try jwtToken())", forHTTPHeaderField: "authorization")
+        try urlRequest.setValue("bearer \(jwtToken())", forHTTPHeaderField: "authorization")
         urlRequest.httpBody = try encoder.encode(APNSNotificationPayload(request: request, serverURL: serverURL))
 
         let (data, response) = try await session.data(for: urlRequest)
@@ -76,7 +75,8 @@ public actor APNSClient {
         let now = Date()
         if let cachedBearerToken,
            let cachedBearerTokenIssuedAt,
-           now.timeIntervalSince(cachedBearerTokenIssuedAt) < (50 * 60) {
+           now.timeIntervalSince(cachedBearerTokenIssuedAt) < (50 * 60)
+        {
             return cachedBearerToken
         }
 
@@ -107,7 +107,7 @@ public actor APNSClient {
         return key
     }
 
-    private func encodedJWTPart<T: Encodable>(_ value: T) throws -> String {
+    private func encodedJWTPart(_ value: some Encodable) throws -> String {
         let data = try JSONEncoder().encode(value)
         return data.base64URLEncodedString()
     }
@@ -149,18 +149,18 @@ private struct APNSNotificationPayload: Encodable {
     }
 
     init(request: StoredRequest, serverURL: String) {
-        self.aps = APSPayload(
+        aps = APSPayload(
             alert: APSAlert(
                 title: "Cookey login request",
                 body: "Approve login for \(request.targetUrl)"
             ),
             sound: "default"
         )
-        self.rid = request.rid
+        rid = request.rid
         self.serverURL = serverURL
-        self.targetURL = request.targetUrl
-        self.pubkey = request.cliPublicKey
-        self.deviceID = request.deviceID
+        targetURL = request.targetUrl
+        pubkey = request.cliPublicKey
+        deviceID = request.deviceID
     }
 }
 

@@ -358,15 +358,15 @@ If `rid` is not provided:
 
 ### 7.2 Status Values
 
-| Status | Meaning |
-|--------|---------|
-| `waiting` | Daemon started, waiting for mobile upload |
-| `receiving` | Server payload received; decrypting or writing to disk |
-| `ready` | Local session file exists |
-| `expired` | Request expired; no session received |
-| `orphaned` | Daemon descriptor exists but PID is gone and session does not exist |
-| `error` | Background process failed |
-| `missing` | Not found locally or on the server |
+| Status      | Meaning                                                             |
+| ----------- | ------------------------------------------------------------------- |
+| `waiting`   | Daemon started, waiting for mobile upload                           |
+| `receiving` | Server payload received; decrypting or writing to disk              |
+| `ready`     | Local session file exists                                           |
+| `expired`   | Request expired; no session received                                |
+| `orphaned`  | Daemon descriptor exists but PID is gone and session does not exist |
+| `error`     | Background process failed                                           |
+| `missing`   | Not found locally or on the server                                  |
 
 ### 7.3 Watch Mode
 
@@ -430,11 +430,11 @@ Default output filename:
 The exported `playwright` file can be used directly:
 
 ```ts
-import { chromium } from '@playwright/test';
+import { chromium } from "@playwright/test";
 
 const browser = await chromium.launch();
 const context = await browser.newContext({
-  storageState: './storage-state.r_8GQx8tY0j8x3Yw2N.json'
+  storageState: "./storage-state.r_8GQx8tY0j8x3Yw2N.json",
 });
 ```
 
@@ -505,15 +505,15 @@ The file must be Playwright-compatible. Recommended format: Playwright top-level
 
 ### 9.2 Field Constraints
 
-| Field | Requirement |
-|-------|-------------|
-| `cookies` | Array; may be empty; must be present |
-| `origins` | Array; may be empty; must be present |
-| `_cookey.version` | Integer; currently `1` |
-| `_cookey.rid` | Must match the filename |
-| `_cookey.device_fingerprint` | Generated during bootstrap |
-| `_cookey.captured_at` | Timestamp when mobile finished capturing |
-| `_cookey.received_at` | Timestamp when CLI wrote the file |
+| Field                        | Requirement                              |
+| ---------------------------- | ---------------------------------------- |
+| `cookies`                    | Array; may be empty; must be present     |
+| `origins`                    | Array; may be empty; must be present     |
+| `_cookey.version`            | Integer; currently `1`                   |
+| `_cookey.rid`                | Must match the filename                  |
+| `_cookey.device_fingerprint` | Generated during bootstrap               |
+| `_cookey.captured_at`        | Timestamp when mobile finished capturing |
+| `_cookey.received_at`        | Timestamp when CLI wrote the file        |
 
 ---
 

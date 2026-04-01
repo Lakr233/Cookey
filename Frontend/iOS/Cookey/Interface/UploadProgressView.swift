@@ -26,7 +26,7 @@ struct UploadProgressView: View {
                     .font(.title3.weight(.semibold))
                 Text("Your terminal can export the session now.")
                     .foregroundStyle(.secondary)
-            case .failed(let message):
+            case let .failed(message):
                 Image(systemName: "xmark.octagon.fill")
                     .font(.system(size: 56))
                     .foregroundStyle(.red)

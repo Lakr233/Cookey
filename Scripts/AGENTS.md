@@ -4,10 +4,10 @@ Build, signing, and CI automation scripts for the Cookey CLI release pipeline.
 
 ## Files
 
-| Script | Purpose |
-|--------|---------|
-| `build-release.sh` | Full release workflow: universal binary build, code signing, zip packaging, Apple notarization |
-| `setup-ci-keychain.sh` | Restores signing keychain from CI secrets, detects signing identity and notarytool profile |
+| Script                 | Purpose                                                                                        |
+| ---------------------- | ---------------------------------------------------------------------------------------------- |
+| `build-release.sh`     | Full release workflow: universal binary build, code signing, zip packaging, Apple notarization |
+| `setup-ci-keychain.sh` | Restores signing keychain from CI secrets, detects signing identity and notarytool profile     |
 
 ## How They Work Together
 

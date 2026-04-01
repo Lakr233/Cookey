@@ -4,22 +4,22 @@ import PackageDescription
 let package = Package(
     name: "Cookey",
     platforms: [
-        .macOS(.v13)
+        .macOS(.v13),
     ],
     products: [
         .executable(name: "cookey", targets: ["CLI"]),
-        .library(name: "Core", targets: ["Core"])
+        .library(name: "Core", targets: ["Core"]),
     ],
     dependencies: [
         .package(path: "../Packages/CryptoBox"),
-        .package(url: "https://github.com/apple/swift-crypto.git", from: "3.0.0")
+        .package(url: "https://github.com/apple/swift-crypto.git", from: "3.0.0"),
     ],
     targets: [
         .target(
             name: "Core",
             dependencies: [
                 .product(name: "CryptoBox", package: "CryptoBox"),
-                .product(name: "Crypto", package: "swift-crypto")
+                .product(name: "Crypto", package: "swift-crypto"),
             ],
             path: "Sources/Core"
         ),
@@ -27,6 +27,6 @@ let package = Package(
             name: "CLI",
             dependencies: ["Core"],
             path: "Sources/CLI"
-        )
+        ),
     ]
 )

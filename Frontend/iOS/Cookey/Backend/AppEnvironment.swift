@@ -5,7 +5,8 @@ enum AppEnvironment {
 
     static var current: URL {
         if let override = ProcessInfo.processInfo.environment["COOKEY_API_URL"],
-           let url = URL(string: override) {
+           let url = URL(string: override)
+        {
             return url
         }
         return productionAPIBaseURL

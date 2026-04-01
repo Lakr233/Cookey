@@ -5,10 +5,10 @@ public typealias RequestID = String
 
 /// Request status
 public enum RequestStatus: String, Codable, Sendable {
-    case pending = "pending"
-    case ready = "ready"
-    case expired = "expired"
-    case delivered = "delivered"
+    case pending
+    case ready
+    case expired
+    case delivered
 }
 
 /// Login request manifest from CLI
@@ -19,7 +19,7 @@ public struct LoginRequest: Codable, Sendable {
     public let deviceID: String
     public let deviceFingerprint: String
     public let expiresAt: Date
-    
+
     enum CodingKeys: String, CodingKey {
         case rid
         case targetUrl = "target_url"
@@ -41,17 +41,17 @@ public struct StoredRequest: Codable, Sendable {
     public let expiresAt: Date
     public var status: RequestStatus
     public var encryptedSession: EncryptedSession?
-    
+
     public init(from request: LoginRequest, status: RequestStatus = .pending) {
-        self.rid = request.rid
-        self.targetUrl = request.targetUrl
-        self.cliPublicKey = request.cliPublicKey
-        self.deviceID = request.deviceID
-        self.deviceFingerprint = request.deviceFingerprint
-        self.createdAt = Date()
-        self.expiresAt = request.expiresAt
+        rid = request.rid
+        targetUrl = request.targetUrl
+        cliPublicKey = request.cliPublicKey
+        deviceID = request.deviceID
+        deviceFingerprint = request.deviceFingerprint
+        createdAt = Date()
+        expiresAt = request.expiresAt
         self.status = status
-        self.encryptedSession = nil
+        encryptedSession = nil
     }
 }
 
@@ -85,7 +85,7 @@ public struct EncryptedSession: Codable, Sendable {
     public let nonce: String
     public let ciphertext: String
     public let capturedAt: Date
-    
+
     enum CodingKeys: String, CodingKey {
         case version
         case algorithm
@@ -123,7 +123,7 @@ public struct RequestStatusResponse: Codable, Sendable {
     public let targetUrl: String
     public let expiresAt: Date
     public let createdAt: Date
-    
+
     enum CodingKeys: String, CodingKey {
         case rid
         case status
@@ -131,13 +131,13 @@ public struct RequestStatusResponse: Codable, Sendable {
         case expiresAt = "expires_at"
         case createdAt = "created_at"
     }
-    
+
     public init(from stored: StoredRequest) {
-        self.rid = stored.rid
-        self.status = stored.status
-        self.targetUrl = stored.targetUrl
-        self.expiresAt = stored.expiresAt
-        self.createdAt = stored.createdAt
+        rid = stored.rid
+        status = stored.status
+        targetUrl = stored.targetUrl
+        expiresAt = stored.expiresAt
+        createdAt = stored.createdAt
     }
 }
 
@@ -168,9 +168,9 @@ public struct RequestWaitResponse: Codable, Sendable {
     }
 
     public init(from stored: StoredRequest, deliveredAt: Date? = nil) {
-        self.rid = stored.rid
-        self.status = stored.status
-        self.encryptedSession = stored.encryptedSession
+        rid = stored.rid
+        status = stored.status
+        encryptedSession = stored.encryptedSession
         self.deliveredAt = deliveredAt
     }
 }
@@ -180,22 +180,22 @@ public enum WebSocketMessage: Codable, Sendable {
     case status(StatusPayload)
     case session(SessionPayload)
     case error(ErrorPayload)
-    
+
     private enum CodingKeys: String, CodingKey {
         case type
         case payload
     }
-    
+
     private enum MessageType: String, Codable {
         case status
         case session
         case error
     }
-    
+
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let type = try container.decode(MessageType.self, forKey: .type)
-        
+
         switch type {
         case .status:
             let payload = try container.decode(StatusPayload.self, forKey: .payload)
@@ -208,18 +208,18 @@ public enum WebSocketMessage: Codable, Sendable {
             self = .error(payload)
         }
     }
-    
+
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        
+
         switch self {
-        case .status(let payload):
+        case let .status(payload):
             try container.encode(MessageType.status, forKey: .type)
             try container.encode(payload, forKey: .payload)
-        case .session(let payload):
+        case let .session(payload):
             try container.encode(MessageType.session, forKey: .type)
             try container.encode(payload, forKey: .payload)
-        case .error(let payload):
+        case let .error(payload):
             try container.encode(MessageType.error, forKey: .type)
             try container.encode(payload, forKey: .payload)
         }
@@ -234,7 +234,7 @@ public struct StatusPayload: Codable, Sendable {
 public struct SessionPayload: Codable, Sendable {
     public let encryptedSession: EncryptedSession
     public let deliveredAt: Date
-    
+
     enum CodingKeys: String, CodingKey {
         case encryptedSession = "encrypted_session"
         case deliveredAt = "delivered_at"
@@ -254,7 +254,7 @@ public struct ServerConfig: Sendable {
     public let maxPayloadSize: Int
     public let publicURL: String
     public let apnsConfiguration: APNSConfiguration?
-    
+
     public init(
         host: String = "0.0.0.0",
         port: Int = 8080,

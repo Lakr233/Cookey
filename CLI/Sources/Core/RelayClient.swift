@@ -1,9 +1,9 @@
 import Foundation
 #if canImport(Dispatch)
-import Dispatch
+    import Dispatch
 #endif
 #if canImport(FoundationNetworking)
-import FoundationNetworking
+    import FoundationNetworking
 #endif
 
 public enum RelayClientError: Error, LocalizedError {
@@ -16,18 +16,18 @@ public enum RelayClientError: Error, LocalizedError {
 
     public var errorDescription: String? {
         switch self {
-        case .invalidServerURL(let value):
-            return "Invalid Relay server URL: \(value)"
+        case let .invalidServerURL(value):
+            "Invalid Relay server URL: \(value)"
         case .invalidResponse:
-            return "Relay server returned an invalid response"
-        case .httpStatus(let code, let body):
-            return "Relay server responded with HTTP \(code): \(body)"
-        case .expired(let rid):
-            return "Request \(rid) expired before a session arrived"
-        case .missing(let rid):
-            return "Request \(rid) was not found"
-        case .timeout(let rid):
-            return "Timed out while waiting for session \(rid)"
+            "Relay server returned an invalid response"
+        case let .httpStatus(code, body):
+            "Relay server responded with HTTP \(code): \(body)"
+        case let .expired(rid):
+            "Request \(rid) expired before a session arrived"
+        case let .missing(rid):
+            "Request \(rid) was not found"
+        case let .timeout(rid):
+            "Timed out while waiting for session \(rid)"
         }
     }
 }
@@ -41,10 +41,10 @@ public struct RelayClient {
     public init(baseURL: URL, session: URLSession? = nil) {
         self.baseURL = baseURL
         self.session = session ?? URLSession(configuration: .default)
-        self.decoder = JSONDecoder()
-        self.decoder.dateDecodingStrategy = .iso8601
-        self.encoder = JSONEncoder()
-        self.encoder.dateEncodingStrategy = .iso8601
+        decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
     }
 
     public func register(manifest: LoginManifest) throws {
@@ -84,12 +84,12 @@ public struct RelayClient {
     public func waitForSession(rid: String, transport: Transport, timeoutSeconds: Int) throws -> EncryptedSessionEnvelope {
         switch transport {
         case .poll:
-            return try waitWithPolling(rid: rid, timeoutSeconds: timeoutSeconds)
+            try waitWithPolling(rid: rid, timeoutSeconds: timeoutSeconds)
         case .ws:
             // URLSession WebSocket support varies across Swift runtime environments.
             // Polling is used as the portable fallback until a server-compatible WS
             // implementation is added and verified in this package.
-            return try waitWithPolling(rid: rid, timeoutSeconds: timeoutSeconds)
+            try waitWithPolling(rid: rid, timeoutSeconds: timeoutSeconds)
         }
     }
 
@@ -103,7 +103,7 @@ public struct RelayClient {
 
             var components = URLComponents(url: endpoint, resolvingAgainstBaseURL: false)
             components?.queryItems = [
-                URLQueryItem(name: "timeout", value: String(perRequestTimeout))
+                URLQueryItem(name: "timeout", value: String(perRequestTimeout)),
             ]
 
             guard let url = components?.url else {
@@ -172,19 +172,17 @@ public struct RelayClient {
         }
 
         let data = responseData ?? Data()
-        if (200 ..< 300).contains(httpResponse.statusCode) {
-            return (data, httpResponse)
+        let code = httpResponse.statusCode
+
+        let isAcceptable =
+            (200 ..< 300).contains(code) ||
+            (acceptNoContent && code == 204) ||
+            (acceptNotFound && code == 404)
+
+        guard isAcceptable else {
+            throw RelayClientError.httpStatus(code, String(data: data, encoding: .utf8) ?? "")
         }
 
-        if acceptNoContent && httpResponse.statusCode == 204 {
-            return (data, httpResponse)
-        }
-
-        if acceptNotFound && httpResponse.statusCode == 404 {
-            return (data, httpResponse)
-        }
-
-        let body = String(data: data, encoding: .utf8) ?? ""
-        throw RelayClientError.httpStatus(httpResponse.statusCode, body)
+        return (data, httpResponse)
     }
 }

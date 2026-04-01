@@ -13,6 +13,7 @@ A lightweight, zero-knowledge relay server for Cookey - built with Swift and Hum
 ## API Endpoints
 
 ### POST /v1/requests
+
 Create a new login request (CLI → Server)
 
 ```json
@@ -26,15 +27,19 @@ Create a new login request (CLI → Server)
 ```
 
 ### GET /v1/requests/{rid}
+
 Get request status
 
 ### GET /v1/requests/{rid}/wait?timeout=30
+
 Long polling for session (CLI daemon)
 
 ### WebSocket /v1/requests/{rid}/ws
+
 WebSocket connection for real-time updates
 
 ### POST /v1/requests/{rid}/session
+
 Upload encrypted session (Mobile → Server)
 
 ```json

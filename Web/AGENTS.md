@@ -4,13 +4,13 @@ Static marketing and documentation site for Cookey. Served via nginx in Docker.
 
 ## Files
 
-| File | Purpose |
-|------|---------|
-| `index.html` | Landing page — hero, features, "how it works" steps, design properties |
+| File               | Purpose                                                                        |
+| ------------------ | ------------------------------------------------------------------------------ |
+| `index.html`       | Landing page — hero, features, "how it works" steps, design properties         |
 | `get-started.html` | Install guide — platform tabs (macOS/Linux), CLI reference, LLM agents section |
-| `llms.txt` | Machine-readable tool description for LLM agent integration |
-| `nginx.conf` | Nginx config — port 3000, SPA routing, `/api/health` proxy to `api:5800` |
-| `Dockerfile` | nginx:1.29-alpine base, copies static files, exposes port 3000 |
+| `llms.txt`         | Machine-readable tool description for LLM agent integration                    |
+| `nginx.conf`       | Nginx config — port 3000, SPA routing, `/api/health` proxy to `api:5800`       |
+| `Dockerfile`       | nginx:1.29-alpine base, copies static files, exposes port 3000                 |
 
 ## Design Conventions
 

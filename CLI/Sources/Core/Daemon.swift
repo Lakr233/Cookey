@@ -1,8 +1,8 @@
 import Foundation
 #if canImport(Glibc)
-import Glibc
+    import Glibc
 #else
-import Darwin
+    import Darwin
 #endif
 
 public enum DaemonError: Error, LocalizedError {
@@ -14,13 +14,13 @@ public enum DaemonError: Error, LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .invalidDaemonPayload:
-            return "Invalid daemon launch payload"
-        case .detachFailed(let reason):
-            return "Daemon detach failed: \(reason)"
-        case .daemonDescriptorTimeout(let rid):
-            return "Timed out waiting for daemon descriptor for \(rid)"
-        case .invalidServerURL(let value):
-            return "Invalid server URL: \(value)"
+            "Invalid daemon launch payload"
+        case let .detachFailed(reason):
+            "Daemon detach failed: \(reason)"
+        case let .daemonDescriptorTimeout(rid):
+            "Timed out waiting for daemon descriptor for \(rid)"
+        case let .invalidServerURL(value):
+            "Invalid server URL: \(value)"
         }
     }
 }
@@ -48,7 +48,7 @@ public enum Daemon {
         let payload = DaemonLaunchPayload(manifest: manifest, timeoutSeconds: timeoutSeconds)
         let process = Process()
         process.executableURL = try resolveExecutableURL()
-        process.arguments = ["__daemon", try encodeLaunchPayload(payload)]
+        process.arguments = try ["__daemon", encodeLaunchPayload(payload)]
         process.currentDirectoryURL = URL(fileURLWithPath: FileManager.default.currentDirectoryPath, isDirectory: true)
         process.standardInput = try devNullHandle(forReading: true)
         process.standardOutput = try devNullHandle(forReading: false)
@@ -141,7 +141,8 @@ public enum Daemon {
         while Date() < deadline {
             if FileManager.default.fileExists(atPath: url.path),
                let descriptor = try? ConfigStore.readJSON(DaemonDescriptor.self, from: url),
-               descriptor.pid == expectedPID {
+               descriptor.pid == expectedPID
+            {
                 return
             }
 
@@ -176,7 +177,7 @@ public enum Daemon {
         let decoder = JSONDecoder()
         let session = try decoder.decode(
             SessionFile.self,
-            from: try KeyManager.decryptSessionEnvelope(envelope, using: keypair)
+            from: KeyManager.decryptSessionEnvelope(envelope, using: keypair)
         )
         return SessionFile(
             cookies: session.cookies,

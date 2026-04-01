@@ -1,7 +1,7 @@
 import Crypto
 import Foundation
 #if canImport(Security)
-import Security
+    import Security
 #endif
 
 public enum CryptoBoxError: Error {
@@ -13,7 +13,13 @@ public enum CryptoBoxError: Error {
     case randomGenerationFailed
 }
 
+/// XSalsa20-Poly1305 authenticated encryption (NaCl secretbox compatible).
+///
+/// Layout: `tag (16 bytes) || encrypted body`
+/// Key derivation: HSalsa20 stretches the 24-byte nonce into a Salsa20 sub-key.
 public enum XSalsa20Poly1305Box {
+    // MARK: - Public API
+
     public static func open(ciphertext: Data, nonce: Data, sharedSecret: Data) throws -> Data {
         guard nonce.count == 24 else {
             throw CryptoBoxError.invalidNonce
@@ -88,10 +94,14 @@ public enum XSalsa20Poly1305Box {
         )
     }
 
+    // MARK: - HSalsa20 Key Derivation
+
+    /// Derives a 32-byte sub-key from a 32-byte key and 16-byte nonce.
+    /// Used to stretch the 24-byte XSalsa20 nonce into a Salsa20-compatible form.
     private static func hsalsa20(_ key: Data, nonce: Data) -> Data {
         let keyBytes = Array(key)
         let nonceBytes = Array(nonce)
-        var state = [
+        let state = [
             sigma[0], load32(keyBytes, 0), load32(keyBytes, 4), load32(keyBytes, 8),
             load32(keyBytes, 12), sigma[1], load32(nonceBytes, 0), load32(nonceBytes, 4),
             load32(nonceBytes, 8), load32(nonceBytes, 12), sigma[2], load32(keyBytes, 16),
@@ -110,6 +120,8 @@ public enum XSalsa20Poly1305Box {
         output.append(contentsOf: store32(working[9]))
         return Data(output)
     }
+
+    // MARK: - Salsa20 Stream Cipher
 
     private static func salsa20XOR(
         input: [UInt8],
@@ -142,8 +154,8 @@ public enum XSalsa20Poly1305Box {
     }
 
     private static func salsa20Block(key: [UInt8], nonce: [UInt8], counter: UInt64) -> [UInt8] {
-        let counterLow = UInt32(counter & 0xffff_ffff)
-        let counterHigh = UInt32((counter >> 32) & 0xffff_ffff)
+        let counterLow = UInt32(counter & 0xFFFF_FFFF)
+        let counterHigh = UInt32((counter >> 32) & 0xFFFF_FFFF)
         let state = [
             sigma[0], load32(key, 0), load32(key, 4), load32(key, 8),
             load32(key, 12), sigma[1], load32(nonce, 0), load32(nonce, 4),
@@ -162,10 +174,12 @@ public enum XSalsa20Poly1305Box {
         return output
     }
 
+    /// 20 rounds of the Salsa20 core (10 iterations of column + row quarter-rounds).
     private static func salsa20Rounds(_ input: [UInt32]) -> [UInt32] {
         var x = input
 
         for _ in 0 ..< 10 {
+            // Column quarter-rounds
             x[4] ^= rotateLeft(x[0] &+ x[12], by: 7)
             x[8] ^= rotateLeft(x[4] &+ x[0], by: 9)
             x[12] ^= rotateLeft(x[8] &+ x[4], by: 13)
@@ -186,6 +200,7 @@ public enum XSalsa20Poly1305Box {
             x[11] ^= rotateLeft(x[7] &+ x[3], by: 13)
             x[15] ^= rotateLeft(x[11] &+ x[7], by: 18)
 
+            // Row quarter-rounds
             x[1] ^= rotateLeft(x[0] &+ x[3], by: 7)
             x[2] ^= rotateLeft(x[1] &+ x[0], by: 9)
             x[3] ^= rotateLeft(x[2] &+ x[1], by: 13)
@@ -210,12 +225,16 @@ public enum XSalsa20Poly1305Box {
         return x
     }
 
+    // MARK: - Poly1305 MAC
+
+    /// Computes a 16-byte Poly1305 authentication tag.
+    /// Key layout: r (16 bytes, clamped) || s (16 bytes, one-time pad).
     private static func poly1305Authenticate(message: [UInt8], key: [UInt8]) -> [UInt8] {
-        let r0 = Int64(load32(key, 0) & 0x3ffffff)
-        let r1 = Int64((load32(key, 3) >> 2) & 0x3ffff03)
-        let r2 = Int64((load32(key, 6) >> 4) & 0x3ffc0ff)
-        let r3 = Int64((load32(key, 9) >> 6) & 0x3f03fff)
-        let r4 = Int64((load32(key, 12) >> 8) & 0x00fffff)
+        let r0 = Int64(load32(key, 0) & 0x3FFFFFF)
+        let r1 = Int64((load32(key, 3) >> 2) & 0x3FFFF03)
+        let r2 = Int64((load32(key, 6) >> 4) & 0x3FFC0FF)
+        let r3 = Int64((load32(key, 9) >> 6) & 0x3F03FFF)
+        let r4 = Int64((load32(key, 12) >> 8) & 0x00FFFFF)
 
         let s1 = r1 * 5
         let s2 = r2 * 5
@@ -238,11 +257,11 @@ public enum XSalsa20Poly1305Box {
             }
             block[blockCount] = 1
 
-            h0 += Int64(load32(block, 0) & 0x3ffffff)
-            h1 += Int64((load32(block, 3) >> 2) & 0x3ffffff)
-            h2 += Int64((load32(block, 6) >> 4) & 0x3ffffff)
-            h3 += Int64((load32(block, 9) >> 6) & 0x3ffffff)
-            h4 += Int64((load32(block, 12) >> 8) & 0x3ffffff)
+            h0 += Int64(load32(block, 0) & 0x3FFFFFF)
+            h1 += Int64((load32(block, 3) >> 2) & 0x3FFFFFF)
+            h2 += Int64((load32(block, 6) >> 4) & 0x3FFFFFF)
+            h3 += Int64((load32(block, 9) >> 6) & 0x3FFFFFF)
+            h4 += Int64((load32(block, 12) >> 8) & 0x3FFFFFF)
 
             let d0 = (h0 * r0) + (h1 * s4) + (h2 * s3) + (h3 * s2) + (h4 * s1)
             let d1 = (h0 * r1) + (h1 * r0) + (h2 * s4) + (h3 * s3) + (h4 * s2)
@@ -251,55 +270,55 @@ public enum XSalsa20Poly1305Box {
             let d4 = (h0 * r4) + (h1 * r3) + (h2 * r2) + (h3 * r1) + (h4 * r0)
 
             var carry = d0 >> 26
-            h0 = d0 & 0x3ffffff
-            var acc1 = d1 + carry
+            h0 = d0 & 0x3FFFFFF
+            let acc1 = d1 + carry
             carry = acc1 >> 26
-            h1 = acc1 & 0x3ffffff
-            var acc2 = d2 + carry
+            h1 = acc1 & 0x3FFFFFF
+            let acc2 = d2 + carry
             carry = acc2 >> 26
-            h2 = acc2 & 0x3ffffff
-            var acc3 = d3 + carry
+            h2 = acc2 & 0x3FFFFFF
+            let acc3 = d3 + carry
             carry = acc3 >> 26
-            h3 = acc3 & 0x3ffffff
-            var acc4 = d4 + carry
+            h3 = acc3 & 0x3FFFFFF
+            let acc4 = d4 + carry
             carry = acc4 >> 26
-            h4 = acc4 & 0x3ffffff
+            h4 = acc4 & 0x3FFFFFF
             h0 += carry * 5
             carry = h0 >> 26
-            h0 &= 0x3ffffff
+            h0 &= 0x3FFFFFF
             h1 += carry
 
             offset += blockCount
         }
 
         var carry = h1 >> 26
-        h1 &= 0x3ffffff
+        h1 &= 0x3FFFFFF
         h2 += carry
         carry = h2 >> 26
-        h2 &= 0x3ffffff
+        h2 &= 0x3FFFFFF
         h3 += carry
         carry = h3 >> 26
-        h3 &= 0x3ffffff
+        h3 &= 0x3FFFFFF
         h4 += carry
         carry = h4 >> 26
-        h4 &= 0x3ffffff
+        h4 &= 0x3FFFFFF
         h0 += carry * 5
         carry = h0 >> 26
-        h0 &= 0x3ffffff
+        h0 &= 0x3FFFFFF
         h1 += carry
 
         var g0 = h0 + 5
         carry = g0 >> 26
-        g0 &= 0x3ffffff
+        g0 &= 0x3FFFFFF
         var g1 = h1 + carry
         carry = g1 >> 26
-        g1 &= 0x3ffffff
+        g1 &= 0x3FFFFFF
         var g2 = h2 + carry
         carry = g2 >> 26
-        g2 &= 0x3ffffff
+        g2 &= 0x3FFFFFF
         var g3 = h3 + carry
         carry = g3 >> 26
-        g3 &= 0x3ffffff
+        g3 &= 0x3FFFFFF
         let g4 = h4 + carry - (1 << 26)
 
         let mask = ~(g4 >> 63)
@@ -315,14 +334,17 @@ public enum XSalsa20Poly1305Box {
         var f2 = UInt64((h2 >> 12) | (h3 << 14)) + UInt64(load32(key, 24)) + (f1 >> 32)
         var f3 = UInt64((h3 >> 18) | (h4 << 8)) + UInt64(load32(key, 28)) + (f2 >> 32)
 
-        f0 &= 0xffff_ffff
-        f1 &= 0xffff_ffff
-        f2 &= 0xffff_ffff
-        f3 &= 0xffff_ffff
+        f0 &= 0xFFFF_FFFF
+        f1 &= 0xFFFF_FFFF
+        f2 &= 0xFFFF_FFFF
+        f3 &= 0xFFFF_FFFF
 
         return store32(UInt32(f0)) + store32(UInt32(f1)) + store32(UInt32(f2)) + store32(UInt32(f3))
     }
 
+    // MARK: - Helpers
+
+    /// Little-endian load of 4 bytes at the given offset (bounds-safe).
     private static func load32(_ bytes: [UInt8], _ index: Int) -> UInt32 {
         let b0 = index < bytes.count ? UInt32(bytes[index]) : 0
         let b1 = index + 1 < bytes.count ? UInt32(bytes[index + 1]) << 8 : 0
@@ -357,22 +379,23 @@ public enum XSalsa20Poly1305Box {
     }
 
     private static func fillRandomBytes(_ bytes: inout [UInt8]) throws {
-#if canImport(Security)
-        guard SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes) == errSecSuccess else {
-            throw CryptoBoxError.randomGenerationFailed
-        }
-#else
-        var generator = SystemRandomNumberGenerator()
-        for index in bytes.indices {
-            bytes[index] = UInt8.random(in: UInt8.min ... UInt8.max, using: &generator)
-        }
-#endif
+        #if canImport(Security)
+            guard SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes) == errSecSuccess else {
+                throw CryptoBoxError.randomGenerationFailed
+            }
+        #else
+            var generator = SystemRandomNumberGenerator()
+            for index in bytes.indices {
+                bytes[index] = UInt8.random(in: UInt8.min ... UInt8.max, using: &generator)
+            }
+        #endif
     }
 
+    /// "expand 32-byte k" in little-endian — the Salsa20 constant.
     private static let sigma: [UInt32] = [
-        0x61707865,
-        0x3320646e,
-        0x79622d32,
-        0x6b206574,
+        0x6170_7865, // "expa"
+        0x3320_646E, // "nd 3"
+        0x7962_2D32, // "2-by"
+        0x6B20_6574, // "te k"
     ]
 }

@@ -12,8 +12,8 @@ struct APIClient {
 
     init(baseURL: URL) {
         self.baseURL = baseURL
-        self.encoder = JSONEncoder()
-        self.encoder.dateEncodingStrategy = .iso8601
+        encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
     }
 
     func healthCheck() async throws -> APIHealthCheckResult {
@@ -56,14 +56,14 @@ struct APIClient {
 
     func unregisterAPNToken(deviceID: String) async throws {
         let endpoint = baseURL.appending(path: "v1/devices/\(deviceID)/apn-token")
-        _ = try await sendRequest(to: endpoint, method: "DELETE", body: Optional<String>.none)
+        _ = try await sendRequest(to: endpoint, method: "DELETE", body: String?.none)
     }
 
     @discardableResult
-    private func sendRequest<T: Encodable>(
+    private func sendRequest(
         to url: URL,
         method: String,
-        body: T?
+        body: (some Encodable)?
     ) async throws -> HTTPURLResponse {
         var request = URLRequest(url: url)
         request.httpMethod = method

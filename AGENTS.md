@@ -11,14 +11,14 @@ Trust model: user trusts CLI + mobile device; relay server is untrusted (zero-kn
 
 ## Repository Layout
 
-| Directory | Purpose | Details |
-|-----------|---------|---------|
-| [CLI/](CLI/AGENTS.md) | Swift CLI tool (`cookey`) | login, status, export commands; background daemon; ed25519/x25519 crypto |
-| [Server/](Server/AGENTS.md) | Swift relay server (Hummingbird) | In-memory request storage; WebSocket + long-poll transport; APNs |
-| [Frontend/iOS/](Frontend/iOS/AGENTS.md) | iOS app (SwiftUI) | QR scanner, in-app browser, cookie/localStorage capture, encrypted upload |
-| [Packages/CryptoBox/](Packages/CryptoBox/AGENTS.md) | Shared Swift crypto library | XSalsa20-Poly1305 authenticated encryption with Curve25519 key agreement |
-| [Web/](Web/AGENTS.md) | Static marketing/docs site | Landing page, get-started guide, llms.txt; served via nginx/Docker |
-| [Scripts/](Scripts/AGENTS.md) | Build and CI scripts | Universal binary builds, code signing, notarization, CI keychain setup |
+| Directory                                           | Purpose                          | Details                                                                   |
+| --------------------------------------------------- | -------------------------------- | ------------------------------------------------------------------------- |
+| [CLI/](CLI/AGENTS.md)                               | Swift CLI tool (`cookey`)        | login, status, export commands; background daemon; ed25519/x25519 crypto  |
+| [Server/](Server/AGENTS.md)                         | Swift relay server (Hummingbird) | In-memory request storage; WebSocket + long-poll transport; APNs          |
+| [Frontend/iOS/](Frontend/iOS/AGENTS.md)             | iOS app (SwiftUI)                | QR scanner, in-app browser, cookie/localStorage capture, encrypted upload |
+| [Packages/CryptoBox/](Packages/CryptoBox/AGENTS.md) | Shared Swift crypto library      | XSalsa20-Poly1305 authenticated encryption with Curve25519 key agreement  |
+| [Web/](Web/AGENTS.md)                               | Static marketing/docs site       | Landing page, get-started guide, llms.txt; served via nginx/Docker        |
+| [Scripts/](Scripts/AGENTS.md)                       | Build and CI scripts             | Universal binary builds, code signing, notarization, CI keychain setup    |
 
 ## Cross-Cutting Conventions
 

@@ -31,9 +31,9 @@ struct InAppBrowserView: View {
                     }
                 }
                 .navigationTitle(browser.pageTitle.isEmpty ? "Cookey" : browser.pageTitle)
-                #if os(iOS)
+            #if os(iOS)
                 .navigationBarTitleDisplayMode(.inline)
-                #endif
+            #endif
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
                         Button("Cancel") { dismiss() }
@@ -83,10 +83,10 @@ final class BrowserCaptureModel: NSObject, WKNavigationDelegate {
         let configuration = WKWebViewConfiguration()
         configuration.websiteDataStore = .nonPersistent()
 
-        self.webView = WKWebView(frame: .zero, configuration: configuration)
+        webView = WKWebView(frame: .zero, configuration: configuration)
         super.init()
-        self.webView.navigationDelegate = self
-        self.webView.load(URLRequest(url: targetURL))
+        webView.navigationDelegate = self
+        webView.load(URLRequest(url: targetURL))
     }
 
     func captureSession() async throws -> ([CapturedCookie], [CapturedOrigin]) {
@@ -95,21 +95,21 @@ final class BrowserCaptureModel: NSObject, WKNavigationDelegate {
         return (cookies, origins)
     }
 
-    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+    func webView(_ webView: WKWebView, didFinish _: WKNavigation!) {
         pageTitle = webView.title ?? "Cookey"
     }
 
     func webView(
-        _ webView: WKWebView,
-        didFail navigation: WKNavigation!,
+        _: WKWebView,
+        didFail _: WKNavigation!,
         withError error: Error
     ) {
         errorMessage = error.localizedDescription
     }
 
     func webView(
-        _ webView: WKWebView,
-        didFailProvisionalNavigation navigation: WKNavigation!,
+        _: WKWebView,
+        didFailProvisionalNavigation _: WKNavigation!,
         withError error: Error
     ) {
         errorMessage = error.localizedDescription
@@ -169,25 +169,24 @@ final class BrowserCaptureModel: NSObject, WKNavigationDelegate {
 }
 
 #if os(iOS)
-private struct BrowserWebView: UIViewRepresentable {
-    let webView: WKWebView
+    private struct BrowserWebView: UIViewRepresentable {
+        let webView: WKWebView
 
-    func makeUIView(context: Context) -> WKWebView {
-        webView
+        func makeUIView(context _: Context) -> WKWebView {
+            webView
+        }
+
+        func updateUIView(_: WKWebView, context _: Context) {}
     }
 
-    func updateUIView(_ uiView: WKWebView, context: Context) {
-    }
-}
 #elseif os(macOS)
-private struct BrowserWebView: NSViewRepresentable {
-    let webView: WKWebView
+    private struct BrowserWebView: NSViewRepresentable {
+        let webView: WKWebView
 
-    func makeNSView(context: Context) -> WKWebView {
-        webView
-    }
+        func makeNSView(context _: Context) -> WKWebView {
+            webView
+        }
 
-    func updateNSView(_ nsView: WKWebView, context: Context) {
+        func updateNSView(_: WKWebView, context _: Context) {}
     }
-}
 #endif

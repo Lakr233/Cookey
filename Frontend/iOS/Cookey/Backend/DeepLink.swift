@@ -36,7 +36,7 @@ struct DeepLink: Equatable {
         self.rid = rid
         self.serverURL = serverURL
         self.targetURL = targetURL
-        self.recipientPublicKeyBase64 = publicKey
+        recipientPublicKeyBase64 = publicKey
         self.deviceID = deviceID
     }
 }

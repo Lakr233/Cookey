@@ -1,5 +1,5 @@
 //
-//  CookeyApp.swift
+//  main.swift
 //  Cookey
 //
 //  Created by qaq on 26/3/2026.
@@ -8,12 +8,12 @@
 import Observation
 import SwiftUI
 #if os(iOS)
-import UIKit
+    import UIKit
 #endif
 
 struct Cookey: App {
     #if os(iOS)
-    @UIApplicationDelegateAdaptor(CookeyAppDelegate.self) private var appDelegate
+        @UIApplicationDelegateAdaptor(CookeyAppDelegate.self) private var appDelegate
     #endif
     @State private var pushCoordinator: PushRegistrationCoordinator
     @State private var sessionModel: SessionUploadModel
@@ -31,7 +31,7 @@ struct Cookey: App {
                 .task {
                     await pushCoordinator.attach(to: sessionModel)
                     #if os(iOS)
-                    appDelegate.pushCoordinator = pushCoordinator
+                        appDelegate.pushCoordinator = pushCoordinator
                     #endif
                 }
         }

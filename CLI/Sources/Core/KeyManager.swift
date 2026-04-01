@@ -13,20 +13,20 @@ public enum KeyManagerError: Error, LocalizedError {
 
     public var errorDescription: String? {
         switch self {
-        case .invalidAlgorithm(let value):
-            return "Unsupported key algorithm: \(value)"
+        case let .invalidAlgorithm(value):
+            "Unsupported key algorithm: \(value)"
         case .invalidPrivateKey:
-            return "Invalid Ed25519 private key"
+            "Invalid Ed25519 private key"
         case .invalidPublicKey:
-            return "Invalid Ed25519 public key"
+            "Invalid Ed25519 public key"
         case .invalidEphemeralPublicKey:
-            return "Invalid X25519 ephemeral public key"
+            "Invalid X25519 ephemeral public key"
         case .invalidNonce:
-            return "Invalid XSalsa20 nonce"
+            "Invalid XSalsa20 nonce"
         case .invalidCiphertext:
-            return "Invalid ciphertext payload"
+            "Invalid ciphertext payload"
         case .decryptionFailed:
-            return "Unable to decrypt session payload"
+            "Unable to decrypt session payload"
         }
     }
 }
@@ -136,22 +136,22 @@ public enum KeyManager {
     }
 
     public static func generateRequestID() -> String {
-        let bytes = (0..<16).map { _ in UInt8.random(in: .min ... .max) }
+        let bytes = (0 ..< 16).map { _ in UInt8.random(in: .min ... .max) }
         return "r_\(Data(bytes).base64URLEncodedString())"
     }
 
     private static func mapCryptoBoxError(_ error: CryptoBoxError) -> KeyManagerError {
         switch error {
         case .invalidNonce:
-            return .invalidNonce
+            .invalidNonce
         case .invalidCiphertext:
-            return .invalidCiphertext
+            .invalidCiphertext
         case .authenticationFailed:
-            return .decryptionFailed
+            .decryptionFailed
         case .invalidEphemeralPublicKey:
-            return .invalidEphemeralPublicKey
+            .invalidEphemeralPublicKey
         case .invalidRecipientPublicKey, .randomGenerationFailed:
-            return .decryptionFailed
+            .decryptionFailed
         }
     }
 }

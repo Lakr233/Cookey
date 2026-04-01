@@ -1,9 +1,9 @@
 import Crypto
 import Foundation
 #if canImport(Glibc)
-import Glibc
+    import Glibc
 #else
-import Darwin
+    import Darwin
 #endif
 
 public struct AppPaths {
@@ -17,11 +17,11 @@ public struct AppPaths {
     public init(homeDirectory: URL) {
         let root = homeDirectory.appendingPathComponent(".cookey", isDirectory: true)
         self.root = root
-        self.keypair = root.appendingPathComponent("keypair.json")
-        self.config = root.appendingPathComponent("config.json")
-        self.deviceIdentifier = root.appendingPathComponent("device_id")
-        self.sessions = root.appendingPathComponent("sessions", isDirectory: true)
-        self.daemons = root.appendingPathComponent("daemons", isDirectory: true)
+        keypair = root.appendingPathComponent("keypair.json")
+        config = root.appendingPathComponent("config.json")
+        deviceIdentifier = root.appendingPathComponent("device_id")
+        sessions = root.appendingPathComponent("sessions", isDirectory: true)
+        daemons = root.appendingPathComponent("daemons", isDirectory: true)
     }
 
     public func sessionURL(for rid: String) -> URL {
@@ -92,7 +92,7 @@ public enum ConfigStore {
         try FileManager.default.setAttributes([.posixPermissions: permissions], ofItemAtPath: url.path)
     }
 
-    public static func writeJSON<T: Encodable>(_ value: T, to url: URL, permissions: Int) throws {
+    public static func writeJSON(_ value: some Encodable, to url: URL, permissions: Int) throws {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -101,7 +101,7 @@ public enum ConfigStore {
         try FileManager.default.setAttributes([.posixPermissions: permissions], ofItemAtPath: url.path)
     }
 
-    public static func readJSON<T: Decodable>(_ type: T.Type, from url: URL) throws -> T {
+    public static func readJSON<T: Decodable>(_: T.Type, from url: URL) throws -> T {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         return try decoder.decode(T.self, from: Data(contentsOf: url))
@@ -110,10 +110,8 @@ public enum ConfigStore {
     public static func loadOrCreateDeviceIdentifier(at url: URL) throws -> String {
         if FileManager.default.fileExists(atPath: url.path) {
             let data = try Data(contentsOf: url)
-            var value = String(decoding: data, as: UTF8.self)
-            while let last = value.last, last.isWhitespace {
-                value.removeLast()
-            }
+            let value = String(decoding: data, as: UTF8.self)
+                .trimmingCharacters(in: .whitespacesAndNewlines)
             if !value.isEmpty {
                 return value
             }
@@ -135,7 +133,7 @@ public enum ConfigStore {
             hostname,
             os,
             arch,
-            machineID
+            machineID,
         ].joined(separator: "|")
 
         return Data(SHA256.hash(data: Data(input.utf8))).base64URLEncodedString()
@@ -151,7 +149,7 @@ public enum ConfigStore {
             if descriptor.status == .waiting || descriptor.status == .receiving {
                 let sessionExists = FileManager.default.fileExists(atPath: paths.sessionURL(for: descriptor.rid).path)
                 let processAlive = isProcessAlive(descriptor.pid)
-                if !sessionExists && !processAlive {
+                if !sessionExists, !processAlive {
                     let updated = descriptor.updating(status: .error, errorMessage: "stale daemon descriptor; process is not alive")
                     try writeJSON(updated, to: url, permissions: 0o600)
                 }
@@ -171,18 +169,10 @@ public enum ConfigStore {
         let latestSessionURL = try latestFile(in: paths.sessions)
         let latestDaemonURL = try latestFile(in: paths.daemons)
 
-        switch (latestSessionURL, latestDaemonURL) {
-        case let (.some(session), .some(daemon)):
-            let sessionDate = modificationDate(for: session)
-            let daemonDate = modificationDate(for: daemon)
-            return sessionDate >= daemonDate ? session.deletingPathExtension().lastPathComponent : daemon.deletingPathExtension().lastPathComponent
-        case let (.some(session), .none):
-            return session.deletingPathExtension().lastPathComponent
-        case let (.none, .some(daemon)):
-            return daemon.deletingPathExtension().lastPathComponent
-        case (.none, .none):
-            return nil
-        }
+        let candidates = [latestSessionURL, latestDaemonURL].compactMap(\.self)
+        return candidates
+            .max { modificationDate(for: $0) < modificationDate(for: $1) }?
+            .deletingPathExtension().lastPathComponent
     }
 
     public static func statusSnapshot(for rid: String, context: BootstrapContext) -> StatusSnapshot {
@@ -204,12 +194,13 @@ public enum ConfigStore {
 
         let daemonURL = context.paths.daemonURL(for: rid)
         if FileManager.default.fileExists(atPath: daemonURL.path),
-           let descriptor = try? readJSON(DaemonDescriptor.self, from: daemonURL) {
-            let status: CLIStatus
-            if descriptor.status == .waiting || descriptor.status == .receiving {
-                status = isProcessAlive(descriptor.pid) ? CLIStatus(rawValue: descriptor.status.rawValue) ?? .error : .orphaned
+           let descriptor = try? readJSON(DaemonDescriptor.self, from: daemonURL)
+        {
+            let isActive = descriptor.status == .waiting || descriptor.status == .receiving
+            let status: CLIStatus = if isActive, !isProcessAlive(descriptor.pid) {
+                .orphaned
             } else {
-                status = CLIStatus(rawValue: descriptor.status.rawValue) ?? .error
+                CLIStatus(rawValue: descriptor.status.rawValue) ?? .error
             }
 
             return StatusSnapshot(
@@ -225,17 +216,7 @@ public enum ConfigStore {
             )
         }
 
-        return StatusSnapshot(
-            rid: rid,
-            status: .missing,
-            pid: nil,
-            targetURL: nil,
-            sessionPath: nil,
-            updatedAt: nil,
-            serverURL: nil,
-            transport: nil,
-            errorMessage: nil
-        )
+        return StatusSnapshot(rid: rid, status: .missing)
     }
 
     public static func isProcessAlive(_ pid: Int32) -> Bool {
@@ -289,13 +270,14 @@ public enum ConfigStore {
     private static func machineIdentifier() -> String? {
         let candidates = [
             "/etc/machine-id",
-            "/var/lib/dbus/machine-id"
+            "/var/lib/dbus/machine-id",
         ]
 
         for path in candidates {
             if let value = try? String(contentsOfFile: path, encoding: .utf8)
                 .trimmingCharacters(in: .whitespacesAndNewlines),
-               !value.isEmpty {
+                !value.isEmpty
+            {
                 return value
             }
         }
@@ -305,13 +287,13 @@ public enum ConfigStore {
 
     private static func currentArchitecture() -> String {
         #if arch(x86_64)
-        return "x86_64"
+            return "x86_64"
         #elseif arch(arm64)
-        return "arm64"
+            return "arm64"
         #elseif arch(i386)
-        return "i386"
+            return "i386"
         #else
-        return "unknown"
+            return "unknown"
         #endif
     }
 }

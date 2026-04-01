@@ -54,7 +54,7 @@ public enum TerminalQRCode {
             "# QR rendering fallback",
             "# Install `qrencode` for terminal QR output, or open this deep link manually:",
             "# \(link)",
-            border
+            border,
         ].joined(separator: "\n")
     }
 }

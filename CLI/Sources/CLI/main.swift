@@ -1,9 +1,9 @@
 import Core
 import Foundation
 #if canImport(Glibc)
-import Glibc
+    import Glibc
 #else
-import Darwin
+    import Darwin
 #endif
 
 enum CLIError: Error, LocalizedError {
@@ -13,8 +13,8 @@ enum CLIError: Error, LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .usage(let message), .missingValue(let message), .invalidValue(let message):
-            return message
+        case let .usage(message), let .missingValue(message), let .invalidValue(message):
+            message
         }
     }
 }
@@ -106,17 +106,21 @@ enum CookeyCLI {
             throw CLIError.invalidValue("Invalid --server value: \(serverURLString)")
         }
 
-        let timeoutSeconds = try parseIntFlag("timeout", in: flags) ?? context.config.timeoutSeconds ?? 300
-        let transport = try parseTransport(flags["transport"] ?? context.config.transport?.rawValue ?? Transport.ws.rawValue)
+        let timeoutSeconds = try parseIntFlag("timeout", in: flags)
+            ?? context.config.timeoutSeconds
+            ?? 300
+        let transport = try parseTransport(
+            flags["transport"] ?? context.config.transport?.rawValue ?? Transport.ws.rawValue
+        )
         let jsonOutput = flags["json"] != nil
         let noDetach = flags["no-detach"] != nil
         let rid = KeyManager.generateRequestID()
         let createdAt = Date()
-        let manifest = LoginManifest(
+        let manifest = try LoginManifest(
             rid: rid,
             targetURL: targetURL,
             serverURL: serverURL.absoluteString,
-            cliPublicKey: try KeyManager.x25519PublicKeyBase64(from: context.keypair),
+            cliPublicKey: KeyManager.x25519PublicKeyBase64(from: context.keypair),
             deviceID: context.deviceIdentifier,
             deviceFingerprint: context.deviceFingerprint,
             transportHint: transport,
@@ -226,8 +230,8 @@ enum CookeyCLI {
             try data.write(to: outputURL, options: .atomic)
         } else {
             FileHandle.standardOutput.write(data)
-            if data.last != 0x0a {
-                FileHandle.standardOutput.write(Data([0x0a]))
+            if data.last != 0x0A {
+                FileHandle.standardOutput.write(Data([0x0A]))
             }
         }
     }
@@ -280,7 +284,8 @@ enum CookeyCLI {
         }
 
         guard let serverURLString = context.config.defaultServer,
-              let serverURL = URL(string: serverURLString) else {
+              let serverURL = URL(string: serverURLString)
+        else {
             return local
         }
 
@@ -289,21 +294,12 @@ enum CookeyCLI {
             return local
         }
 
-        let status = CLIStatus(rawValue: remote.status?.lowercased() ?? "") ?? .missing
-        let pid: Int32? = nil
-        let sessionPath: String? = nil
-        let transport: Transport? = nil
-        let errorMessage: String? = nil
         return StatusSnapshot(
             rid: remote.rid ?? rid,
-            status: status,
-            pid: pid,
+            status: CLIStatus(rawValue: remote.status?.lowercased() ?? "") ?? .missing,
             targetURL: remote.targetURL,
-            sessionPath: sessionPath,
             updatedAt: remote.expiresAt,
-            serverURL: serverURL.absoluteString,
-            transport: transport,
-            errorMessage: errorMessage
+            serverURL: serverURL.absoluteString
         )
     }
 
@@ -323,67 +319,71 @@ enum CookeyCLI {
         print(output.qrText)
     }
 
-    private static func emit<T: Encodable>(_ value: T, asJSON: Bool) throws {
+    private static func emit(_ value: some Encodable, asJSON: Bool) throws {
         if asJSON {
-            print(try render(value, asJSON: true))
+            try print(render(value, asJSON: true))
             return
         }
 
-        print(try render(value, asJSON: false))
+        try print(render(value, asJSON: false))
     }
 
-    private static func render<T: Encodable>(_ value: T, asJSON: Bool) throws -> String {
+    private static func render(_ value: some Encodable, asJSON: Bool) throws -> String {
         if asJSON {
             let data = try encode(value, pretty: true)
             return String(decoding: data, as: UTF8.self)
         }
 
-        if let snapshot = value as? StatusSnapshot {
-            var lines = [
-                "rid: \(snapshot.rid)",
-                "status: \(snapshot.status.rawValue)"
-            ]
-            if let pid = snapshot.pid {
-                lines.append("pid: \(pid)")
+        switch value {
+        case let snapshot as StatusSnapshot:
+            return renderSnapshot(snapshot)
+        case let summary as StatusSummary:
+            return try renderSummary(summary)
+        default:
+            return String(describing: value)
+        }
+    }
+
+    private static func renderSnapshot(_ snapshot: StatusSnapshot) -> String {
+        var lines = [
+            "rid: \(snapshot.rid)",
+            "status: \(snapshot.status.rawValue)",
+        ]
+
+        let optionalFields: [(String, String?)] = [
+            ("pid", snapshot.pid.map(String.init)),
+            ("target_url", snapshot.targetURL),
+            ("session_path", snapshot.sessionPath),
+            ("updated_at", snapshot.updatedAt.map { ISO8601DateFormatter().string(from: $0) }),
+            ("server_url", snapshot.serverURL),
+            ("transport", snapshot.transport?.rawValue),
+            ("error", snapshot.errorMessage),
+        ]
+        for (label, value) in optionalFields {
+            if let value {
+                lines.append("\(label): \(value)")
             }
-            if let targetURL = snapshot.targetURL {
-                lines.append("target_url: \(targetURL)")
-            }
-            if let sessionPath = snapshot.sessionPath {
-                lines.append("session_path: \(sessionPath)")
-            }
-            if let updatedAt = snapshot.updatedAt {
-                lines.append("updated_at: \(ISO8601DateFormatter().string(from: updatedAt))")
-            }
-            if let serverURL = snapshot.serverURL {
-                lines.append("server_url: \(serverURL)")
-            }
-            if let transport = snapshot.transport {
-                lines.append("transport: \(transport.rawValue)")
-            }
-            if let errorMessage = snapshot.errorMessage {
-                lines.append("error: \(errorMessage)")
-            }
-            return lines.joined(separator: "\n")
         }
 
-        if let summary = value as? StatusSummary {
-            var lines = [String]()
-            if let latestDaemon = summary.latestDaemon {
-                lines.append("latest_daemon:")
-                lines.append(try render(latestDaemon, asJSON: false))
-            }
-            if let latestSession = summary.latestSession {
-                lines.append("latest_session:")
-                lines.append(try render(latestSession, asJSON: false))
-            }
-            if lines.isEmpty {
-                lines.append("No local requests found.")
-            }
-            return lines.joined(separator: "\n")
+        return lines.joined(separator: "\n")
+    }
+
+    private static func renderSummary(_ summary: StatusSummary) throws -> String {
+        var lines = [String]()
+
+        if let latestDaemon = summary.latestDaemon {
+            lines.append("latest_daemon:")
+            lines.append(renderSnapshot(latestDaemon))
+        }
+        if let latestSession = summary.latestSession {
+            lines.append("latest_session:")
+            lines.append(renderSnapshot(latestSession))
+        }
+        if lines.isEmpty {
+            lines.append("No local requests found.")
         }
 
-        return String(describing: value)
+        return lines.joined(separator: "\n")
     }
 
     private static func parseFlags(from arguments: [String]) throws -> [String: String] {
@@ -434,7 +434,7 @@ enum CookeyCLI {
         return transport
     }
 
-    private static func encode<T: Encodable>(_ value: T, pretty: Bool) throws -> Data {
+    private static func encode(_ value: some Encodable, pretty: Bool) throws -> Data {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         encoder.outputFormatting = pretty ? [.prettyPrinted, .sortedKeys] : [.sortedKeys]

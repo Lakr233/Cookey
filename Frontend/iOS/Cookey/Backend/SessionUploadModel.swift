@@ -17,6 +17,11 @@ final class SessionUploadModel {
 
     var phase: Phase = .idle
 
+    var isShowingSheet: Bool {
+        get { phase != .idle }
+        set { if !newValue { dismissSheet() } }
+    }
+
     private let pushCoordinator: PushRegistrationCoordinator?
 
     init(pushCoordinator: PushRegistrationCoordinator?) {
@@ -126,7 +131,7 @@ private enum SessionUploadError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidRecipientPublicKey:
-            return "The login request contains an invalid recipient key."
+            "The login request contains an invalid recipient key."
         }
     }
 }

@@ -22,7 +22,7 @@ final class HealthCheckModel {
         status = .checking
 
         do {
-            status = .healthy(try await client.healthCheck())
+            status = try await .healthy(client.healthCheck())
         } catch {
             status = .failed(error.localizedDescription)
         }

@@ -69,6 +69,7 @@ func (c *Client) Register(manifest models.LoginManifest) (string, error) {
 		ExpiresAt:         manifest.ExpiresAt,
 		RequestType:       manifest.RequestType,
 		RequestProof:      manifest.RequestProof,
+		RequestSecret:     manifest.RequestSecret,
 	})
 	if err != nil {
 		return "", err

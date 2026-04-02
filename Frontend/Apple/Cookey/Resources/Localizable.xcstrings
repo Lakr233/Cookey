@@ -431,6 +431,54 @@
         }
       }
     },
+    "Enter" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "输入"
+          }
+        }
+      }
+    },
+    "Enter Pair Key" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter Pair Key"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "输入配对码"
+          }
+        }
+      }
+    },
+    "Enter the pair key shown in your terminal." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter the pair key shown in your terminal."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "输入终端中显示的配对码。"
+          }
+        }
+      }
+    },
     "Encrypting and sending your browser session." : {
       "localizations" : {
         "en" : {
@@ -578,10 +626,36 @@
       }
     },
     "Invalid or expired pair code." : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid or expired pair code."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "配对码无效或已过期。"
+          }
+        }
+      }
     },
     "Invalid server response for pair code." : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid server response for pair code."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "服务器对配对码的响应无效。"
+          }
+        }
+      }
     },
     "Loading session…" : {
       "localizations" : {
@@ -1009,34 +1083,18 @@
         }
       }
     },
-    "Scan QR Code" : {
+    "Scan or enter the pair code from your terminal\nto transfer a login session." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Scan QR Code"
+            "value" : "Scan or enter the pair code from your terminal\nto transfer a login session."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "扫描二维码"
-          }
-        }
-      }
-    },
-    "Scan the QR code from your terminal\nto transfer a login session." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Scan the QR code from your terminal\nto transfer a login session."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "扫描终端中的二维码\n以传输登录会话。"
+            "value" : "扫描或输入终端中的配对码\n以传输登录会话。"
           }
         }
       }
@@ -1169,6 +1227,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "开始"
+          }
+        }
+      }
+    },
+    "Submit" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Submit"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "提交"
           }
         }
       }

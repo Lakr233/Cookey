@@ -121,14 +121,15 @@ func (rt *Routes) handleResolvePairKey(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, PairKeyResponse{
-		CLIPublicKey: stored.CLIPublicKey,
-		DeviceID:     stored.DeviceID,
-		ExpiresAt:    ISO8601Time{stored.ExpiresAt},
-		RID:          stored.RID,
-		RequestProof: stored.RequestProof,
-		RequestType:  stored.RequestType,
-		ServerURL:    rt.config.PublicURL,
-		TargetURL:    stored.TargetURL,
+		CLIPublicKey:  stored.CLIPublicKey,
+		DeviceID:      stored.DeviceID,
+		ExpiresAt:     ISO8601Time{stored.ExpiresAt},
+		RID:           stored.RID,
+		RequestProof:  stored.RequestProof,
+		RequestSecret: stored.RequestSecret,
+		RequestType:   stored.RequestType,
+		ServerURL:     rt.config.PublicURL,
+		TargetURL:     stored.TargetURL,
 	})
 }
 

@@ -21,23 +21,30 @@ class HomeViewController: UIViewController {
     }
 
     private let subtitleLabel = UILabel().then {
-        $0.text = String(localized: "Scan the QR code from your terminal\nto transfer a login session.")
+        $0.text = String(localized: "Scan or enter the pair code from your terminal\nto transfer a login session.")
         $0.font = .preferredFont(forTextStyle: .subheadline)
         $0.textColor = .secondaryLabel
         $0.textAlignment = .center
         $0.numberOfLines = 0
     }
 
-    private lazy var actionButton = UIButton(configuration: .filled()).then {
+    private lazy var scanButton = UIButton(configuration: .filled()).then {
         #if targetEnvironment(macCatalyst)
             $0.configuration?.title = String(localized: "Paste Link")
             $0.configuration?.image = UIImage(systemName: "doc.on.clipboard")
         #else
-            $0.configuration?.title = String(localized: "Scan QR Code")
+            $0.configuration?.title = String(localized: "Scan")
             $0.configuration?.image = UIImage(systemName: "qrcode.viewfinder")
         #endif
         $0.configuration?.imagePadding = 8
-        $0.addTarget(self, action: #selector(actionTapped), for: .touchUpInside)
+        $0.addTarget(self, action: #selector(scanTapped), for: .touchUpInside)
+    }
+
+    private lazy var typeButton = UIButton(configuration: .filled()).then {
+        $0.configuration?.title = String(localized: "Enter")
+        $0.configuration?.image = UIImage(systemName: "keyboard")
+        $0.configuration?.imagePadding = 8
+        $0.addTarget(self, action: #selector(typeTapped), for: .touchUpInside)
     }
 
     init(sessionModel: SessionUploadModel) {
@@ -108,15 +115,21 @@ class HomeViewController: UIViewController {
             $0.setCustomSpacing(24, after: iconView)
         }
 
+        let buttonStack = UIStackView(arrangedSubviews: [scanButton, typeButton]).then {
+            $0.axis = .horizontal
+            $0.distribution = .fillEqually
+            $0.spacing = 12
+        }
+
         view.addSubview(stack)
-        view.addSubview(actionButton)
+        view.addSubview(buttonStack)
 
         stack.snp.makeConstraints {
             $0.center.equalToSuperview()
             $0.leading.trailing.equalToSuperview().inset(32)
         }
 
-        actionButton.snp.makeConstraints {
+        buttonStack.snp.makeConstraints {
             $0.leading.trailing.equalToSuperview().inset(32)
             $0.bottom.equalTo(view.safeAreaLayoutGuide).inset(16)
             $0.height.equalTo(50)
@@ -129,7 +142,7 @@ class HomeViewController: UIViewController {
         navigationController?.pushViewController(settings, animated: true)
     }
 
-    @objc private func actionTapped() {
+    @objc private func scanTapped() {
         #if targetEnvironment(macCatalyst)
             Logger.ui.infoFile("Paste Link tapped on Mac Catalyst")
             guard let string = UIPasteboard.general.string?.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -149,8 +162,23 @@ class HomeViewController: UIViewController {
             }
             sessionModel.handleURL(url)
         #else
-            Logger.ui.infoFile("Scan QR Code tapped")
+            Logger.ui.infoFile("Scan tapped")
             sessionModel.startScan()
         #endif
+    }
+
+    @objc private func typeTapped() {
+        Logger.ui.infoFile("Type pair key tapped")
+        let alert = AlertInputViewController(
+            title: "Enter Pair Key",
+            message: "Enter the pair key shown in your terminal.",
+            placeholder: "XXXX-XXXX",
+            text: "",
+            cancelButtonText: "Cancel",
+            doneButtonText: "Submit"
+        ) { [weak self] text in
+            self?.sessionModel.handleManualPairKey(text)
+        }
+        present(alert, animated: true)
     }
 }

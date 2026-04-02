@@ -162,6 +162,7 @@ type RelayRegisterRequest struct {
 	ExpiresAt         ISO8601Time `json:"expires_at"`
 	RequestType       string      `json:"request_type,omitempty"`
 	RequestProof      string      `json:"request_proof"`
+	RequestSecret     string      `json:"request_secret,omitempty"`
 }
 
 type RelayStatusResponse struct {
@@ -276,15 +277,17 @@ type StatusSummary struct {
 }
 
 type LoginOutput struct {
-	RID            string `json:"rid"`
-	ServerURL      string `json:"server_url"`
-	TargetURL      string `json:"target_url"`
-	TimeoutSeconds int    `json:"timeout_seconds"`
-	DaemonPID      int32  `json:"daemon_pid"`
-	PairKey        string `json:"pair_key"`
-	DeepLink       string `json:"deep_link"`
-	QRText         string `json:"qr_text"`
-	Detached       bool   `json:"detached"`
+	RID             string `json:"rid"`
+	ServerURL       string `json:"server_url"`
+	TargetURL       string `json:"target_url"`
+	TimeoutSeconds  int    `json:"timeout_seconds"`
+	DaemonPID       int32  `json:"daemon_pid"`
+	PairKey         string `json:"pair_key"`
+	PairKeyDeepLink string `json:"pair_key_deep_link,omitempty"`
+	DeepLink        string `json:"deep_link"`
+	QRText          string `json:"qr_text"`
+	ShowQR          bool   `json:"show_qr,omitempty"`
+	Detached        bool   `json:"detached"`
 }
 
 type DeleteOutput struct {

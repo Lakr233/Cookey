@@ -49,6 +49,7 @@ func (s *Storage) Store(req LoginRequest) *StoredRequest {
 		ExpiresAt:         req.ExpiresAt.Time,
 		RequestType:       NormalizeRequestType(req.RequestType),
 		RequestProof:      req.RequestProof,
+		RequestSecret:     req.RequestSecret,
 		PairKey:           pairKey,
 		Status:            StatusPending,
 	}

@@ -76,7 +76,18 @@ final class SessionUploadModel: ObservableObject {
         Task { await validateAndProceed(deepLink) }
     }
 
-    func handlePairKey(_ pairKey: String, requestSecret: String, serverURL: URL) {
+    func handleManualPairKey(_ pairKey: String) {
+        let normalized = pairKey
+            .uppercased()
+            .filter { $0.isLetter || $0.isNumber }
+        guard !normalized.isEmpty else {
+            phase = .failed(String(localized: "Invalid or expired pair code."))
+            return
+        }
+        handlePairKey(normalized, requestSecret: nil, serverURL: AppEnvironment.apiBaseURL)
+    }
+
+    func handlePairKey(_ pairKey: String, requestSecret: String?, serverURL: URL) {
         let normalized = pairKey
             .uppercased()
             .filter { $0.isLetter || $0.isNumber }
@@ -97,6 +108,13 @@ final class SessionUploadModel: ObservableObject {
                     phase = .failed(String(localized: "Invalid server response for pair code."))
                     return
                 }
+                let effectiveSecret = [requestSecret, response.requestSecret]
+                    .compactMap { $0 }
+                    .first { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+                guard let effectiveSecret else {
+                    phase = .failed(String(localized: "Invalid or expired pair code."))
+                    return
+                }
                 let deepLink = DeepLink(
                     rid: response.rid,
                     serverURL: resolvedServerURL,
@@ -106,7 +124,7 @@ final class SessionUploadModel: ObservableObject {
                     requestType: DeepLink.RequestType(rawValue: response.requestType) ?? .login,
                     expiresAt: response.expiresAt,
                     requestProof: response.requestProof,
-                    requestSecret: requestSecret
+                    requestSecret: effectiveSecret
                 )
                 try RequestAuthenticator.verify(deepLink)
                 Logger.model.infoFile("Resolved pair key to rid=\(deepLink.rid) target=\(deepLink.targetURL.host() ?? deepLink.targetURL.absoluteString)")

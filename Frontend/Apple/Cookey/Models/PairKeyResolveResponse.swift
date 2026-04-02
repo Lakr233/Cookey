@@ -8,6 +8,7 @@ struct PairKeyResolveResponse: Codable {
     let deviceID: String
     let expiresAt: Date
     let requestProof: String
+    let requestSecret: String
     let requestType: String
 
     enum CodingKeys: String, CodingKey {
@@ -18,6 +19,7 @@ struct PairKeyResolveResponse: Codable {
         case deviceID = "device_id"
         case expiresAt = "expires_at"
         case requestProof = "request_proof"
+        case requestSecret = "request_secret"
         case requestType = "request_type"
     }
 }

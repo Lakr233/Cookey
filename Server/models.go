@@ -63,6 +63,7 @@ type LoginRequest struct {
 	ExpiresAt         ISO8601Time `json:"expires_at"`
 	RequestType       string      `json:"request_type,omitempty"`
 	RequestProof      string      `json:"request_proof"`
+	RequestSecret     string      `json:"request_secret,omitempty"`
 	RID               string      `json:"rid"`
 	TargetURL         string      `json:"target_url"`
 }
@@ -80,6 +81,7 @@ type StoredRequest struct {
 	ExpiresAt            time.Time         `json:"-"`
 	RequestType          string            `json:"-"`
 	RequestProof         string            `json:"-"`
+	RequestSecret        string            `json:"-"`
 	PairKey              string            `json:"-"`
 	Status               RequestStatus     `json:"-"`
 	EncryptedSession     *EncryptedSession `json:"-"`
@@ -117,8 +119,9 @@ type PairKeyResponse struct {
 	DeviceID     string      `json:"device_id"`
 	ExpiresAt    ISO8601Time `json:"expires_at"`
 	RID          string      `json:"rid"`
-	RequestProof string      `json:"request_proof"`
-	RequestType  string      `json:"request_type"`
+	RequestProof  string      `json:"request_proof"`
+	RequestSecret string      `json:"request_secret"`
+	RequestType   string      `json:"request_type"`
 	ServerURL    string      `json:"server_url"`
 	TargetURL    string      `json:"target_url"`
 }

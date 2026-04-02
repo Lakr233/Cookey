@@ -69,7 +69,7 @@ func run(args []string) error {
 
 func handleLogin(arguments []string) error {
 	if len(arguments) == 0 || strings.HasPrefix(arguments[0], "-") {
-		return cliError{message: "Usage: cookey login <target_url> [--server URL] [--timeout 300] [--json] [--no-detach] [--update]"}
+		return cliError{message: "Usage: cookey login <target_url> [--server URL] [--timeout 600] [--qr] [--json] [--no-detach] [--update]"}
 	}
 
 	targetURL := arguments[0]
@@ -84,7 +84,7 @@ func handleLogin(arguments []string) error {
 	}
 
 	serverURL := firstNonEmpty(flags["server"], stringPtrValue(context.Config.DefaultServer), defaultServerURL)
-	timeoutSeconds, err := parsePositiveIntFlag("timeout", flags["timeout"], context.Config.TimeoutSeconds, 300)
+	timeoutSeconds, err := parsePositiveIntFlag("timeout", flags["timeout"], context.Config.TimeoutSeconds, 600)
 	if err != nil {
 		return err
 	}
@@ -204,21 +204,27 @@ func handleLogin(arguments []string) error {
 	if pairKey != "" {
 		qrLink = qrcode.PairKeyDeepLink(pairKey, serverURL, manifest.RequestSecret)
 	}
-	qrText := qrcode.Render(qrLink)
+	showQR := flags["qr"] != ""
+	qrText := ""
+	if showQR {
+		qrText = qrcode.Render(qrLink)
+	}
 	jsonOutput := flags["json"] != ""
 	noDetach := flags["no-detach"] != ""
 
 	if noDetach {
 		output := models.LoginOutput{
-			RID:            rid,
-			ServerURL:      serverURL,
-			TargetURL:      targetURL,
-			TimeoutSeconds: timeoutSeconds,
-			DaemonPID:      int32(os.Getpid()),
-			DeepLink:       deepLink,
-			PairKey:        pairKey,
-			QRText:         qrText,
-			Detached:       false,
+			RID:             rid,
+			ServerURL:       serverURL,
+			TargetURL:       targetURL,
+			TimeoutSeconds:  timeoutSeconds,
+			DaemonPID:       int32(os.Getpid()),
+			DeepLink:        deepLink,
+			PairKey:         pairKey,
+			PairKeyDeepLink: qrLink,
+			QRText:          qrText,
+			ShowQR:          showQR,
+			Detached:        false,
 		}
 		if err := emitLoginOutput(output, jsonOutput); err != nil {
 			return err
@@ -240,15 +246,17 @@ func handleLogin(arguments []string) error {
 	}
 
 	output := models.LoginOutput{
-		RID:            rid,
-		ServerURL:      serverURL,
-		TargetURL:      targetURL,
-		TimeoutSeconds: timeoutSeconds,
-		DaemonPID:      daemonPID,
-		DeepLink:       deepLink,
-		PairKey:        pairKey,
-		QRText:         qrText,
-		Detached:       true,
+		RID:             rid,
+		ServerURL:       serverURL,
+		TargetURL:       targetURL,
+		TimeoutSeconds:  timeoutSeconds,
+		DaemonPID:       daemonPID,
+		DeepLink:        deepLink,
+		PairKey:         pairKey,
+		PairKeyDeepLink: qrLink,
+		QRText:          qrText,
+		ShowQR:          showQR,
+		Detached:        true,
 	}
 	return emitLoginOutput(output, jsonOutput)
 }
@@ -608,14 +616,21 @@ func emitLoginOutput(output models.LoginOutput, asJSON bool) error {
 	fmt.Printf("  Target URL  %s\n", output.TargetURL)
 	expiresAt := time.Now().Add(time.Duration(output.TimeoutSeconds) * time.Second)
 	fmt.Printf("  Expires in  %s (%s)\n\n", formatLoginTimeout(output.TimeoutSeconds), expiresAt.Format("15:04:05"))
-	fmt.Print(output.QRText)
-	if !strings.HasSuffix(output.QRText, "\n") {
-		fmt.Println()
+	if output.ShowQR && output.QRText != "" {
+		fmt.Print(output.QRText)
+		if !strings.HasSuffix(output.QRText, "\n") {
+			fmt.Println()
+		}
 	}
 	if output.PairKey != "" {
-		fmt.Printf("  Pair Key  %s-%s\n", output.PairKey[:4], output.PairKey[4:])
+		fmt.Printf("  Pair Key    %s-%s\n", output.PairKey[:4], output.PairKey[4:])
+		fmt.Printf("  Deep Link   %s\n", output.PairKeyDeepLink)
 	}
-	fmt.Println("  Scan the QR code above with the Cookey app.")
+	if output.ShowQR {
+		fmt.Println("  Scan or enter the pair key in the Cookey app to continue.")
+	} else {
+		fmt.Println("  Open the Cookey app and enter the pair key to continue.")
+	}
 	return nil
 }
 
@@ -761,7 +776,7 @@ func parseFlags(arguments []string) (map[string]string, error) {
 
 		flag := strings.TrimPrefix(token, "--")
 		switch flag {
-		case "json", "no-detach", "latest", "watch", "pretty", "update":
+		case "json", "no-detach", "latest", "watch", "pretty", "update", "qr":
 			flags[flag] = "true"
 		case "server", "timeout", "out":
 			if i+1 >= len(arguments) {
@@ -837,12 +852,12 @@ func valueOrDefault(value *string, fallback string) string {
 
 func printUsage() {
 	fmt.Println(`Usage:
-  cookey login <target_url> [--server URL] [--timeout 300] [--json] [--no-detach] [--update]
+  cookey login <target_url> [--server URL] [--timeout 600] [--qr] [--json] [--no-detach] [--update]
   cookey export [rid] [--out FILE] [--pretty]
-	cookey status [rid] [--latest] [--watch] [--json]
-	cookey list [--json]
-	cookey delete <rid> [--json]
-	cookey clean [--json]`)
+  cookey status [rid] [--latest] [--watch] [--json]
+  cookey list [--json]
+  cookey delete <rid> [--json]
+  cookey clean [--json]`)
 }
 
 func formatLoginTimeout(timeoutSeconds int) string {

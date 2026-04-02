@@ -17,34 +17,12 @@
         }
       }
     },
-    "A login request was received for %@. Would you like to start?" : {
+    "A login request was received. Would you like to start?" : {
       "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A login request was received for %@. Would you like to start?"
-          }
-        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "收到来自 %@ 的登录请求。要开始吗？"
-          }
-        }
-      }
-    },
-    "A session refresh was received for %@. Would you like to start?" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A session refresh was received for %@. Would you like to start?"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "收到来自 %@ 的会话刷新请求。要开始吗？"
+            "value" : "收到登录请求，要开始吗？"
           }
         }
       }
@@ -783,22 +761,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "新的登录请求"
-          }
-        }
-      }
-    },
-    "New Session Refresh" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "New Session Refresh"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "新的会话刷新"
           }
         }
       }

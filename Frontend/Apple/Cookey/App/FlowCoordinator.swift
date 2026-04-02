@@ -34,23 +34,19 @@ final class FlowCoordinator {
 
         case .scanning:
             let vc = ScannerViewController(sessionModel: sessionModel)
-            navigationController.pushViewController(vc, animated: true)
+            pushAndTrimStack(vc)
 
         case let .validating(deepLink):
             let vc = SeedLoadingViewController(deepLink: deepLink, sessionModel: sessionModel)
-            navigationController.pushViewController(vc, animated: true)
+            pushAndTrimStack(vc)
 
         case let .browsing(deepLink):
-            // Pop back to root before pushing browser (handles scanner → browser transition)
-            if navigationController.viewControllers.count > 1 {
-                navigationController.popToRootViewController(animated: false)
-            }
             let vc = BrowserViewController(deepLink: deepLink, sessionModel: sessionModel)
-            navigationController.pushViewController(vc, animated: true)
+            pushAndTrimStack(vc)
 
         case .uploading:
             let vc = UploadProgressViewController(sessionModel: sessionModel)
-            navigationController.pushViewController(vc, animated: true)
+            pushAndTrimStack(vc)
 
         case .done:
             // UploadProgressVC handles this state via its own $phase subscription
@@ -70,6 +66,15 @@ final class FlowCoordinator {
                 }
             }
             topVC?.present(alert, animated: true)
+        }
+    }
+
+    /// Push the new VC with animation, then trim the stack to [root, vc] so
+    /// intermediate screens are removed without a visible flicker.
+    private func pushAndTrimStack(_ vc: UIViewController) {
+        navigationController.pushViewController(vc, animated: true)
+        if let root = navigationController.viewControllers.first, root !== vc {
+            navigationController.viewControllers = [root, vc]
         }
     }
 }

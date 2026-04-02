@@ -44,6 +44,10 @@ function bytesToBase64Url(bytes: Uint8Array): string {
   return bytesToBase64(bytes).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
+function utcTimestamp(date: Date): string {
+  return date.toISOString().replace(/\.\d{3}Z$/, "Z");
+}
+
 function requireAbsoluteUrl(value: string, label: string): string {
   let url: URL;
   try {
@@ -61,11 +65,15 @@ function requireAbsoluteUrl(value: string, label: string): string {
 }
 
 function futureIsoDate(secondsFromNow: number): string {
-  return new Date(Date.now() + secondsFromNow * 1000).toISOString();
+  return utcTimestamp(new Date(Date.now() + secondsFromNow * 1000));
 }
 
 function generateRequestId(): string {
   return `r_${bytesToBase64Url(crypto.getRandomValues(new Uint8Array(16)))}`;
+}
+
+function generateRequestSecret(): string {
+  return bytesToBase64Url(crypto.getRandomValues(new Uint8Array(32)));
 }
 
 async function generateDeviceFingerprint(
@@ -79,16 +87,56 @@ async function generateDeviceFingerprint(
   return bytesToBase64Url(new Uint8Array(digest));
 }
 
-function buildDeepLink(params: {
+async function computeRequestProof(params: {
   deviceId: string;
+  expiresAt: string;
   pubkey: string;
   rid: string;
+  requestSecret: string;
+  requestType: string;
+  serverUrl: string;
+  targetUrl: string;
+}): Promise<string> {
+  const secret = params.requestSecret.replace(/-/g, "+").replace(/_/g, "/");
+  const padding = "=".repeat((4 - (secret.length % 4)) % 4);
+  const secretBytes = Uint8Array.from(atob(secret + padding), (char) => char.charCodeAt(0));
+  const key = await crypto.subtle.importKey(
+    "raw",
+    secretBytes,
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const message = [
+    "cookey-request-v1",
+    params.rid,
+    params.serverUrl,
+    params.targetUrl,
+    params.pubkey,
+    params.deviceId,
+    params.requestType,
+    params.expiresAt,
+  ].join("\n");
+  const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(message));
+  return bytesToBase64Url(new Uint8Array(signature));
+}
+
+function buildDeepLink(params: {
+  deviceId: string;
+  expiresAt: string;
+  pubkey: string;
+  rid: string;
+  requestProof: string;
+  requestSecret: string;
   serverUrl: string;
   targetUrl: string;
 }): string {
   const query = new URLSearchParams({
     device_id: params.deviceId,
+    expires_at: params.expiresAt,
     pubkey: params.pubkey,
+    request_proof: params.requestProof,
+    request_secret: params.requestSecret,
     request_type: "login",
     rid: params.rid,
     server: params.serverUrl,
@@ -134,6 +182,18 @@ export async function createLoginRequest(signal: AbortSignal): Promise<LoginRequ
   const keyPair = nacl.box.keyPair();
   const pubkey = bytesToBase64(keyPair.publicKey);
   const deviceFingerprint = await generateDeviceFingerprint(pubkey, deviceId);
+  const expiresAt = futureIsoDate(300);
+  const requestSecret = generateRequestSecret();
+  const requestProof = await computeRequestProof({
+    deviceId,
+    expiresAt,
+    pubkey,
+    rid,
+    requestSecret,
+    requestType: "login",
+    serverUrl: relayServerUrl,
+    targetUrl,
+  });
 
   const response = await fetch(`${serverUrl}/v1/requests`, {
     method: "POST",
@@ -142,7 +202,9 @@ export async function createLoginRequest(signal: AbortSignal): Promise<LoginRequ
       cli_public_key: pubkey,
       device_fingerprint: deviceFingerprint,
       device_id: deviceId,
-      expires_at: futureIsoDate(300),
+      expires_at: expiresAt,
+      request_proof: requestProof,
+      request_secret: requestSecret,
       request_type: "login",
       rid,
       target_url: targetUrl,
@@ -168,8 +230,11 @@ export async function createLoginRequest(signal: AbortSignal): Promise<LoginRequ
     targetUrl,
     deepLink: buildDeepLink({
       deviceId,
+      expiresAt,
       pubkey,
       rid: payload.rid,
+      requestProof,
+      requestSecret,
       serverUrl: relayServerUrl,
       targetUrl,
     }),

@@ -10,6 +10,8 @@ import (
 	"time"
 )
 
+const maxRequestTTL = 30 * time.Minute
+
 type notificationSender interface {
 	SendNotificationWithToken(request *StoredRequest, serverURL string, token string, environment string, blocker *APNTokenBlocker, sourceIP string)
 }
@@ -59,6 +61,11 @@ func (rt *Routes) handleCreateRequest(w http.ResponseWriter, r *http.Request) {
 	if req.ExpiresAt.Time.Before(time.Now()) {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid expiration time"})
 		return
+	}
+
+	maxExpiry := time.Now().Add(maxRequestTTL)
+	if req.ExpiresAt.Time.After(maxExpiry) {
+		req.ExpiresAt = ISO8601Time{Time: maxExpiry}
 	}
 
 	stored := rt.storage.Store(req)

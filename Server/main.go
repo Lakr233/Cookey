@@ -95,7 +95,7 @@ func parseConfig(args []string) ServerConfig {
 	config := ServerConfig{
 		Host:           "0.0.0.0",
 		Port:           8080,
-		DefaultTTL:     300 * time.Second,
+		DefaultTTL:     5 * time.Minute,
 		MaxPayloadSize: 1 * 1024 * 1024, // 1MB
 	}
 

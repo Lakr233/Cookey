@@ -60,9 +60,12 @@ func runRequestCapture(args []string, mode requestMode) error {
 	}
 
 	serverURL := firstNonEmpty(*server, stringPtrValue(context.Config.DefaultServer), defaultServerURL)
-	timeoutSeconds, err := resolvePositiveInt(*timeout, context.Config.TimeoutSeconds, 600, "timeout")
+	timeoutSeconds, err := resolvePositiveInt(*timeout, context.Config.TimeoutSeconds, 300, "timeout")
 	if err != nil {
 		return err
+	}
+	if timeoutSeconds > 1800 {
+		timeoutSeconds = 1800
 	}
 
 	rid, err := crypto.GenerateRequestID()

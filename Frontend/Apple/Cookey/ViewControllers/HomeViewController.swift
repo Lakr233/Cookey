@@ -28,8 +28,6 @@ class HomeViewController: UIViewController {
         $0.numberOfLines = 0
     }
 
-    private let shadowOverlay = DappledShadowView()
-
     private lazy var actionButton = UIButton(configuration: .filled()).then {
         #if targetEnvironment(macCatalyst)
             $0.configuration?.title = String(localized: "Paste Link")
@@ -74,11 +72,6 @@ class HomeViewController: UIViewController {
 
         view.addSubview(stack)
         view.addSubview(actionButton)
-        view.addSubview(shadowOverlay)
-
-        shadowOverlay.snp.makeConstraints {
-            $0.edges.equalToSuperview()
-        }
 
         stack.snp.makeConstraints {
             $0.center.equalToSuperview()

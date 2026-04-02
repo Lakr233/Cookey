@@ -145,23 +145,6 @@
         }
       }
     },
-    "Cookey can reuse APNs on this device for future refresh requests from %@." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cookey can reuse APNs on this device for future refresh requests from %@."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cookey 可以在此设备上重新使用 APNs 来处理来自 %@ 的未来刷新请求。"
-          }
-        }
-      }
-    },
     "Cookey can send future login requests from %@ directly to this device. Your push token is only sent to the Cookey relay server you choose and is never shared with third parties." : {
       "localizations" : {
         "en" : {
@@ -467,7 +450,20 @@
       }
     },
     "Passkey Not Supported" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passkey Not Supported"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不支持 Passkey"
+          }
+        }
+      }
     },
     "Paste Link" : {
       "localizations" : {
@@ -481,40 +477,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "粘贴链接"
-          }
-        }
-      }
-    },
-    "Preparing device info…" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Preparing device info…"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在准备设备信息…"
-          }
-        }
-      }
-    },
-    "Refreshing this device's APNs registration with %@ before opening the website." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Refreshing this device's APNs registration with %@ before opening the website."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "打开网站之前，正在使用 %@ 刷新此设备的 APNs 注册。"
           }
         }
       }
@@ -744,7 +706,20 @@
       }
     },
     "This website is requesting Passkey authentication, which is not supported in the in-app browser. Please use an alternative login method such as password or SMS verification." : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This website is requesting Passkey authentication, which is not supported in the in-app browser. Please use an alternative login method such as password or SMS verification."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "该网站正在请求 Passkey 认证，应用内浏览器不支持此功能。请使用密码或短信验证等其他登录方式。"
+          }
+        }
+      }
     },
     "This will package and send the current session state to the requester. Please confirm you have completed login or the required actions." : {
       "localizations" : {
@@ -838,23 +813,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "正在上传会话…"
-          }
-        }
-      }
-    },
-    "Waiting for APNs token…" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Waiting for APNs token…"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "等待 APNs 令牌…"
           }
         }
       }

@@ -4,12 +4,10 @@ import Footer from "../components/Footer";
 import Container from "../components/Container";
 import Badge from "../components/Badge";
 import StepProgress from "../components/StepProgress";
-import DetailsDisclosure from "../components/DetailsDisclosure";
 import { ButtonLink } from "../components/Button";
 import {
   REQUEST_POLL_INTERVAL_MS,
   fetchRequestStatus,
-  formatDateTime,
   type RequestStatus,
   type RequestStatusResponse,
   validateRequestId,
@@ -238,33 +236,6 @@ export default function TestLoginResultPage() {
                         <Badge>{getStatusBadgeCopy(status)}</Badge>
                       </div>
                     )}
-                  </div>
-
-                  <div className="w-full mt-2">
-                    <DetailsDisclosure title="Request Metadata">
-                      <dl className="space-y-4 text-sm">
-                        <div>
-                          <dt className="text-[11px] uppercase tracking-[0.18em] text-muted">Request ID</dt>
-                          <dd className="mt-1 font-mono break-all text-ink">{result.rid}</dd>
-                        </div>
-                        <div>
-                          <dt className="text-[11px] uppercase tracking-[0.18em] text-muted">Status</dt>
-                          <dd className="mt-1 text-ink capitalize">{result.status}</dd>
-                        </div>
-                        <div>
-                          <dt className="text-[11px] uppercase tracking-[0.18em] text-muted">Created At</dt>
-                          <dd className="mt-1 text-ink">{formatDateTime(result.created_at)}</dd>
-                        </div>
-                        <div>
-                          <dt className="text-[11px] uppercase tracking-[0.18em] text-muted">Expires At</dt>
-                          <dd className="mt-1 text-ink">{formatDateTime(result.expires_at)}</dd>
-                        </div>
-                        <div>
-                          <dt className="text-[11px] uppercase tracking-[0.18em] text-muted">Target URL</dt>
-                          <dd className="mt-1 font-mono break-all text-ink">{result.target_url}</dd>
-                        </div>
-                      </dl>
-                    </DetailsDisclosure>
                   </div>
 
                   <div className="mt-4 flex flex-wrap justify-center gap-3">

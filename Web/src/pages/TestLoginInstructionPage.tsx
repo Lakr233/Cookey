@@ -4,12 +4,10 @@ import Footer from "../components/Footer";
 import Container from "../components/Container";
 import Badge from "../components/Badge";
 import QrCode from "../components/QrCode";
-import DetailsDisclosure from "../components/DetailsDisclosure";
 import { Button, ButtonLink } from "../components/Button";
 import {
   createLoginRequest,
   fetchRequestStatus,
-  formatDateTime,
   REQUEST_POLL_INTERVAL_MS,
   type LoginRequestState,
   type RequestStatus,
@@ -89,31 +87,6 @@ function ResultModal({
               {getResultDetail(result.status)}
             </p>
           </div>
-
-          <DetailsDisclosure title="Request Metadata">
-            <dl className="space-y-3 text-sm">
-              <div>
-                <dt className="text-[11px] uppercase tracking-[0.18em] text-muted">Request ID</dt>
-                <dd className="mt-1 font-mono break-all text-ink">{result.rid}</dd>
-              </div>
-              <div>
-                <dt className="text-[11px] uppercase tracking-[0.18em] text-muted">Status</dt>
-                <dd className="mt-1 text-ink capitalize">{result.status}</dd>
-              </div>
-              {result.created_at && (
-                <div>
-                  <dt className="text-[11px] uppercase tracking-[0.18em] text-muted">Created</dt>
-                  <dd className="mt-1 text-ink">{formatDateTime(result.created_at)}</dd>
-                </div>
-              )}
-              {result.expires_at && (
-                <div>
-                  <dt className="text-[11px] uppercase tracking-[0.18em] text-muted">Expires</dt>
-                  <dd className="mt-1 text-ink">{formatDateTime(result.expires_at)}</dd>
-                </div>
-              )}
-            </dl>
-          </DetailsDisclosure>
 
           <button
             type="button"
@@ -264,24 +237,6 @@ export default function TestLoginInstructionPage() {
                     </ButtonLink>
                   </div>
 
-                  <div className="w-full mt-4 animate-[fade-in_0.4s_ease-out_325ms_both]">
-                    <DetailsDisclosure title="Request Details">
-                      <dl className="space-y-3 text-sm">
-                        <div>
-                          <dt className="text-[11px] uppercase tracking-[0.18em] text-muted">Request ID</dt>
-                          <dd className="mt-1 font-mono break-all text-ink">{state.request.rid}</dd>
-                        </div>
-                        <div>
-                          <dt className="text-[11px] uppercase tracking-[0.18em] text-muted">Relay server</dt>
-                          <dd className="mt-1 font-mono break-all text-ink">{state.request.serverUrl}</dd>
-                        </div>
-                        <div>
-                          <dt className="text-[11px] uppercase tracking-[0.18em] text-muted">Target URL</dt>
-                          <dd className="mt-1 font-mono break-all text-ink">{state.request.targetUrl}</dd>
-                        </div>
-                      </dl>
-                    </DetailsDisclosure>
-                  </div>
                 </div>
               )}
             </div>

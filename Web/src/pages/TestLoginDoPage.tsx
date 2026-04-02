@@ -4,7 +4,6 @@ import Footer from "../components/Footer";
 import Container from "../components/Container";
 import Badge from "../components/Badge";
 import StepProgress from "../components/StepProgress";
-import DetailsDisclosure from "../components/DetailsDisclosure";
 import { ButtonLink } from "../components/Button";
 import {
   REQUEST_POLL_INTERVAL_MS,
@@ -255,23 +254,6 @@ export default function TestLoginDoPage() {
                       {state.kind === "loading" ? "Preparing the request monitor." : state.detail}
                     </p>
                   </div>
-
-                  {state.kind === "ready" && (
-                    <div className="w-full mt-2 animate-[fade-in_0.4s_ease-out_both]">
-                      <DetailsDisclosure title="Request Details">
-                        <dl className="space-y-4 text-sm">
-                          <div>
-                            <dt className="text-[11px] uppercase tracking-[0.18em] text-muted">Request ID</dt>
-                            <dd className="mt-1 font-mono break-all text-ink">{state.rid}</dd>
-                          </div>
-                          <div>
-                            <dt className="text-[11px] uppercase tracking-[0.18em] text-muted">Status</dt>
-                            <dd className="mt-1 text-ink capitalize">{state.status}</dd>
-                          </div>
-                        </dl>
-                      </DetailsDisclosure>
-                    </div>
-                  )}
 
                   {isTerminal && (
                     <div className="mt-4 flex flex-wrap justify-center gap-3 animate-[fade-in_0.4s_ease-out_both]">

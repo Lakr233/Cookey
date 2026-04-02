@@ -144,3 +144,6 @@ AuthKey_*.p8
 /.claude
 PLAN.md
 CommandLineTool/cookey
+
+# Auto-generated build info
+Frontend/Apple/Cookey/DerivedSources/

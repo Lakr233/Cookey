@@ -1,4 +1,6 @@
 import ConfigurableKit
+import SnapKit
+import Then
 import UIKit
 import UserNotifications
 
@@ -35,6 +37,104 @@ final class SettingsViewController: ConfigurableViewController {
     required init?(coder _: NSCoder) {
         fatalError()
     }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            image: UIImage(systemName: "ellipsis.circle"),
+            style: .plain,
+            target: nil,
+            action: nil
+        ).then {
+            $0.menu = UIMenu(children: [
+                UIAction(
+                    title: String(localized: "What's New"),
+                    image: UIImage(systemName: "sparkles")
+                ) { [weak self] _ in
+                    self?.presentWhatsNew()
+                },
+                UIMenu(options: .displayInline, children: [
+                    UIAction(
+                        title: String(localized: "Privacy Policy"),
+                        image: UIImage(systemName: "lock.shield")
+                    ) { [weak self] _ in
+                        self?.openPrivacyPolicy()
+                    },
+                    UIAction(
+                        title: String(localized: "Open Source Licenses"),
+                        image: UIImage(systemName: "flag.filled.and.flag.crossed")
+                    ) { [weak self] _ in
+                        self?.openOpenSourceLicenses()
+                    },
+                ]),
+            ])
+        }
+    }
+
+    override func setupContentViews() {
+        super.setupContentViews()
+        buildBuildInfoFooter()
+    }
+
+    // MARK: - Menu Actions
+
+    private func presentWhatsNew() {
+        let controller = WelcomePageViewController.makePresentedController()
+        present(controller, animated: true)
+    }
+
+    private func openPrivacyPolicy() {
+        var text = String(localized: "Resource not found, please check your installation.")
+        if let url = Bundle.main.url(forResource: "PrivacyPolicy", withExtension: "txt"),
+           let content = try? String(contentsOf: url)
+        { text = content }
+        let vc = TextViewerController(title: String(localized: "Privacy Policy"), text: text)
+        navigationController?.pushViewController(vc, animated: true)
+    }
+
+    private func openOpenSourceLicenses() {
+        var text = String(localized: "Resource not found, please check your installation.")
+        if let url = Bundle.main.url(forResource: "OpenSourceLicenses", withExtension: "md"),
+           let content = try? String(contentsOf: url)
+        { text = content }
+        let vc = TextViewerController(title: String(localized: "Open Source Licenses"), text: text)
+        navigationController?.pushViewController(vc, animated: true)
+    }
+
+    // MARK: - Build Info Footer
+
+    private func buildBuildInfoFooter() {
+        let version: String = {
+            let info = Bundle.main.infoDictionary
+            let marketing = info?["CFBundleShortVersionString"] as? String ?? "?"
+            let build = info?["CFBundleVersion"] as? String ?? "?"
+            return "Version \(marketing) (\(build))"
+        }()
+
+        let label = UILabel().then {
+            $0.text = [version, BuildInfo.buildTime, String(BuildInfo.commitID.prefix(7))]
+                .joined(separator: "\n")
+            $0.font = .monospacedSystemFont(
+                ofSize: UIFont.preferredFont(forTextStyle: .caption2).pointSize,
+                weight: .regular
+            )
+            $0.textColor = .tertiaryLabel
+            $0.textAlignment = .center
+            $0.numberOfLines = 0
+        }
+
+        let container = UIView().then {
+            $0.addSubview(label)
+            label.snp.makeConstraints {
+                $0.edges.equalToSuperview().inset(UIEdgeInsets(top: 16, left: 16, bottom: 24, right: 16))
+            }
+        }
+
+        stackView.addArrangedSubview(container)
+    }
+
+    // MARK: - Notification Toggle
 
     @MainActor
     private static func openFeedback(_: UIViewController) async {

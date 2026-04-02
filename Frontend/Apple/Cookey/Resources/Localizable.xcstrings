@@ -705,6 +705,9 @@
         }
       }
     },
+    "Open Source Licenses" : {
+
+    },
     "Outputs Playwright-compatible storageState JSON. Pipe into any browser automation tool." : {
       "localizations" : {
         "en" : {
@@ -753,6 +756,9 @@
         }
       }
     },
+    "Privacy Policy" : {
+
+    },
     "Report bugs, request features, or share your thoughts about Cookey." : {
       "localizations" : {
         "en" : {
@@ -768,6 +774,9 @@
           }
         }
       }
+    },
+    "Resource not found, please check your installation." : {
+
     },
     "Scan" : {
       "localizations" : {
@@ -1232,6 +1241,9 @@
           }
         }
       }
+    },
+    "What's New" : {
+
     },
     "When enabled, the relay server can send push notifications to this device for session refresh requests. This requires system notification permissions." : {
       "localizations" : {

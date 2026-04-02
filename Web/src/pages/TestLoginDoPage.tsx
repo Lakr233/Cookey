@@ -3,6 +3,8 @@ import Nav from "../components/Nav";
 import Footer from "../components/Footer";
 import Container from "../components/Container";
 import Badge from "../components/Badge";
+import StepProgress from "../components/StepProgress";
+import DetailsDisclosure from "../components/DetailsDisclosure";
 import { ButtonLink } from "../components/Button";
 import {
   REQUEST_POLL_INTERVAL_MS,
@@ -27,6 +29,58 @@ function getStatusDetail(status: RequestStatus): string {
     case "expired":
       return "This request expired before the upload completed.";
   }
+}
+
+function getStatusBadge(status: RequestStatus): string {
+  switch (status) {
+    case "pending":
+      return "Scanning";
+    case "ready":
+      return "Ready";
+    case "delivered":
+      return "Complete";
+    case "expired":
+      return "Expired";
+  }
+}
+
+function StatusIndicator({ status }: { status: RequestStatus | null }) {
+  if (status === "expired") {
+    return (
+      <div className="relative mx-auto h-24 w-24 flex items-center justify-center">
+        <div className="absolute inset-0 rounded-full border border-border bg-surface" />
+        <div className="relative flex items-center justify-center">
+          <svg className="w-8 h-8 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === "ready" || status === "delivered") {
+    return (
+      <div className="relative mx-auto h-24 w-24 flex items-center justify-center">
+        <div className="absolute inset-0 rounded-full border-2 border-accent bg-accent/10 shadow-[0_0_32px_rgba(74,222,128,0.12)]" />
+        <div className="relative flex items-center justify-center">
+          <svg className="w-10 h-10 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+      </div>
+    );
+  }
+
+  // Pending / loading - radar pulse
+  return (
+    <div className="relative mx-auto h-24 w-24">
+      <div className="absolute inset-0 rounded-full border border-accent/20 animate-ping-slow" />
+      <div className="absolute inset-3 rounded-full border border-accent/30 animate-pulse" />
+      <div className="absolute inset-6 rounded-full bg-accent/10 flex items-center justify-center">
+        <div className="h-3 w-3 rounded-full bg-accent animate-pulse" />
+      </div>
+    </div>
+  );
 }
 
 export default function TestLoginDoPage() {
@@ -136,6 +190,7 @@ export default function TestLoginDoPage() {
   }, []);
 
   const status = state.kind === "ready" ? state.status : null;
+  const isTerminal = status === "ready" || status === "delivered" || status === "expired";
 
   return (
     <div className="bg-bg text-ink font-sans leading-[1.6] min-h-screen flex flex-col">
@@ -144,22 +199,26 @@ export default function TestLoginDoPage() {
       <main className="flex-1">
         <Container>
           <section className="pt-20 pb-16">
-            <div className="mb-7 text-center">
+            <div className="mb-7 text-center animate-[fade-in_0.4s_ease-out]">
               <Badge>Live Request Status</Badge>
             </div>
 
             <div className="mx-auto max-w-[620px] text-center">
-              <h1 className="mb-[18px] font-bold tracking-[-0.03em] leading-[1.1] text-[clamp(2.2rem,6vw,3.2rem)]">
+              <h1 className="mb-[18px] font-bold tracking-[-0.03em] leading-[1.1] text-[clamp(2.2rem,6vw,3.2rem)] animate-[fade-in_0.4s_ease-out] delay-100">
                 Monitor the test login request.
               </h1>
-              <p className="mx-auto mb-10 max-w-[540px] text-[1.05rem] text-muted">
+              <p className="mx-auto mb-8 max-w-[540px] text-[1.05rem] text-muted animate-[fade-in_0.4s_ease-out] delay-200">
                 This page polls the relay status without consuming the one-shot session payload.
               </p>
             </div>
 
-            <div className="mx-auto max-w-[620px] rounded-xl border border-border bg-surface p-6 text-center sm:p-7">
+            <div className="mb-10 animate-[fade-in_0.4s_ease-out] delay-300">
+              <StepProgress current={2} />
+            </div>
+
+            <div className="mx-auto max-w-[620px] rounded-xl border border-border bg-surface p-6 sm:p-7 animate-[fade-in_0.4s_ease-out] delay-400">
               {state.kind === "error" ? (
-                <>
+                <div className="text-center" role="status" aria-live="polite">
                   <h2 className="text-xl font-semibold tracking-tight">Unable to monitor request</h2>
                   <p className="mt-3 text-sm text-muted">{state.message}</p>
                   <div className="mt-6 flex flex-wrap justify-center gap-3">
@@ -170,21 +229,19 @@ export default function TestLoginDoPage() {
                       Back to home
                     </ButtonLink>
                   </div>
-                </>
+                </div>
               ) : (
-                <>
-                  <div className="mb-5 flex justify-center">
-                    <div
-                      aria-hidden="true"
-                      className={`h-10 w-10 rounded-full border-[3px] ${
-                        status === "expired"
-                          ? "border-border"
-                          : "animate-spin border-border border-t-accent"
-                      }`}
-                    />
+                <div className="flex flex-col items-center gap-5">
+                  <div className="animate-[fade-in_0.4s_ease-out]">
+                    <StatusIndicator status={status} />
                   </div>
 
-                  <div role="status" aria-live="polite">
+                  <div className="text-center" role="status" aria-live="polite">
+                    {status && (
+                      <div className="mb-3">
+                        <Badge>{getStatusBadge(status)}</Badge>
+                      </div>
+                    )}
                     <h2 className="text-xl font-semibold tracking-tight">
                       {state.kind === "loading" || status === "pending"
                         ? "Waiting for device login"
@@ -194,35 +251,41 @@ export default function TestLoginDoPage() {
                             ? "Session delivered"
                             : "Request expired"}
                     </h2>
-                    <p className="mt-3 text-sm text-muted">
+                    <p className="mt-3 text-sm text-muted max-w-[400px]">
                       {state.kind === "loading" ? "Preparing the request monitor." : state.detail}
                     </p>
                   </div>
 
                   {state.kind === "ready" && (
-                    <dl className="mt-6 space-y-4 rounded-xl border border-border bg-terminal-bg p-5 text-left text-sm">
-                      <div>
-                        <dt className="text-[11px] uppercase tracking-[0.18em] text-muted">Request ID</dt>
-                        <dd className="mt-1 font-mono break-all text-ink">{state.rid}</dd>
-                      </div>
-                      <div>
-                        <dt className="text-[11px] uppercase tracking-[0.18em] text-muted">Status</dt>
-                        <dd className="mt-1 text-ink capitalize">{state.status}</dd>
-                      </div>
-                    </dl>
+                    <div className="w-full mt-2 animate-[fade-in_0.4s_ease-out]">
+                      <DetailsDisclosure title="Request Details">
+                        <dl className="space-y-4 text-sm">
+                          <div>
+                            <dt className="text-[11px] uppercase tracking-[0.18em] text-muted">Request ID</dt>
+                            <dd className="mt-1 font-mono break-all text-ink">{state.rid}</dd>
+                          </div>
+                          <div>
+                            <dt className="text-[11px] uppercase tracking-[0.18em] text-muted">Status</dt>
+                            <dd className="mt-1 text-ink capitalize">{state.status}</dd>
+                          </div>
+                        </dl>
+                      </DetailsDisclosure>
+                    </div>
                   )}
 
-                  <div className="mt-6 flex flex-wrap justify-center gap-3">
-                    {resultUrl && (
-                      <ButtonLink href={resultUrl} variant="secondary">
-                        Result page
+                  {isTerminal && (
+                    <div className="mt-4 flex flex-wrap justify-center gap-3 animate-[fade-in_0.4s_ease-out]">
+                      {resultUrl && (
+                        <ButtonLink href={resultUrl} variant="primary">
+                          View result →
+                        </ButtonLink>
+                      )}
+                      <ButtonLink href="/test-login-instruction" variant="secondary">
+                        New request
                       </ButtonLink>
-                    )}
-                    <ButtonLink href="/test-login-instruction" variant="secondary">
-                      New request
-                    </ButtonLink>
-                  </div>
-                </>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </section>

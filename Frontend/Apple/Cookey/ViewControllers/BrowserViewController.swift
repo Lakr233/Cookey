@@ -131,7 +131,7 @@ class BrowserViewController: UIViewController {
                     title: String(localized: "Passkey Not Supported"),
                     message: String(localized: "This website is requesting Passkey authentication, which is not supported in the in-app browser. Please use an alternative login method such as password or SMS verification.")
                 ) { context in
-                    context.addAction(title: String(localized: "OK")) { context.dispose() }
+                    context.addAction(title: String(localized: "OK"), attribute: .dangerous) { context.dispose() }
                 }
                 self?.present(alert, animated: true)
             }

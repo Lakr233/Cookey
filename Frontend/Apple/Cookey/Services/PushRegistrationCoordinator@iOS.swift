@@ -35,6 +35,7 @@ final class PushRegistrationCoordinator: ObservableObject {
     static let isSupported = true
 
     @Published var state: State = .idle
+    @Published private(set) var pendingNotificationURL: URL?
 
     private weak var model: SessionUploadModel?
     private var tokenContinuation: CheckedContinuation<Void, Error>?
@@ -104,7 +105,17 @@ final class PushRegistrationCoordinator: ObservableObject {
             return
         }
 
-        model?.handleURL(url)
+        if model?.phase == .idle {
+            model?.handleURL(url)
+        } else {
+            pendingNotificationURL = url
+        }
+    }
+
+    func consumePendingNotification() -> URL? {
+        guard let url = pendingNotificationURL else { return nil }
+        pendingNotificationURL = nil
+        return url
     }
 
     func attach(to model: SessionUploadModel) async {

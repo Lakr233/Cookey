@@ -30,7 +30,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
 
         #if targetEnvironment(macCatalyst)
-            windowScene.sizeRestrictions?.minimumSize = CGSize(width: 420, height: 520)
+            let fixedSize = CGSize(width: 666, height: 666)
+            windowScene.sizeRestrictions?.minimumSize = fixedSize
+            windowScene.sizeRestrictions?.maximumSize = fixedSize
         #endif
 
         if let url = connectionOptions.urlContexts.first?.url {

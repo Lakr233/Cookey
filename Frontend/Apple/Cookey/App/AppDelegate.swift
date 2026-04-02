@@ -63,10 +63,28 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
     func userNotificationCenter(
         _: UNUserNotificationCenter,
+        willPresent _: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        completionHandler([.banner, .sound])
+    }
+
+    func userNotificationCenter(
+        _: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse,
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
         pushCoordinator.handleNotificationUserInfo(response.notification.request.content.userInfo)
         completionHandler()
     }
+}
+
+private extension AppDelegate {
+    // DONT REMOVE
+    static let localizationExtension: [String] = [
+        String(localized: "apn_refresh_title"),
+        String(localized: "apn_refresh_body"),
+        String(localized: "apn_login_title"),
+        String(localized: "apn_login_body"),
+    ]
 }

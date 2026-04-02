@@ -62,18 +62,19 @@ func (c *APNSClient) sendNotification(request *StoredRequest, serverURL string, 
 	}
 	url := fmt.Sprintf("%s/3/device/%s", baseURL, token)
 
-	title := "Cookey login request"
-	bodyText := fmt.Sprintf("Approve login for %s", request.TargetURL)
+	titleLocKey := "apn_login_title"
+	locKey := "apn_login_body"
 	if request.RequestType == RequestTypeRefresh {
-		title = "Cookey session refresh"
-		bodyText = fmt.Sprintf("Session refresh for %s", request.TargetURL)
+		titleLocKey = "apn_refresh_title"
+		locKey = "apn_refresh_body"
 	}
 
 	payload := apnsNotificationPayload{
 		APS: apsPayload{
 			Alert: apsAlert{
-				Title: title,
-				Body:  bodyText,
+				TitleLocKey: titleLocKey,
+				LocKey:      locKey,
+				LocArgs:     []string{request.TargetURL},
 			},
 			Sound: "default",
 		},
@@ -254,8 +255,9 @@ type apsPayload struct {
 }
 
 type apsAlert struct {
-	Body  string `json:"body"`
-	Title string `json:"title"`
+	LocArgs     []string `json:"loc-args,omitempty"`
+	LocKey      string   `json:"loc-key"`
+	TitleLocKey string   `json:"title-loc-key"`
 }
 
 type apnsErrorResponse struct {

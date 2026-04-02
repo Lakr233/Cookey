@@ -62,6 +62,41 @@ class HomeViewController: UIViewController {
         setupLayout()
     }
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        checkPendingNotification()
+    }
+
+    private func checkPendingNotification() {
+        let appDelegate = UIApplication.shared.delegate as? AppDelegate
+        guard let coordinator = appDelegate?.pushCoordinator else { return }
+
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(500))
+            guard let url = coordinator.consumePendingNotification(),
+                  let deepLink = DeepLink(url: url)
+            else { return }
+
+            let targetHost = deepLink.targetURL.host() ?? deepLink.targetURL.absoluteString
+            let isRefresh = deepLink.requestType == .refresh
+            let title = isRefresh
+                ? String(localized: "New Session Refresh")
+                : String(localized: "New Login Request")
+            let message = isRefresh
+                ? String(format: String(localized: "A session refresh was received for %@. Would you like to start?"), targetHost)
+                : String(format: String(localized: "A login request was received for %@. Would you like to start?"), targetHost)
+
+            let alert = AlertViewController(title: title, message: message) { [weak self] context in
+                context.addAction(title: String(localized: "Start"), attribute: .dangerous) {
+                    context.dispose {
+                        self?.sessionModel.handleURL(url)
+                    }
+                }
+            }
+            self.present(alert, animated: true)
+        }
+    }
+
     private func setupLayout() {
         let stack = UIStackView(arrangedSubviews: [iconView, titleLabel, subtitleLabel]).then {
             $0.axis = .vertical

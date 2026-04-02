@@ -94,12 +94,6 @@ final class SeedLoadingViewController: UIViewController {
         case let .loadingSeed(currentHost):
             titleLabel.text = String(localized: "Loading session…")
             subtitleLabel.text = String(localized: "Downloading the latest session from \(currentHost)…")
-        case let .preparingNotifications(currentHost):
-            titleLabel.text = String(localized: "Preparing device info…")
-            subtitleLabel.text = String(localized: "Cookey can reuse APNs on this device for future refresh requests from \(currentHost).")
-        case let .waitingForPushToken(currentHost):
-            titleLabel.text = String(localized: "Waiting for APNs token…")
-            subtitleLabel.text = String(localized: "Refreshing this device's APNs registration with \(currentHost) before opening the website.")
         case nil:
             titleLabel.text = String(localized: "Loading session…")
             subtitleLabel.text = String(localized: "Communicating with \(host)…")

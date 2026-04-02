@@ -146,6 +146,7 @@
       }
     },
     "Cookey can reuse APNs on this device for future refresh requests from %@." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -465,6 +466,9 @@
         }
       }
     },
+    "Passkey Not Supported" : {
+
+    },
     "Paste Link" : {
       "localizations" : {
         "en" : {
@@ -482,6 +486,7 @@
       }
     },
     "Preparing device info…" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -498,6 +503,7 @@
       }
     },
     "Refreshing this device's APNs registration with %@ before opening the website." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -737,6 +743,9 @@
         }
       }
     },
+    "This website is requesting Passkey authentication, which is not supported in the in-app browser. Please use an alternative login method such as password or SMS verification." : {
+
+    },
     "This will package and send the current session state to the requester. Please confirm you have completed login or the required actions." : {
       "localizations" : {
         "en" : {
@@ -834,6 +843,7 @@
       }
     },
     "Waiting for APNs token…" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

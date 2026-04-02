@@ -8,8 +8,6 @@ final class SessionUploadModel: ObservableObject {
     enum LoadingState: Equatable {
         case checkingRequest(host: String)
         case loadingSeed(host: String)
-        case preparingNotifications(host: String)
-        case waitingForPushToken(host: String)
     }
 
     enum Phase: Equatable {
@@ -196,7 +194,6 @@ final class SessionUploadModel: ObservableObject {
         )
 
         if allowRefresh {
-            loadingState = .waitingForPushToken(host: host)
             try await pushCoordinator.ensurePushToken(
                 serverURL: deepLink.serverURL,
                 deviceID: deepLink.deviceID,
@@ -205,11 +202,9 @@ final class SessionUploadModel: ObservableObject {
             return
         }
 
-        loadingState = .preparingNotifications(host: host)
         let wantsPush = await requestPushExplanation()
         guard wantsPush else { return }
 
-        loadingState = .waitingForPushToken(host: host)
         try await pushCoordinator.ensurePushToken(
             serverURL: deepLink.serverURL,
             deviceID: deepLink.deviceID,

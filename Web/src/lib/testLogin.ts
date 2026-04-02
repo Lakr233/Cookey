@@ -7,7 +7,6 @@ export interface LoginRequestState {
   serverUrl: string;
   targetUrl: string;
   deepLink: string;
-  monitorUrl: string;
 }
 
 export interface RequestStatusResponse {
@@ -26,7 +25,7 @@ interface ApiErrorResponse {
 
 const REQUEST_ID_PATTERN = /^r_[A-Za-z0-9_-]{22}$/;
 export const API_BASE = "/api";
-export const TARGET_URL = "https://cookey.sh/test-login-do";
+export const TARGET_URL = "https://cookey.sh/test-login-site";
 export const REQUEST_POLL_INTERVAL_MS = 2000;
 
 function bytesToBinary(bytes: Uint8Array): string {
@@ -174,7 +173,6 @@ export async function createLoginRequest(signal: AbortSignal): Promise<LoginRequ
       serverUrl: relayServerUrl,
       targetUrl,
     }),
-    monitorUrl: `/test-login-do?rid=${encodeURIComponent(payload.rid)}`,
   };
 }
 

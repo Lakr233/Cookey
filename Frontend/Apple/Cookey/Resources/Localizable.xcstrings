@@ -625,12 +625,12 @@
         }
       }
     },
-    "Invalid or expired pair code." : {
+    "Invalid or expired pair key." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Invalid or expired pair code."
+            "value" : "Invalid or expired pair key."
           }
         },
         "zh-Hans" : {
@@ -641,12 +641,12 @@
         }
       }
     },
-    "Invalid server response for pair code." : {
+    "Invalid server response for pair key." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Invalid server response for pair code."
+            "value" : "Invalid server response for pair key."
           }
         },
         "zh-Hans" : {
@@ -1083,12 +1083,12 @@
         }
       }
     },
-    "Scan or enter the pair code from your terminal\nto transfer a login session." : {
+    "Scan or enter the pair key from your terminal\nto transfer a login session." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Scan or enter the pair code from your terminal\nto transfer a login session."
+            "value" : "Scan or enter the pair key from your terminal\nto transfer a login session."
           }
         },
         "zh-Hans" : {

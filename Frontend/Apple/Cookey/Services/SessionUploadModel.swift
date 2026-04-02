@@ -81,7 +81,7 @@ final class SessionUploadModel: ObservableObject {
             .uppercased()
             .filter { $0.isLetter || $0.isNumber }
         guard !normalized.isEmpty else {
-            phase = .failed(String(localized: "Invalid or expired pair code."))
+            phase = .failed(String(localized: "Invalid or expired pair key."))
             return
         }
         handlePairKey(normalized, requestSecret: nil, serverURL: AppEnvironment.apiBaseURL)
@@ -105,14 +105,14 @@ final class SessionUploadModel: ObservableObject {
                       !response.cliPublicKey.isEmpty,
                       !response.deviceID.isEmpty
                 else {
-                    phase = .failed(String(localized: "Invalid server response for pair code."))
+                    phase = .failed(String(localized: "Invalid server response for pair key."))
                     return
                 }
                 let effectiveSecret = [requestSecret, response.requestSecret]
                     .compactMap { $0 }
                     .first { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
                 guard let effectiveSecret else {
-                    phase = .failed(String(localized: "Invalid or expired pair code."))
+                    phase = .failed(String(localized: "Invalid or expired pair key."))
                     return
                 }
                 let deepLink = DeepLink(
@@ -134,7 +134,7 @@ final class SessionUploadModel: ObservableObject {
                 let nsError = error as NSError
                 if nsError.domain == "Cookey.RelayClient", nsError.code == 404 || nsError.code == 410 {
                     Logger.model.errorFile("Pair key \(normalized) not found or expired")
-                    phase = .failed(String(localized: "Invalid or expired pair code."))
+                    phase = .failed(String(localized: "Invalid or expired pair key."))
                 } else {
                     Logger.model.errorFile("Pair key resolve failed: \(error.localizedDescription)")
                     phase = .failed(error.localizedDescription)

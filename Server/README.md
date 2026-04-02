@@ -1,14 +1,15 @@
 # Cookey Relay Server
 
-A lightweight, zero-knowledge relay server for Cookey — built with Go.
+A lightweight relay server for Cookey — built with Go.
 
 ## Features
 
-- **Zero Knowledge**: Server only stores encrypted session data, never sees plaintext
+- **End-to-End Encrypted Sessions**: Server only stores encrypted session data, never sees plaintext
 - **In-Memory Storage**: No database required, all data stored in memory with TTL
 - **WebSocket Transport**: Real-time session delivery via WebSocket
 - **Ephemeral Key Exchange**: X25519 ECDH for secure session encryption
 - **Auto-Cleanup**: Automatic cleanup of expired requests every 30 seconds
+- **Pair Key Resolution**: Optional manual pairing flow resolves a short pair key to the full request metadata
 - **Stateless Refresh Push**: APNs refresh push uses token data attached to each refresh request; the server does not store device registrations
 
 ## API Endpoints
@@ -99,11 +100,19 @@ docker compose up api
 
 ## Architecture
 
-1. **Zero-Knowledge Design**: Server never sees plaintext cookies/session data
+1. **Encrypted Session Relay**: Server never sees plaintext cookies/session data
 2. **Ephemeral Storage**: All data expires after TTL (default 5 minutes)
 3. **WebSocket Delivery**: Real-time session delivery with text ping/pong keepalive
 4. **One-Shot Delivery**: Session delivered once then immediately purged
-5. **Stateless APNs**: APNs tokens are never registered or stored server-side; only refresh requests can trigger push, using token fields embedded in the request
+5. **Pair Key Metadata**: Manual pair-key entry requires the relay to temporarily store request metadata needed to resolve the short code
+6. **Stateless APNs**: APNs tokens are never registered or stored server-side; only refresh requests can trigger push, using token fields embedded in the request
+
+## Trust Model Notes
+
+- **QR / deep-link flow**: the app receives the authenticated request metadata directly from the CLI-generated link.
+- **Manual pair-key flow**: the relay temporarily stores request metadata in memory so the app can resolve the short pair key. This includes the CLI public key and request authentication material used for pair-key resolution.
+- **What the relay still cannot do**: decrypt uploaded browser sessions. The X25519 private key stays on the CLI, so stored ciphertext remains unreadable to the relay.
+- **What changes**: manual pair-key entry is not equivalent to the pure QR / deep-link flow. Because the relay reconstructs the request metadata for the app, this mode requires trusting the relay not to tamper with the resolved metadata.
 
 ## Security
 
@@ -111,6 +120,7 @@ docker compose up api
 - XSalsa20-Poly1305 for encryption
 - Server only handles encrypted blobs
 - No persistent storage of session data
+- Pair-key resolution stores additional request metadata in memory for the lifetime of the request
 - Automatic cleanup prevents data accumulation
 - APNs token blocking: request-scoped tokens that repeatedly fail delivery are blocked to prevent abuse
 - Rate limiting: per-IP and per-device rate limits protect against request flooding

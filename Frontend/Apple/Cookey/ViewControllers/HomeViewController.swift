@@ -21,7 +21,7 @@ class HomeViewController: UIViewController {
     }
 
     private let subtitleLabel = UILabel().then {
-        $0.text = String(localized: "Scan or enter the pair code from your terminal\nto transfer a login session.")
+        $0.text = String(localized: "Scan or enter the pair key from your terminal\nto transfer a login session.")
         $0.font = .preferredFont(forTextStyle: .subheadline)
         $0.textColor = .secondaryLabel
         $0.textAlignment = .center
@@ -168,14 +168,14 @@ class HomeViewController: UIViewController {
     }
 
     @objc private func typeTapped() {
-        Logger.ui.infoFile("Type pair key tapped")
+        Logger.ui.infoFile("Enter pair key tapped")
         let alert = AlertInputViewController(
-            title: "Enter Pair Key",
-            message: "Enter the pair key shown in your terminal.",
+            title: String(localized: "Enter Pair Key"),
+            message: String(localized: "Enter the pair key shown in your terminal."),
             placeholder: "XXXX-XXXX",
             text: "",
-            cancelButtonText: "Cancel",
-            doneButtonText: "Submit"
+            cancelButtonText: String(localized: "Cancel"),
+            doneButtonText: String(localized: "Submit")
         ) { [weak self] text in
             self?.sessionModel.handleManualPairKey(text)
         }

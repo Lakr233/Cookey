@@ -21,7 +21,7 @@ export default function DetailsDisclosure({
         onClick={() => setIsOpen(!isOpen)}
         aria-expanded={isOpen}
         aria-controls={panelId}
-        className="flex w-full items-center justify-between px-4 py-3 text-left transition-colors hover:bg-white/[0.02]"
+        className="flex w-full items-center justify-between px-4 py-3 text-left transition-colors hover:bg-ink/[0.03]"
       >
         <span className="flex items-center gap-2 text-sm font-medium text-muted">
           <svg aria-hidden="true" className="h-4 w-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

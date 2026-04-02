@@ -10,6 +10,9 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, "index.html"),
         "get-started": resolve(__dirname, "get-started.html"),
+        "test-login-instruction": resolve(__dirname, "test-login-instruction.html"),
+        "test-login-do": resolve(__dirname, "test-login-do.html"),
+        "test-login-result": resolve(__dirname, "test-login-result.html"),
       },
     },
   },

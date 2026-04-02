@@ -4,12 +4,14 @@ import Footer from "../components/Footer";
 import Container from "../components/Container";
 import Badge from "../components/Badge";
 
+type RequestStatus = "pending" | "ready" | "delivered" | "expired";
+
 interface RequestResult {
   rid: string;
-  status: string;
+  status: RequestStatus;
   created_at: string;
+  expires_at: string;
   target_url: string;
-  expires_at?: string;
 }
 
 export default function TestLoginResultPage() {
@@ -45,6 +47,9 @@ export default function TestLoginResultPage() {
     fetchResult();
   }, []);
 
+  const isComplete = result?.status === "ready" || result?.status === "delivered";
+  const isExpired = result?.status === "expired";
+
   return (
     <div className="bg-bg text-ink font-sans leading-[1.6] min-h-screen flex flex-col">
       <Nav />
@@ -59,7 +64,7 @@ export default function TestLoginResultPage() {
             )}
 
             {error && (
-              <div className="rounded-xl border border-red-200 bg-red-50 px-6 py-8 text-red-700 max-w-md mx-auto">
+              <div className="rounded-xl border border-border bg-surface px-6 py-8 text-ink max-w-md mx-auto">
                 <div className="text-4xl mb-4">⚠️</div>
                 <h1 className="text-xl font-bold mb-3">Error</h1>
                 <p>{error}</p>
@@ -68,59 +73,99 @@ export default function TestLoginResultPage() {
 
             {!loading && !error && result && (
               <div className="max-w-lg mx-auto">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 text-green-600 text-3xl mb-6">
-                  ✓
-                </div>
+                {isComplete ? (
+                  <>
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-surface border-2 border-border text-accent text-3xl mb-6">
+                      ✓
+                    </div>
 
-                <h1 className="text-3xl font-bold tracking-tight mb-4">
-                  Test Login Successful
-                </h1>
-                
-                <div className="mb-8">
-                  <Badge>App Store Review Complete</Badge>
-                </div>
+                    <h1 className="text-3xl font-bold tracking-tight mb-4">
+                      Test Login Successful
+                    </h1>
+                    
+                    <div className="mb-8">
+                      <Badge>App Store Review Complete</Badge>
+                    </div>
+                  </>
+                ) : isExpired ? (
+                  <>
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-surface border-2 border-border text-muted text-3xl mb-6">
+                      ⏱
+                    </div>
+
+                    <h1 className="text-3xl font-bold tracking-tight mb-4">
+                      Request Expired
+                    </h1>
+                    
+                    <div className="mb-8">
+                      <Badge>Timed Out</Badge>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-surface border-2 border-border text-accent text-3xl mb-6">
+                      ⏳
+                    </div>
+
+                    <h1 className="text-3xl font-bold tracking-tight mb-4">
+                      Login Pending
+                    </h1>
+                    
+                    <div className="mb-8">
+                      <Badge>Waiting for Device</Badge>
+                    </div>
+
+                    <div className="flex justify-center mb-8">
+                      <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-accent" />
+                    </div>
+                  </>
+                )}
 
                 <div className="rounded-xl border border-border bg-surface p-6 text-left">
-                  <div className="mb-4">
-                    <label className="text-xs font-medium text-muted uppercase tracking-wide">
-                      Request ID
-                    </label>
-                    <p className="font-mono text-sm text-ink break-all mt-1">
-                      {result.rid}
-                    </p>
-                  </div>
+                  <dl className="space-y-4">
+                    <div>
+                      <dt className="text-xs font-medium text-muted uppercase tracking-wide">
+                        Request ID
+                      </dt>
+                      <dd className="font-mono text-sm text-ink break-all mt-1">
+                        {result.rid}
+                      </dd>
+                    </div>
 
-                  <div className="mb-4">
-                    <label className="text-xs font-medium text-muted uppercase tracking-wide">
-                      Status
-                    </label>
-                    <p className="text-green-600 font-medium mt-1 capitalize">
-                      {result.status}
-                    </p>
-                  </div>
+                    <div>
+                      <dt className="text-xs font-medium text-muted uppercase tracking-wide">
+                        Status
+                      </dt>
+                      <dd className="text-ink font-medium mt-1 capitalize">
+                        {result.status}
+                      </dd>
+                    </div>
 
-                  <div className="mb-4">
-                    <label className="text-xs font-medium text-muted uppercase tracking-wide">
-                      Created At
-                    </label>
-                    <p className="text-ink mt-1">
-                      {new Date(result.created_at).toLocaleString()}
-                    </p>
-                  </div>
+                    <div>
+                      <dt className="text-xs font-medium text-muted uppercase tracking-wide">
+                        Created At
+                      </dt>
+                      <dd className="text-ink mt-1">
+                        {new Date(result.created_at).toLocaleString()}
+                      </dd>
+                    </div>
 
-                  <div>
-                    <label className="text-xs font-medium text-muted uppercase tracking-wide">
-                      Target URL
-                    </label>
-                    <p className="font-mono text-sm text-ink break-all mt-1">
-                      {result.target_url}
-                    </p>
-                  </div>
+                    <div>
+                      <dt className="text-xs font-medium text-muted uppercase tracking-wide">
+                        Target URL
+                      </dt>
+                      <dd className="font-mono text-sm text-ink break-all mt-1">
+                        {result.target_url}
+                      </dd>
+                    </div>
+                  </dl>
                 </div>
 
-                <p className="mt-8 text-muted text-sm">
-                  Your test login has been completed successfully. The session has been securely relayed.
-                </p>
+                {isComplete && (
+                  <p className="mt-8 text-muted text-sm">
+                    Your test login has been completed successfully. The session has been securely relayed.
+                  </p>
+                )}
 
                 <div className="mt-8">
                   <a

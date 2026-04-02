@@ -7,8 +7,6 @@ import { Button } from "../components/Button";
 
 interface LoginRequest {
   rid: string;
-  deep_link: string;
-  qr_text: string;
   server_url: string;
 }
 
@@ -23,8 +21,34 @@ function generateKeyPair(): { deviceId: string; pubkey: string } {
   return { deviceId, pubkey };
 }
 
+function buildDeepLink(rid: string, deviceId: string, pubkey: string): string {
+  const params = new URLSearchParams({
+    device_id: deviceId,
+    pubkey: pubkey,
+    request_type: "login",
+    rid: rid,
+    server: API_BASE,
+    target: TARGET_URL,
+  });
+  return `cookey://login?${params.toString()}`;
+}
+
+function generateQRText(rid: string): string {
+  // Simple ASCII QR placeholder - in production this would be a real QR code
+  return `
+┌─────────────────┐
+│  COOKEY LOGIN   │
+│                 │
+│   RID: ${rid.slice(0, 8)}   │
+│                 │
+│  Scan with app  │
+└─────────────────┘
+  `.trim();
+}
+
 export default function TestLoginInstructionPage() {
   const [request, setRequest] = useState<LoginRequest | null>(null);
+  const [keys, setKeys] = useState<{ deviceId: string; pubkey: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -32,6 +56,7 @@ export default function TestLoginInstructionPage() {
     async function createLoginRequest() {
       try {
         const { deviceId, pubkey } = generateKeyPair();
+        setKeys({ deviceId, pubkey });
 
         const response = await fetch(`${API_BASE}/v1/requests`, {
           method: "POST",
@@ -49,7 +74,7 @@ export default function TestLoginInstructionPage() {
         }
 
         const data = await response.json();
-        setRequest(data);
+        setRequest({ rid: data.rid, server_url: data.server_url || API_BASE });
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to create login request");
       } finally {
@@ -85,23 +110,23 @@ export default function TestLoginInstructionPage() {
             )}
 
             {error && (
-              <div className="rounded-xl border border-red-200 bg-red-50 px-6 py-4 text-red-700">
+              <div className="rounded-xl border border-border bg-surface px-6 py-4 text-ink">
                 <p className="font-medium">Error: {error}</p>
               </div>
             )}
 
-            {request && (
+            {request && keys && (
               <div className="max-w-[420px] mx-auto">
                 <div className="mb-8 overflow-hidden rounded-xl border border-border bg-terminal-bg p-6">
                   <pre className="m-0 text-center text-[12px] leading-[1.2] text-ink font-mono whitespace-pre">
-                    {request.qr_text}
+                    {generateQRText(request.rid)}
                   </pre>
                 </div>
 
                 <div className="flex flex-col items-center gap-4">
                   <Button
                     variant="primary"
-                    onClick={() => window.location.href = request.deep_link}
+                    onClick={() => window.location.href = buildDeepLink(request.rid, keys.deviceId, keys.pubkey)}
                   >
                     Open in Cookey
                   </Button>

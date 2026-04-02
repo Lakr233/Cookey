@@ -20,14 +20,15 @@ Assets:
     Tool description file for LLM agents
 
 ## Commands
-  cookey login <url>       Start session capture (prints QR code in terminal)
-  cookey status [rid]      Check session status
-  cookey export <rid>      Export Playwright storageState.json to stdout
+  cookey request start <url>    Start session capture
+  cookey request refresh <url>  Refresh a prior session for the same target
+  cookey request status [rid]   Check request status
+  cookey session export [rid]   Export Playwright storageState.json to stdout
 
 ## Workflow
-  cookey login https://example.com/login
-  # -> QR code appears in terminal
+  cookey request start https://example.com/login
+  # -> Pair key / QR appears in terminal
   # -> User scans with Cookey app, logs in
   # -> Encrypted session delivered to CLI
-  cookey export <rid> > storageState.json
+  cookey session export <rid> > storageState.json
   # -> Use with Playwright, Puppeteer, or any automation tool

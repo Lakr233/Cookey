@@ -57,7 +57,7 @@ export default function HomePage() {
                 <div>
                   <span className="text-code-prompt">❯</span>{" "}
                   <span className="text-ink">
-                    cookey login{" "}
+                    cookey request start{" "}
                     <span className="text-code-url">
                       https://github.com/login
                     </span>

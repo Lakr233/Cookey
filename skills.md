@@ -12,17 +12,25 @@ Playwright-compatible storageState JSON.
 
 ## Commands
 
-- `cookey login <url>` — start session capture, shows QR code
-  - `cookey login <url> --update` — refresh an existing session instead of starting from scratch
-  - `cookey login <url> --no-detach` — wait inline instead of detaching to a background daemon
-  - `cookey login <url> --json` — output machine-readable JSON (request ID, status, etc.)
-- `cookey status [rid]` — check if session arrived
-- `cookey export <rid>` — print storageState.json to stdout
+- `cookey request start <url>` — start session capture
+- `cookey request refresh <url>` — refresh an existing session using the latest local session for that target
+- `cookey request status [rid]` — check request or delivery status
+- `cookey session export [rid]` — print Playwright `storageState.json` to stdout
+- `cookey session list` — list local requests and sessions
+- `cookey session delete <rid>` — remove one local request/session pair
+- `cookey session clean` — remove all inactive local requests/sessions
+- `cookey config get [key]` / `cookey config set <key> <value>` — inspect or update CLI defaults
+
+Legacy aliases still work for now:
+
+- `cookey login` → `cookey request start`
+- `cookey status` → `cookey request status`
+- `cookey export` → `cookey session export`
 
 ## Usage
 
-1. `cookey login <target_url>` → QR code appears
+1. `cookey request start <target_url>` → pair key / QR appears
 2. User scans QR with Cookey iPhone app and logs in
-3. `cookey export <rid> > storageState.json`
+3. `cookey session export <rid> > storageState.json`
 4. Pass storageState to Playwright or browser automation
-5. `cookey login <target_url> --update` → refresh an expired session using the existing cookies as a seed
+5. `cookey request refresh <target_url>` → refresh an expired session using the existing cookies as a seed

@@ -112,7 +112,7 @@ func RunInline(context config.BootstrapContext, manifest models.LoginManifest, t
 
 	if session.DeviceInfo == nil {
 		fmt.Fprintln(os.Stderr, "  Warning: Received session does not include device info.")
-		fmt.Fprintln(os.Stderr, "           Push notifications and --update will not be available for this session.")
+		fmt.Fprintln(os.Stderr, "           Push notifications and `cookey request refresh` will not be available for this session.")
 	}
 
 	if err := config.WriteSession(session, manifest.RID, context.Paths); err != nil {

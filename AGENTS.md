@@ -32,9 +32,11 @@ Trust model: user trusts CLI + mobile device; relay server is untrusted (zero-kn
 ## Deployment Conventions
 
 - Production deploys sync only compose.yaml, Server/, and Web/
+- When using rsync for deploys, use `--delete` only on the specific target directory being synced (for example `Server/` or `Web/`), never on the repo root or parent deploy path
 - Remote environment files and secret files are maintained on the server and must not be overwritten by rsync
 - Build and restart production with docker compose on the remote host after syncing those paths
 - Production deploy target is provided out-of-band by the user/session and has remote-managed Cloudflare tunnel configuration that must be preserved exactly unless the user explicitly asks to change it
+- Do not print, commit, or add the production server username, hostname, or address to repository files, logs intended for handoff, or user-facing summaries unless the user explicitly asks for it
 - Required production tunnel routes are api.cookey.sh -> http://api:5800 and cookey.sh -> http://web:3000
 - Cloudflared tunnel tokens for those routes are remote secrets; never commit them, print them unnecessarily, or overwrite them during deploys
 - Before any production deploy that touches compose or tunnel services, inspect and preserve the remote tunnel-related environment/configuration instead of replacing it from local files

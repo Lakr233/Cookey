@@ -4,91 +4,26 @@ import Footer from "../components/Footer";
 import Container from "../components/Container";
 import Badge from "../components/Badge";
 import { ButtonLink } from "../components/Button";
-
-type RequestStatus = "pending" | "ready" | "delivered" | "expired";
-
-interface RequestResult {
-  rid: string;
-  status: RequestStatus;
-  created_at: string;
-  expires_at: string;
-  target_url: string;
-  delivered_at?: string;
-}
+import {
+  REQUEST_POLL_INTERVAL_MS,
+  fetchRequestStatus,
+  formatDateTime,
+  type RequestStatus,
+  type RequestStatusResponse,
+  validateRequestId,
+} from "../lib/testLogin";
 
 type PageState =
   | { kind: "loading" }
-  | { kind: "ready"; result: RequestResult }
+  | { kind: "ready"; result: RequestStatusResponse }
   | { kind: "error"; message: string };
-
-const API_BASE = "https://api.cookey.sh";
-const REQUEST_ID_PATTERN = /^[A-Za-z0-9_-]{6,128}$/;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
-function isNonEmptyString(value: unknown): value is string {
-  return typeof value === "string" && value.trim().length > 0;
-}
-
-function isRequestStatus(value: unknown): value is RequestStatus {
-  return (
-    value === "pending" ||
-    value === "ready" ||
-    value === "delivered" ||
-    value === "expired"
-  );
-}
-
-function validateRequestId(value: string | null): string {
-  const rid = value?.trim() ?? "";
-  if (!REQUEST_ID_PATTERN.test(rid)) {
-    throw new Error("Request ID not found in URL.");
-  }
-  return rid;
-}
-
-async function readJson(response: Response): Promise<unknown> {
-  const text = await response.text();
-
-  if (!text.trim()) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(text) as unknown;
-  } catch {
-    throw new Error("API returned invalid JSON.");
-  }
-}
-
-function isRequestResult(value: unknown): value is RequestResult {
-  return (
-    isRecord(value) &&
-    isNonEmptyString(value.rid) &&
-    isRequestStatus(value.status) &&
-    isNonEmptyString(value.created_at) &&
-    isNonEmptyString(value.expires_at) &&
-    isNonEmptyString(value.target_url) &&
-    (value.delivered_at === undefined || isNonEmptyString(value.delivered_at))
-  );
-}
-
-function formatDateTime(value: string): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-  return date.toLocaleString();
-}
 
 function getStatusBadgeCopy(status: RequestStatus): string {
   switch (status) {
     case "pending":
       return "Waiting for Device";
     case "ready":
-      return "Session Uploaded";
+      return "Session Ready";
     case "delivered":
       return "Relay Complete";
     case "expired":
@@ -101,9 +36,9 @@ function getStatusHeading(status: RequestStatus): string {
     case "pending":
       return "Login still in progress";
     case "ready":
-      return "Session ready on the relay";
+      return "Test login succeeded";
     case "delivered":
-      return "Test login completed";
+      return "Relay delivery completed";
     case "expired":
       return "Request expired";
   }
@@ -112,13 +47,13 @@ function getStatusHeading(status: RequestStatus): string {
 function getStatusDetail(status: RequestStatus): string {
   switch (status) {
     case "pending":
-      return "The mobile login is still in progress. Keep the page open or retry after the device finishes.";
+      return "The mobile login is still in progress. Refresh will happen automatically while this page is open.";
     case "ready":
-      return "The encrypted session reached the relay and is waiting to be claimed.";
+      return "Cookey uploaded the encrypted session to the relay successfully. For App Store review, this is the expected success state.";
     case "delivered":
-      return "The relay marked the session as delivered successfully.";
+      return "A consumer claimed the encrypted session and the relay marked the request as delivered.";
     case "expired":
-      return "The request expired before the full delivery flow completed.";
+      return "The request expired before the relay reached a successful terminal state.";
   }
 }
 
@@ -127,36 +62,31 @@ export default function TestLoginResultPage() {
 
   useEffect(() => {
     let pollTimer: number | undefined;
-    let disposed = false;
     let activeController: AbortController | null = null;
-    let latestStatus: RequestStatus | null = null;
+    let disposed = false;
 
     const rid = (() => {
       try {
-        return validateRequestId(
-          new URLSearchParams(window.location.search).get("rid"),
-        );
+        return validateRequestId(new URLSearchParams(window.location.search).get("rid"));
       } catch (error) {
         setState({
           kind: "error",
-          message:
-            error instanceof Error
-              ? error.message
-              : "Request ID not found in URL.",
+          message: error instanceof Error ? error.message : "Missing or invalid request ID.",
         });
         return null;
       }
     })();
 
     if (!rid) {
-      return () => {
-        disposed = true;
-        activeController?.abort();
-        if (pollTimer !== undefined) {
-          window.clearInterval(pollTimer);
-        }
-      };
+      return () => undefined;
     }
+
+    const stopPolling = () => {
+      if (pollTimer !== undefined) {
+        window.clearInterval(pollTimer);
+        pollTimer = undefined;
+      }
+    };
 
     const loadResult = async () => {
       activeController?.abort();
@@ -164,38 +94,15 @@ export default function TestLoginResultPage() {
       activeController = controller;
 
       try {
-        const response = await fetch(
-          `${API_BASE}/v1/requests/${encodeURIComponent(rid)}`,
-          { signal: controller.signal },
-        );
-
-        if (response.status === 410) {
-          latestStatus = "expired";
-          setState({
-            kind: "ready",
-            result: {
-              rid,
-              status: "expired",
-              created_at: "",
-              expires_at: "",
-              target_url: "",
-            },
-          });
+        const result = await fetchRequestStatus(rid, controller.signal);
+        if (disposed) {
           return;
         }
 
-        const payload = await readJson(response);
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch request details (${response.status}).`);
+        setState({ kind: "ready", result });
+        if (result.status !== "pending") {
+          stopPolling();
         }
-
-        if (!isRequestResult(payload)) {
-          throw new Error("API returned an unexpected response shape.");
-        }
-
-        latestStatus = payload.status;
-        setState({ kind: "ready", result: payload });
       } catch (error) {
         if (
           disposed ||
@@ -207,9 +114,9 @@ export default function TestLoginResultPage() {
 
         setState({
           kind: "error",
-          message:
-            error instanceof Error ? error.message : "An error occurred.",
+          message: error instanceof Error ? error.message : "Unable to load request result.",
         });
+        stopPolling();
       } finally {
         if (activeController === controller) {
           activeController = null;
@@ -218,33 +125,18 @@ export default function TestLoginResultPage() {
     };
 
     void loadResult();
-
     pollTimer = window.setInterval(() => {
-      if (disposed) {
-        return;
-      }
-
-      if (latestStatus === "delivered" || latestStatus === "expired") {
-        if (pollTimer !== undefined) {
-          window.clearInterval(pollTimer);
-        }
-        return;
-      }
-
       void loadResult();
-    }, 3000);
+    }, REQUEST_POLL_INTERVAL_MS);
 
     return () => {
       disposed = true;
       activeController?.abort();
-      if (pollTimer !== undefined) {
-        window.clearInterval(pollTimer);
-      }
+      stopPolling();
     };
   }, []);
 
   const result = state.kind === "ready" ? state.result : null;
-  const status = result?.status ?? null;
 
   return (
     <div className="bg-bg text-ink font-sans leading-[1.6] min-h-screen flex flex-col">
@@ -262,8 +154,7 @@ export default function TestLoginResultPage() {
                 Review the final request state.
               </h1>
               <p className="mx-auto mb-10 max-w-[540px] text-[1.05rem] text-muted">
-                The result page summarizes the relay status and the request
-                metadata returned by the API.
+                The result page summarizes the relay status returned by the API for this request.
               </p>
             </div>
 
@@ -273,20 +164,14 @@ export default function TestLoginResultPage() {
                   <div className="mb-5 flex justify-center">
                     <div aria-hidden="true" className="h-10 w-10 animate-spin rounded-full border-[3px] border-border border-t-accent" />
                   </div>
-                  <h2 className="text-xl font-semibold tracking-tight">
-                    Loading request result
-                  </h2>
-                  <p className="mt-3 text-sm text-muted">
-                    Fetching the latest relay state and request metadata.
-                  </p>
+                  <h2 className="text-xl font-semibold tracking-tight">Loading request result</h2>
+                  <p className="mt-3 text-sm text-muted">Fetching the latest state from the relay.</p>
                 </div>
               )}
 
               {state.kind === "error" && (
                 <div className="text-center" role="status" aria-live="polite">
-                  <h2 className="text-xl font-semibold tracking-tight">
-                    Unable to load request result
-                  </h2>
+                  <h2 className="text-xl font-semibold tracking-tight">Unable to load request result</h2>
                   <p className="mt-3 text-sm text-muted">{state.message}</p>
                   <div className="mt-6 flex flex-wrap justify-center gap-3">
                     <ButtonLink href="/test-login-instruction" variant="primary">
@@ -299,66 +184,38 @@ export default function TestLoginResultPage() {
                 </div>
               )}
 
-              {result && status && (
+              {result && (
                 <div className="text-center" role="status" aria-live="polite">
                   <h2 className="text-xl font-semibold tracking-tight">
-                    {getStatusHeading(status)}
+                    {getStatusHeading(result.status)}
                   </h2>
                   <div className="mt-4">
-                    <Badge>{getStatusBadgeCopy(status)}</Badge>
+                    <Badge>{getStatusBadgeCopy(result.status)}</Badge>
                   </div>
                   <p className="mx-auto mt-4 max-w-[520px] text-sm text-muted">
-                    {getStatusDetail(status)}
+                    {getStatusDetail(result.status)}
                   </p>
 
                   <dl className="mt-8 space-y-4 rounded-xl border border-border bg-terminal-bg p-5 text-left text-sm">
                     <div>
-                      <dt className="text-[11px] uppercase tracking-[0.18em] text-muted">
-                        Request ID
-                      </dt>
-                      <dd className="mt-1 font-mono break-all text-ink">
-                        {result.rid}
-                      </dd>
+                      <dt className="text-[11px] uppercase tracking-[0.18em] text-muted">Request ID</dt>
+                      <dd className="mt-1 font-mono break-all text-ink">{result.rid}</dd>
                     </div>
                     <div>
-                      <dt className="text-[11px] uppercase tracking-[0.18em] text-muted">
-                        Status
-                      </dt>
+                      <dt className="text-[11px] uppercase tracking-[0.18em] text-muted">Status</dt>
                       <dd className="mt-1 text-ink capitalize">{result.status}</dd>
                     </div>
                     <div>
-                      <dt className="text-[11px] uppercase tracking-[0.18em] text-muted">
-                        Created At
-                      </dt>
-                      <dd className="mt-1 text-ink">
-                        {result.created_at ? formatDateTime(result.created_at) : "Unavailable"}
-                      </dd>
+                      <dt className="text-[11px] uppercase tracking-[0.18em] text-muted">Created At</dt>
+                      <dd className="mt-1 text-ink">{formatDateTime(result.created_at)}</dd>
                     </div>
                     <div>
-                      <dt className="text-[11px] uppercase tracking-[0.18em] text-muted">
-                        Expires At
-                      </dt>
-                      <dd className="mt-1 text-ink">
-                        {result.expires_at ? formatDateTime(result.expires_at) : "Unavailable"}
-                      </dd>
+                      <dt className="text-[11px] uppercase tracking-[0.18em] text-muted">Expires At</dt>
+                      <dd className="mt-1 text-ink">{formatDateTime(result.expires_at)}</dd>
                     </div>
                     <div>
-                      <dt className="text-[11px] uppercase tracking-[0.18em] text-muted">
-                        Delivered At
-                      </dt>
-                      <dd className="mt-1 text-ink">
-                        {result.delivered_at
-                          ? formatDateTime(result.delivered_at)
-                          : "Not delivered yet"}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-[11px] uppercase tracking-[0.18em] text-muted">
-                        Target URL
-                      </dt>
-                      <dd className="mt-1 font-mono break-all text-ink">
-                        {result.target_url || "Unavailable"}
-                      </dd>
+                      <dt className="text-[11px] uppercase tracking-[0.18em] text-muted">Target URL</dt>
+                      <dd className="mt-1 font-mono break-all text-ink">{result.target_url}</dd>
                     </div>
                   </dl>
 

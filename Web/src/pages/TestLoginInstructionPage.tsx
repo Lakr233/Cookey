@@ -5,237 +5,38 @@ import Container from "../components/Container";
 import Badge from "../components/Badge";
 import QrCode from "../components/QrCode";
 import { Button, ButtonLink } from "../components/Button";
-
-interface DeviceKeys {
-  deviceId: string;
-  pubkey: string;
-}
-
-interface CreateLoginRequestResponse {
-  rid: string;
-  server_url?: string;
-}
-
-interface ApiErrorResponse {
-  code?: string;
-  message: string;
-}
-
-interface LoginRequest {
-  rid: string;
-  serverUrl: string;
-  targetUrl: string;
-  deepLink: string;
-  monitorUrl: string;
-}
+import { createLoginRequest, type LoginRequestState } from "../lib/testLogin";
 
 type PageState =
-  | { status: "loading" }
-  | { status: "ready"; request: LoginRequest }
-  | { status: "error"; error: string };
-
-const API_BASE = "https://api.cookey.sh";
-const TARGET_URL = "https://cookey.sh/test-login-do";
-const REQUEST_ID_PATTERN = /^[A-Za-z0-9_-]{6,128}$/;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
-function isNonEmptyString(value: unknown): value is string {
-  return typeof value === "string" && value.trim().length > 0;
-}
-
-function isApiErrorResponse(value: unknown): value is ApiErrorResponse {
-  return (
-    isRecord(value) &&
-    isNonEmptyString(value.message) &&
-    (value.code === undefined || isNonEmptyString(value.code))
-  );
-}
-
-function isCreateLoginRequestResponse(
-  value: unknown,
-): value is CreateLoginRequestResponse {
-  return (
-    isRecord(value) &&
-    isNonEmptyString(value.rid) &&
-    (value.server_url === undefined || isNonEmptyString(value.server_url))
-  );
-}
-
-function toErrorMessage(error: unknown): string {
-  if (error instanceof Error && error.message.trim()) {
-    return error.message;
-  }
-  return "Failed to create the Cookey login request.";
-}
-
-function normalizeUrl(value: string, label: string): URL {
-  try {
-    return new URL(value);
-  } catch {
-    throw new Error(`${label} is not a valid absolute URL.`);
-  }
-}
-
-function validateHttpsUrl(value: string, label: string): string {
-  const url = normalizeUrl(value, label);
-  if (url.protocol !== "https:") {
-    throw new Error(`${label} must use https.`);
-  }
-  url.hash = "";
-  return url.toString();
-}
-
-function validateHttpUrl(value: string, label: string): string {
-  const url = normalizeUrl(value, label);
-  if (url.protocol !== "https:" && url.protocol !== "http:") {
-    throw new Error(`${label} must use http or https.`);
-  }
-  url.hash = "";
-  return url.toString();
-}
-
-function validateRequestId(value: string): string {
-  const rid = value.trim();
-  if (!REQUEST_ID_PATTERN.test(rid)) {
-    throw new Error("API returned an invalid request ID.");
-  }
-  return rid;
-}
-
-function withTrailingSlash(value: string): string {
-  return value.endsWith("/") ? value : `${value}/`;
-}
-
-function generateKeyPair(): DeviceKeys {
-  const deviceId = crypto.randomUUID();
-  const randomBytes = crypto.getRandomValues(new Uint8Array(32));
-  let binary = "";
-
-  for (const byte of randomBytes) {
-    binary += String.fromCharCode(byte);
-  }
-
-  return { deviceId, pubkey: btoa(binary) };
-}
-
-function buildDeepLink(
-  rid: string,
-  deviceId: string,
-  pubkey: string,
-  serverUrl: string,
-  targetUrl: string,
-): string {
-  const params = new URLSearchParams({
-    device_id: deviceId,
-    pubkey,
-    request_type: "login",
-    rid,
-    server: serverUrl,
-    target: targetUrl,
-  });
-
-  return `cookey://login?${params.toString()}`;
-}
-
-async function readJson(response: Response): Promise<unknown> {
-  const text = await response.text();
-
-  if (!text.trim()) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(text) as unknown;
-  } catch {
-    throw new Error("API returned invalid JSON.");
-  }
-}
-
-async function createLoginRequest(signal: AbortSignal): Promise<LoginRequest> {
-  const apiBaseUrl = validateHttpsUrl(API_BASE, "API base URL");
-  const targetUrl = validateHttpsUrl(TARGET_URL, "Target URL");
-  const endpoint = new URL("v1/requests", withTrailingSlash(apiBaseUrl));
-  const { deviceId, pubkey } = generateKeyPair();
-
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      target_url: targetUrl,
-      request_type: "login",
-      device_id: deviceId,
-      pubkey,
-    }),
-    signal,
-  });
-
-  const payload = await readJson(response);
-
-  if (!response.ok) {
-    if (isApiErrorResponse(payload)) {
-      throw new Error(payload.message);
-    }
-
-    throw new Error(
-      `Login request failed with status ${response.status}. Please retry.`,
-    );
-  }
-
-  if (!isCreateLoginRequestResponse(payload)) {
-    throw new Error("API returned an unexpected response shape.");
-  }
-
-  const rid = validateRequestId(payload.rid);
-  const serverUrl = validateHttpUrl(
-    payload.server_url ?? apiBaseUrl,
-    "Server URL",
-  );
-
-  return {
-    rid,
-    serverUrl,
-    targetUrl,
-    deepLink: buildDeepLink(rid, deviceId, pubkey, serverUrl, targetUrl),
-    monitorUrl: `/test-login-do?rid=${encodeURIComponent(rid)}`,
-  };
-}
+  | { kind: "loading" }
+  | { kind: "ready"; request: LoginRequestState }
+  | { kind: "error"; message: string };
 
 export default function TestLoginInstructionPage() {
-  const [state, setState] = useState<PageState>({ status: "loading" });
+  const [state, setState] = useState<PageState>({ kind: "loading" });
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     const controller = new AbortController();
-    setState({ status: "loading" });
+    setState({ kind: "loading" });
 
-    void (async () => {
-      try {
-        const request = await createLoginRequest(controller.signal);
+    void createLoginRequest(controller.signal)
+      .then((request) => {
         if (!controller.signal.aborted) {
-          setState({ status: "ready", request });
+          setState({ kind: "ready", request });
         }
-      } catch (error) {
+      })
+      .catch((error: unknown) => {
         if (!controller.signal.aborted) {
           setState({
-            status: "error",
-            error: toErrorMessage(error),
+            kind: "error",
+            message: error instanceof Error ? error.message : "Failed to create login request.",
           });
         }
-      }
-    })();
+      });
 
-    return () => {
-      controller.abort();
-    };
+    return () => controller.abort();
   }, [attempt]);
-
-  const request = state.status === "ready" ? state.request : null;
-  const errorMessage = state.status === "error" ? state.error : null;
-  const isLoading = state.status === "loading";
-  const isError = errorMessage !== null;
 
   return (
     <div className="bg-bg text-ink font-sans leading-[1.6] min-h-screen flex flex-col">
@@ -253,39 +54,30 @@ export default function TestLoginInstructionPage() {
                 Start a test login request.
               </h1>
               <p className="mx-auto mb-10 max-w-[540px] text-[1.05rem] text-muted">
-                Create a fresh Cookey request, open it in the app, then continue
-                to the live status page to confirm the relay flow works end to
-                end.
+                This page creates a real relay request, encodes the Cookey deep link
+                into a scannable QR code, and gives you a status page for the review flow.
               </p>
             </div>
 
             <div className="mx-auto max-w-[620px] rounded-xl border border-border bg-surface p-6 sm:p-7">
-              {isLoading && (
+              {state.kind === "loading" && (
                 <div className="text-center" role="status" aria-live="polite">
                   <div className="mb-5 flex justify-center">
                     <div aria-hidden="true" className="h-10 w-10 animate-spin rounded-full border-[3px] border-border border-t-accent" />
                   </div>
-                  <h2 className="text-xl font-semibold tracking-tight">
-                    Creating login request
-                  </h2>
+                  <h2 className="text-xl font-semibold tracking-tight">Creating login request</h2>
                   <p className="mt-3 text-sm text-muted">
-                    Generating device keys, validating configuration, and
-                    requesting a fresh session from the relay.
+                    Generating a request ID, relay payload, and deep link for Cookey.
                   </p>
                 </div>
               )}
 
-              {isError && (
+              {state.kind === "error" && (
                 <div className="text-center" role="status" aria-live="polite">
-                  <h2 className="text-xl font-semibold tracking-tight">
-                    Request setup failed
-                  </h2>
-                  <p className="mt-3 text-sm text-muted">{errorMessage}</p>
+                  <h2 className="text-xl font-semibold tracking-tight">Request setup failed</h2>
+                  <p className="mt-3 text-sm text-muted">{state.message}</p>
                   <div className="mt-6 flex flex-wrap justify-center gap-3">
-                    <Button
-                      variant="primary"
-                      onClick={() => setAttempt((current) => current + 1)}
-                    >
+                    <Button variant="primary" onClick={() => setAttempt((current) => current + 1)}>
                       Retry request
                     </Button>
                     <ButtonLink href="/" variant="secondary">
@@ -295,70 +87,54 @@ export default function TestLoginInstructionPage() {
                 </div>
               )}
 
-              {request && (
+              {state.kind === "ready" && (
                 <div className="flex flex-col gap-8 md:flex-row md:items-start">
-                  <div className="mx-auto w-full max-w-[210px] rounded-xl border border-border bg-terminal-bg p-5 md:mx-0">
+                  <div className="mx-auto w-full max-w-[220px] rounded-xl border border-border bg-terminal-bg p-5 md:mx-0">
                     <div className="flex justify-center">
-                      <QrCode />
+                      <QrCode value={state.request.deepLink} size={160} />
                     </div>
-                    <p className="mt-3 text-center text-xs text-muted">
-                      Open Cookey on the review device, then continue to the
-                      request status page.
+                    <p className="mt-4 text-center text-xs text-muted">
+                      Scan this QR code with Cookey, or use the button below to open the app directly.
                     </p>
                   </div>
 
                   <div className="flex-1">
-                    <h2 className="text-xl font-semibold tracking-tight">
-                      Request ready
-                    </h2>
+                    <h2 className="text-xl font-semibold tracking-tight">Request ready</h2>
                     <p className="mt-3 text-sm text-muted">
-                      Use the Cookey deep link first. After switching to the
-                      app, open the status page below to watch the request
-                      complete.
+                      The relay has accepted the request. Complete the login in Cookey, then
+                      continue to the status page to confirm the session reaches the relay.
                     </p>
 
                     <div className="mt-6 flex flex-wrap gap-3">
-                      <ButtonLink href={request.deepLink} variant="primary">
+                      <ButtonLink href={state.request.deepLink} variant="primary">
                         Open in Cookey
                       </ButtonLink>
-                      <ButtonLink href={request.monitorUrl} variant="secondary">
+                      <ButtonLink href={state.request.monitorUrl} variant="secondary">
                         Continue to status page
                       </ButtonLink>
                     </div>
 
                     <dl className="mt-6 space-y-4 rounded-xl border border-border bg-terminal-bg p-5 text-sm">
                       <div>
-                        <dt className="text-[11px] uppercase tracking-[0.18em] text-muted">
-                          Request ID
-                        </dt>
-                        <dd className="mt-1 font-mono break-all text-ink">
-                          {request.rid}
-                        </dd>
+                        <dt className="text-[11px] uppercase tracking-[0.18em] text-muted">Request ID</dt>
+                        <dd className="mt-1 font-mono break-all text-ink">{state.request.rid}</dd>
                       </div>
                       <div>
-                        <dt className="text-[11px] uppercase tracking-[0.18em] text-muted">
-                          Relay server
-                        </dt>
-                        <dd className="mt-1 font-mono break-all text-ink">
-                          {request.serverUrl}
-                        </dd>
+                        <dt className="text-[11px] uppercase tracking-[0.18em] text-muted">Relay server</dt>
+                        <dd className="mt-1 font-mono break-all text-ink">{state.request.serverUrl}</dd>
                       </div>
                       <div>
-                        <dt className="text-[11px] uppercase tracking-[0.18em] text-muted">
-                          Target URL
-                        </dt>
-                        <dd className="mt-1 font-mono break-all text-ink">
-                          {request.targetUrl}
-                        </dd>
+                        <dt className="text-[11px] uppercase tracking-[0.18em] text-muted">Target URL</dt>
+                        <dd className="mt-1 font-mono break-all text-ink">{state.request.targetUrl}</dd>
                       </div>
                     </dl>
 
                     <div className="mt-6 rounded-xl border border-border p-5">
                       <h3 className="font-semibold">Flow</h3>
                       <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm text-muted">
-                        <li>Open Cookey with the primary button above.</li>
-                        <li>Complete the login on the mobile device.</li>
-                        <li>Open the status page to verify delivery.</li>
+                        <li>Scan the QR code or tap the deep link button.</li>
+                        <li>Finish the login inside Cookey on the review device.</li>
+                        <li>Use the status page to confirm the relay reaches the ready state.</li>
                       </ol>
                     </div>
                   </div>

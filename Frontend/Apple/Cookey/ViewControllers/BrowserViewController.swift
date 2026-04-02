@@ -41,9 +41,11 @@ class BrowserViewController: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
         navigationItem.largeTitleDisplayMode = .never
+        edgesForExtendedLayout = .all
+        extendedLayoutIncludesOpaqueBars = true
 
         view.addSubview(browser.webView)
-        browser.webView.snp.makeConstraints { $0.edges.equalToSuperview() }
+        browser.webView.snp.makeConstraints { $0.edges.equalTo(view) }
 
         browser.webView.scrollView.refreshControl = UIRefreshControl().then {
             $0.addTarget(self, action: #selector(refresh), for: .valueChanged)
@@ -93,6 +95,21 @@ class BrowserViewController: UIViewController {
                     message: message
                 ) { context in
                     context.addAction(title: String(localized: "OK"), attribute: .dangerous) { context.dispose() }
+                }
+                self?.present(alert, animated: true)
+            }
+            .store(in: &cancellables)
+
+        browser.$passkeyAlertPresented
+            .receive(on: DispatchQueue.main)
+            .filter(\.self)
+            .sink { [weak self] _ in
+                self?.browser.passkeyAlertPresented = false
+                let alert = AlertViewController(
+                    title: String(localized: "Passkey Not Supported"),
+                    message: String(localized: "This website is requesting Passkey authentication, which is not supported in the in-app browser. Please use an alternative login method such as password or SMS verification.")
+                ) { context in
+                    context.addAction(title: String(localized: "OK")) { context.dispose() }
                 }
                 self?.present(alert, animated: true)
             }

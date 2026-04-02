@@ -183,26 +183,26 @@ export default function TestLoginResultPage() {
       <main className="flex-1">
         <Container>
           <section className="pt-20 pb-16">
-            <div className="mb-7 text-center animate-[fade-in_0.4s_ease-out]">
+            <div className="mb-7 text-center animate-[fade-in_0.4s_ease-out_both]">
               <Badge>Test Login Result</Badge>
             </div>
 
             <div className="mx-auto max-w-[620px] text-center">
-              <h1 className="mb-[18px] font-bold tracking-[-0.03em] leading-[1.1] text-[clamp(2.2rem,6vw,3.2rem)] animate-[fade-in_0.4s_ease-out] delay-100">
+              <h1 className="mb-[18px] font-bold tracking-[-0.03em] leading-[1.1] text-[clamp(2.2rem,6vw,3.2rem)] animate-[fade-in_0.4s_ease-out_75ms_both]">
                 {status ? getStatusHeading(status) : "Review the final request state."}
               </h1>
-              <p className="mx-auto mb-8 max-w-[540px] text-[1.05rem] text-muted animate-[fade-in_0.4s_ease-out] delay-200">
+              <p className="mx-auto mb-8 max-w-[540px] text-[1.05rem] text-muted animate-[fade-in_0.4s_ease-out_150ms_both]">
                 {status
                   ? getStatusDetail(status)
-                  : "The result page summarizes the relay status returned by the API for this request."}
+                  : "Loading the relay status for this request."}
               </p>
             </div>
 
-            <div className="mb-10 animate-[fade-in_0.4s_ease-out] delay-300">
+            <div className="mb-10 animate-[fade-in_0.4s_ease-out_225ms_both]">
               <StepProgress current={3} />
             </div>
 
-            <div className="mx-auto max-w-[620px] rounded-xl border border-border bg-surface p-6 sm:p-7 animate-[fade-in_0.4s_ease-out] delay-400">
+            <div className="mx-auto max-w-[620px] rounded-xl border border-border bg-surface p-6 sm:p-7 animate-[fade-in_0.4s_ease-out_300ms_both]">
               {state.kind === "loading" && (
                 <div className="text-center" role="status" aria-live="polite">
                   <div className="mb-5 flex justify-center">
@@ -238,12 +238,6 @@ export default function TestLoginResultPage() {
                         <Badge>{getStatusBadgeCopy(status)}</Badge>
                       </div>
                     )}
-                    <h2 className="text-xl font-semibold tracking-tight">
-                      {getStatusHeading(result.status)}
-                    </h2>
-                    <p className="mx-auto mt-3 max-w-[480px] text-sm text-muted">
-                      {getStatusDetail(result.status)}
-                    </p>
                   </div>
 
                   <div className="w-full mt-2">

@@ -199,24 +199,24 @@ export default function TestLoginDoPage() {
       <main className="flex-1">
         <Container>
           <section className="pt-20 pb-16">
-            <div className="mb-7 text-center animate-[fade-in_0.4s_ease-out]">
+            <div className="mb-7 text-center animate-[fade-in_0.4s_ease-out_both]">
               <Badge>Live Request Status</Badge>
             </div>
 
             <div className="mx-auto max-w-[620px] text-center">
-              <h1 className="mb-[18px] font-bold tracking-[-0.03em] leading-[1.1] text-[clamp(2.2rem,6vw,3.2rem)] animate-[fade-in_0.4s_ease-out] delay-100">
+              <h1 className="mb-[18px] font-bold tracking-[-0.03em] leading-[1.1] text-[clamp(2.2rem,6vw,3.2rem)] animate-[fade-in_0.4s_ease-out_75ms_both]">
                 Monitor the test login request.
               </h1>
-              <p className="mx-auto mb-8 max-w-[540px] text-[1.05rem] text-muted animate-[fade-in_0.4s_ease-out] delay-200">
+              <p className="mx-auto mb-8 max-w-[540px] text-[1.05rem] text-muted animate-[fade-in_0.4s_ease-out_150ms_both]">
                 This page polls the relay status without consuming the one-shot session payload.
               </p>
             </div>
 
-            <div className="mb-10 animate-[fade-in_0.4s_ease-out] delay-300">
+            <div className="mb-10 animate-[fade-in_0.4s_ease-out_225ms_both]">
               <StepProgress current={2} />
             </div>
 
-            <div className="mx-auto max-w-[620px] rounded-xl border border-border bg-surface p-6 sm:p-7 animate-[fade-in_0.4s_ease-out] delay-400">
+            <div className="mx-auto max-w-[620px] rounded-xl border border-border bg-surface p-6 sm:p-7 animate-[fade-in_0.4s_ease-out_300ms_both]">
               {state.kind === "error" ? (
                 <div className="text-center" role="status" aria-live="polite">
                   <h2 className="text-xl font-semibold tracking-tight">Unable to monitor request</h2>
@@ -232,7 +232,7 @@ export default function TestLoginDoPage() {
                 </div>
               ) : (
                 <div className="flex flex-col items-center gap-5">
-                  <div className="animate-[fade-in_0.4s_ease-out]">
+                  <div className="animate-[fade-in_0.4s_ease-out_both]">
                     <StatusIndicator status={status} />
                   </div>
 
@@ -257,7 +257,7 @@ export default function TestLoginDoPage() {
                   </div>
 
                   {state.kind === "ready" && (
-                    <div className="w-full mt-2 animate-[fade-in_0.4s_ease-out]">
+                    <div className="w-full mt-2 animate-[fade-in_0.4s_ease-out_both]">
                       <DetailsDisclosure title="Request Details">
                         <dl className="space-y-4 text-sm">
                           <div>
@@ -274,7 +274,7 @@ export default function TestLoginDoPage() {
                   )}
 
                   {isTerminal && (
-                    <div className="mt-4 flex flex-wrap justify-center gap-3 animate-[fade-in_0.4s_ease-out]">
+                    <div className="mt-4 flex flex-wrap justify-center gap-3 animate-[fade-in_0.4s_ease-out_both]">
                       {resultUrl && (
                         <ButtonLink href={resultUrl} variant="primary">
                           View result →

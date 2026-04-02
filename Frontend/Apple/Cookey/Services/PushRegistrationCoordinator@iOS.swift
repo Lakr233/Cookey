@@ -39,7 +39,7 @@ final class PushRegistrationCoordinator: ObservableObject {
     private weak var model: SessionUploadModel?
     private var tokenContinuation: CheckedContinuation<Void, Error>?
 
-    init(relayClientFactory _: @escaping RelayClientFactory = { RelayClient(baseURL: $0) }) {}
+    init() {}
 
     func ensurePushToken(
         serverURL: URL,
@@ -67,7 +67,8 @@ final class PushRegistrationCoordinator: ObservableObject {
         }
 
         if let token = PushTokenStore.currentToken,
-           let environment = PushTokenStore.currentEnvironment {
+           let environment = PushTokenStore.currentEnvironment
+        {
             _ = token
             _ = environment
             state = .idle

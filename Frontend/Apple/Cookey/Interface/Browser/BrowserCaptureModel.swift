@@ -3,7 +3,7 @@ import Foundation
 import WebKit
 
 @MainActor
-final class BrowserCaptureModel: NSObject, ObservableObject {
+final class BrowserCaptureModel: NSObject, ObservableObject, WKScriptMessageHandler {
     enum CaptureError: LocalizedError {
         case emptyPayload
         case invalidPayload
@@ -23,6 +23,7 @@ final class BrowserCaptureModel: NSObject, ObservableObject {
     @Published var errorMessage: String?
     @Published var isTransferring = false
     @Published var pageTitle = ""
+    @Published var passkeyAlertPresented = false
 
     private let targetURL: URL
     private let deviceID: String
@@ -34,8 +35,12 @@ final class BrowserCaptureModel: NSObject, ObservableObject {
         let configuration = WKWebViewConfiguration()
         configuration.websiteDataStore = .nonPersistent()
 
+        Self.installPasskeyIntercept(on: configuration.userContentController)
+
         webView = WKWebView(frame: .zero, configuration: configuration)
+        webView.underPageBackgroundColor = .systemBackground
         super.init()
+        configuration.userContentController.add(self, name: Self.passkeyMessageHandler)
         webView.navigationDelegate = self
         webView.load(URLRequest(url: targetURL))
     }
@@ -56,8 +61,12 @@ final class BrowserCaptureModel: NSObject, ObservableObject {
             configuration.userContentController.addUserScript(userScript)
         }
 
+        Self.installPasskeyIntercept(on: configuration.userContentController)
+
         webView = WKWebView(frame: .zero, configuration: configuration)
+        webView.underPageBackgroundColor = .systemBackground
         super.init()
+        configuration.userContentController.add(self, name: Self.passkeyMessageHandler)
         webView.navigationDelegate = self
 
         Task { @MainActor [weak webView] in
@@ -236,6 +245,55 @@ final class BrowserCaptureModel: NSObject, ObservableObject {
             }
         }
     }
+
+    // MARK: - Passkey Intercept
+
+    private static let passkeyMessageHandler = "passkeyInterceptHandler"
+
+    private static let passkeyInterceptScript = """
+    (function() {
+        if (navigator.credentials) {
+            var origCreate = navigator.credentials.create.bind(navigator.credentials);
+            var origGet = navigator.credentials.get.bind(navigator.credentials);
+
+            navigator.credentials.create = function(options) {
+                if (options && options.publicKey) {
+                    window.webkit.messageHandlers.passkeyInterceptHandler.postMessage("create");
+                    return Promise.reject(new DOMException("Passkey is not supported in this browser.", "NotAllowedError"));
+                }
+                return origCreate.apply(navigator.credentials, arguments);
+            };
+
+            navigator.credentials.get = function(options) {
+                if (options && options.publicKey) {
+                    window.webkit.messageHandlers.passkeyInterceptHandler.postMessage("get");
+                    return Promise.reject(new DOMException("Passkey is not supported in this browser.", "NotAllowedError"));
+                }
+                return origGet.apply(navigator.credentials, arguments);
+            };
+        }
+    })();
+    """
+
+    private static func installPasskeyIntercept(on controller: WKUserContentController) {
+        let script = WKUserScript(
+            source: passkeyInterceptScript,
+            injectionTime: .atDocumentStart,
+            forMainFrameOnly: false
+        )
+        controller.addUserScript(script)
+    }
+
+    nonisolated func userContentController(
+        _: WKUserContentController,
+        didReceive _: WKScriptMessage
+    ) {
+        Task { @MainActor in
+            passkeyAlertPresented = true
+        }
+    }
+
+    // MARK: - Helpers
 
     private static func jsonLiteral(_ string: String) -> String? {
         guard

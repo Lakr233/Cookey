@@ -11,9 +11,7 @@ import PropertyCard from "../components/PropertyCard";
 import FaqItem from "../components/FaqItem";
 
 const NAV_LINKS = [
-  { label: "Get Started", href: "/get-started" },
   { label: "llms.txt", href: "/llms.txt" },
-  { label: "GitHub", href: "https://github.com/Lakr233/Cookey" },
 ];
 
 export default function HomePage() {
@@ -158,8 +156,8 @@ export default function HomePage() {
 
       <Footer
         rightLink={{
-          label: "GitHub",
-          href: "https://github.com/Lakr233/Cookey",
+          label: "Test Login",
+          href: "/test-login-instruction",
         }}
       />
     </div>

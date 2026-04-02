@@ -253,12 +253,12 @@ struct CookeyTests {
     }
 
     @Test("PushRegistrationCoordinator refreshes stored token without relay registration")
-    func coordinatorRefreshesStoredToken() async throws {
+    func coordinatorRefreshesStoredToken() async {
         PushTokenStore.currentToken = nil
         PushTokenStore.currentEnvironment = nil
         let coordinator = PushRegistrationCoordinator()
 
-        await coordinator.handleRegisteredDeviceToken(Data([0xaa, 0xbb]))
+        await coordinator.handleRegisteredDeviceToken(Data([0xAA, 0xBB]))
 
         #expect(PushTokenStore.currentToken == "aabb")
     }

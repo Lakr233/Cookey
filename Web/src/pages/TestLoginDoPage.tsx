@@ -49,8 +49,18 @@ function StatusIndicator({ status }: { status: RequestStatus | null }) {
       <div className="relative mx-auto h-24 w-24 flex items-center justify-center">
         <div className="absolute inset-0 rounded-full border border-border bg-surface" />
         <div className="relative flex items-center justify-center">
-          <svg className="w-8 h-8 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          <svg
+            className="w-8 h-8 text-muted"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </div>
       </div>
@@ -62,8 +72,18 @@ function StatusIndicator({ status }: { status: RequestStatus | null }) {
       <div className="relative mx-auto h-24 w-24 flex items-center justify-center">
         <div className="absolute inset-0 rounded-full border-2 border-accent bg-accent/10 shadow-[0_0_32px_rgba(74,222,128,0.12)]" />
         <div className="relative flex items-center justify-center">
-          <svg className="w-10 h-10 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          <svg
+            className="w-10 h-10 text-accent"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5 13l4 4L19 7"
+            />
           </svg>
         </div>
       </div>
@@ -94,11 +114,16 @@ export default function TestLoginDoPage() {
 
     const rid = (() => {
       try {
-        return validateRequestId(new URLSearchParams(window.location.search).get("rid"));
+        return validateRequestId(
+          new URLSearchParams(window.location.search).get("rid"),
+        );
       } catch (error) {
         setState({
           kind: "error",
-          message: error instanceof Error ? error.message : "Missing or invalid request ID.",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Missing or invalid request ID.",
         });
         return null;
       }
@@ -162,7 +187,10 @@ export default function TestLoginDoPage() {
 
         setState({
           kind: "error",
-          message: error instanceof Error ? error.message : "Unable to read request status.",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Unable to read request status.",
         });
         stopPolling();
       } finally {
@@ -189,7 +217,8 @@ export default function TestLoginDoPage() {
   }, []);
 
   const status = state.kind === "ready" ? state.status : null;
-  const isTerminal = status === "ready" || status === "delivered" || status === "expired";
+  const isTerminal =
+    status === "ready" || status === "delivered" || status === "expired";
 
   return (
     <div className="bg-bg text-ink font-sans leading-[1.6] min-h-screen flex flex-col">
@@ -207,7 +236,8 @@ export default function TestLoginDoPage() {
                 Monitor the test login request.
               </h1>
               <p className="mx-auto mb-8 max-w-[540px] text-[1.05rem] text-muted animate-[fade-in_0.4s_ease-out_150ms_both]">
-                This page polls the relay status without consuming the one-shot session payload.
+                This page polls the relay status without consuming the one-shot
+                session payload.
               </p>
             </div>
 
@@ -218,10 +248,15 @@ export default function TestLoginDoPage() {
             <div className="mx-auto max-w-[620px] rounded-xl border border-border bg-surface p-6 sm:p-7 animate-[fade-in_0.4s_ease-out_300ms_both]">
               {state.kind === "error" ? (
                 <div className="text-center" role="status" aria-live="polite">
-                  <h2 className="text-xl font-semibold tracking-tight">Unable to monitor request</h2>
+                  <h2 className="text-xl font-semibold tracking-tight">
+                    Unable to monitor request
+                  </h2>
                   <p className="mt-3 text-sm text-muted">{state.message}</p>
                   <div className="mt-6 flex flex-wrap justify-center gap-3">
-                    <ButtonLink href="/test-login-instruction" variant="primary">
+                    <ButtonLink
+                      href="/test-login-instruction"
+                      variant="primary"
+                    >
                       Start another request
                     </ButtonLink>
                     <ButtonLink href="/" variant="secondary">
@@ -251,7 +286,9 @@ export default function TestLoginDoPage() {
                             : "Request expired"}
                     </h2>
                     <p className="mt-3 text-sm text-muted max-w-[400px]">
-                      {state.kind === "loading" ? "Preparing the request monitor." : state.detail}
+                      {state.kind === "loading"
+                        ? "Preparing the request monitor."
+                        : state.detail}
                     </p>
                   </div>
 
@@ -262,7 +299,10 @@ export default function TestLoginDoPage() {
                           View result →
                         </ButtonLink>
                       )}
-                      <ButtonLink href="/test-login-instruction" variant="secondary">
+                      <ButtonLink
+                        href="/test-login-instruction"
+                        variant="secondary"
+                      >
                         New request
                       </ButtonLink>
                     </div>

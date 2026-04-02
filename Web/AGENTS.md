@@ -4,20 +4,20 @@ Static marketing and documentation site for Cookey. Built with React + Tailwind 
 
 ## Structure
 
-| Path                           | Purpose                                                            |
-| ------------------------------ | ------------------------------------------------------------------ |
-| `index.html`                   | Vite entry for landing page (/)                                    |
-| `get-started.html`             | Vite entry for get-started page (/get-started)                     |
-| `src/home.tsx`                 | React entry point for landing page                                 |
-| `src/get-started.tsx`          | React entry point for get-started page                             |
-| `src/index.css`                | Tailwind directives + @theme tokens + @layer base overrides        |
+| Path                           | Purpose                                                                                                                 |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| `index.html`                   | Vite entry for landing page (/)                                                                                         |
+| `get-started.html`             | Vite entry for get-started page (/get-started)                                                                          |
+| `src/home.tsx`                 | React entry point for landing page                                                                                      |
+| `src/get-started.tsx`          | React entry point for get-started page                                                                                  |
+| `src/index.css`                | Tailwind directives + @theme tokens + @layer base overrides                                                             |
 | `src/components/`              | Shared React components (Nav, Footer, Button, Badge, Terminal, Container, PropertyCard, QrCode, SectionBlock, StepCard) |
-| `src/pages/HomePage.tsx`       | Landing page content                                               |
-| `src/pages/GetStartedPage.tsx` | Agent handoff page content                                         |
-| `src/data/agentMarkdown.ts`    | Clipboard content string for agent handoff                         |
-| `public/`                      | Static assets (favicons, llms.txt) copied as-is to dist/           |
-| `nginx.conf`                   | Nginx config — port 3000, MPA routing, `/api/health` proxy         |
-| `Dockerfile`                   | Multi-stage: node build → nginx serve, exposes port 3000           |
+| `src/pages/HomePage.tsx`       | Landing page content                                                                                                    |
+| `src/pages/GetStartedPage.tsx` | Agent handoff page content                                                                                              |
+| `src/data/agentMarkdown.ts`    | Clipboard content string for agent handoff                                                                              |
+| `public/`                      | Static assets (favicons, llms.txt) copied as-is to dist/                                                                |
+| `nginx.conf`                   | Nginx config — port 3000, MPA routing, `/api/health` proxy                                                              |
+| `Dockerfile`                   | Multi-stage: node build → nginx serve, exposes port 3000                                                                |
 
 ## Build
 

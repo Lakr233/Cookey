@@ -41,7 +41,10 @@ function bytesToBase64(bytes: Uint8Array): string {
 }
 
 function bytesToBase64Url(bytes: Uint8Array): string {
-  return bytesToBase64(bytes).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+  return bytesToBase64(bytes)
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/g, "");
 }
 
 function utcTimestamp(date: Date): string {
@@ -99,7 +102,9 @@ async function computeRequestProof(params: {
 }): Promise<string> {
   const secret = params.requestSecret.replace(/-/g, "+").replace(/_/g, "/");
   const padding = "=".repeat((4 - (secret.length % 4)) % 4);
-  const secretBytes = Uint8Array.from(atob(secret + padding), (char) => char.charCodeAt(0));
+  const secretBytes = Uint8Array.from(atob(secret + padding), (char) =>
+    char.charCodeAt(0),
+  );
   const key = await crypto.subtle.importKey(
     "raw",
     secretBytes,
@@ -117,7 +122,11 @@ async function computeRequestProof(params: {
     params.requestType,
     params.expiresAt,
   ].join("\n");
-  const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(message));
+  const signature = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    new TextEncoder().encode(message),
+  );
   return bytesToBase64Url(new Uint8Array(signature));
 }
 
@@ -165,7 +174,10 @@ function toApiErrorMessage(payload: unknown, fallback: string): string {
     if (typeof errorPayload.error === "string" && errorPayload.error.trim()) {
       return errorPayload.error;
     }
-    if (typeof errorPayload.message === "string" && errorPayload.message.trim()) {
+    if (
+      typeof errorPayload.message === "string" &&
+      errorPayload.message.trim()
+    ) {
       return errorPayload.message;
     }
   }
@@ -173,7 +185,9 @@ function toApiErrorMessage(payload: unknown, fallback: string): string {
   return fallback;
 }
 
-export async function createLoginRequest(signal: AbortSignal): Promise<LoginRequestState> {
+export async function createLoginRequest(
+  signal: AbortSignal,
+): Promise<LoginRequestState> {
   const serverUrl = API_BASE;
   const relayServerUrl = "https://api.cookey.sh";
   const targetUrl = requireAbsoluteUrl(TARGET_URL, "Target URL");
@@ -216,7 +230,10 @@ export async function createLoginRequest(signal: AbortSignal): Promise<LoginRequ
 
   if (!response.ok) {
     throw new Error(
-      toApiErrorMessage(payload, `Login request failed with status ${response.status}.`),
+      toApiErrorMessage(
+        payload,
+        `Login request failed with status ${response.status}.`,
+      ),
     );
   }
 
@@ -242,10 +259,17 @@ export async function createLoginRequest(signal: AbortSignal): Promise<LoginRequ
 }
 
 export function isRequestStatus(value: unknown): value is RequestStatus {
-  return value === "pending" || value === "ready" || value === "delivered" || value === "expired";
+  return (
+    value === "pending" ||
+    value === "ready" ||
+    value === "delivered" ||
+    value === "expired"
+  );
 }
 
-export function isRequestStatusResponse(value: unknown): value is RequestStatusResponse {
+export function isRequestStatusResponse(
+  value: unknown,
+): value is RequestStatusResponse {
   if (!value || typeof value !== "object") {
     return false;
   }
@@ -273,9 +297,12 @@ export async function fetchRequestStatus(
   rid: string,
   signal?: AbortSignal,
 ): Promise<RequestStatusResponse> {
-  const response = await fetch(`${API_BASE}/v1/requests/${encodeURIComponent(rid)}`, {
-    signal,
-  });
+  const response = await fetch(
+    `${API_BASE}/v1/requests/${encodeURIComponent(rid)}`,
+    {
+      signal,
+    },
+  );
 
   if (response.status === 410) {
     return {
@@ -291,7 +318,10 @@ export async function fetchRequestStatus(
 
   if (!response.ok) {
     throw new Error(
-      toApiErrorMessage(payload, `Request lookup failed with status ${response.status}.`),
+      toApiErrorMessage(
+        payload,
+        `Request lookup failed with status ${response.status}.`,
+      ),
     );
   }
 

@@ -10,9 +10,7 @@ import StepCard from "../components/StepCard";
 import PropertyCard from "../components/PropertyCard";
 import FaqItem from "../components/FaqItem";
 
-const NAV_LINKS = [
-  { label: "llms.txt", href: "/llms.txt" },
-];
+const NAV_LINKS = [{ label: "llms.txt", href: "/llms.txt" }];
 
 export default function HomePage() {
   return (
@@ -126,29 +124,38 @@ export default function HomePage() {
         <SectionBlock label="FAQ" heading="Common questions.">
           <div className="rounded-[10px] border border-border bg-surface px-6">
             <FaqItem question="Why can't I use passkeys or security keys in the in-app browser?">
-              Cookey uses WKWebView to capture cookies and localStorage after you log in.
-              Apple blocks Passkey, WebAuthn, and FIDO2 security key APIs in WKWebView
-              &mdash; only Safari and ASWebAuthenticationSession are allowed to access them.
-              This is an intentional platform restriction: embedded browsers can inject
-              JavaScript and intercept requests, so Apple considers them a phishing risk for
-              credential operations.
-              <br /><br />
-              <strong>Workaround:</strong> choose an alternative login method (password, SMS
-              OTP, email link, etc.) when authenticating inside Cookey.
+              Cookey uses WKWebView to capture cookies and localStorage after
+              you log in. Apple blocks Passkey, WebAuthn, and FIDO2 security key
+              APIs in WKWebView &mdash; only Safari and
+              ASWebAuthenticationSession are allowed to access them. This is an
+              intentional platform restriction: embedded browsers can inject
+              JavaScript and intercept requests, so Apple considers them a
+              phishing risk for credential operations.
+              <br />
+              <br />
+              <strong>Workaround:</strong> choose an alternative login method
+              (password, SMS OTP, email link, etc.) when authenticating inside
+              Cookey.
             </FaqItem>
             <FaqItem question="Can the relay server see my session data?">
-              No. Session data is encrypted on your phone with the CLI&rsquo;s public key
-              (X25519 ECDH + XSalsa20-Poly1305) before it leaves the device. The relay only
-              forwards opaque encrypted blobs and deletes them after delivery or expiry.
+              No. Session data is encrypted on your phone with the CLI&rsquo;s
+              public key (X25519 ECDH + XSalsa20-Poly1305) before it leaves the
+              device. The relay only forwards opaque encrypted blobs and deletes
+              them after delivery or expiry.
             </FaqItem>
             <FaqItem question="What data does Cookey capture?">
-              Cookies and localStorage for the site you logged in to. This is exported as
-              Playwright-compatible <code className="rounded border border-border bg-tag-bg px-[4px] py-[1px] font-mono text-[0.88em]">storageState</code> JSON.
-              No passwords, autofill data, or indexedDB content is captured.
+              Cookies and localStorage for the site you logged in to. This is
+              exported as Playwright-compatible{" "}
+              <code className="rounded border border-border bg-tag-bg px-[4px] py-[1px] font-mono text-[0.88em]">
+                storageState
+              </code>{" "}
+              JSON. No passwords, autofill data, or indexedDB content is
+              captured.
             </FaqItem>
             <FaqItem question="Do I need an account to use Cookey?">
-              No. The CLI generates its own Ed25519 key pair on first run. There is no
-              registration, no device enrollment, and no push tokens required.
+              No. The CLI generates its own Ed25519 key pair on first run. There
+              is no registration, no device enrollment, and no push tokens
+              required.
             </FaqItem>
           </div>
         </SectionBlock>

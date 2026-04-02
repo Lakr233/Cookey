@@ -110,7 +110,7 @@ final class SessionUploadModel: ObservableObject {
                     return
                 }
                 let effectiveSecret = [requestSecret, response.requestSecret]
-                    .compactMap { $0 }
+                    .compactMap(\.self)
                     .first { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
                 guard let effectiveSecret else {
                     phase = .failed(String(localized: "Invalid or expired pair key."))

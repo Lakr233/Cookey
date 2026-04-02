@@ -47,8 +47,18 @@ function ResultIcon({ status }: { status: RequestStatus }) {
   if (status === "expired") {
     return (
       <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full border-2 border-border bg-surface">
-        <svg className="h-10 w-10 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <svg
+          className="h-10 w-10 text-muted"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
         </svg>
       </div>
     );
@@ -56,8 +66,18 @@ function ResultIcon({ status }: { status: RequestStatus }) {
 
   return (
     <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full border-2 border-accent bg-accent/10 shadow-[0_0_32px_rgba(74,222,128,0.12)] animate-scale-in">
-      <svg className="h-10 w-10 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+      <svg
+        className="h-10 w-10 text-accent"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M5 13l4 4L19 7"
+        />
       </svg>
     </div>
   );
@@ -73,7 +93,9 @@ function ResultModal({
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-5 animate-[fade-in_0.2s_ease-out_both]"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
     >
       <div className="w-full max-w-[440px] rounded-2xl border border-border bg-surface p-7 animate-[scale-in_0.3s_ease-out_both]">
         <div className="flex flex-col items-center gap-5">
@@ -124,7 +146,10 @@ export default function TestLoginInstructionPage() {
         if (!controller.signal.aborted) {
           setState({
             kind: "error",
-            message: error instanceof Error ? error.message : "Failed to create login request.",
+            message:
+              error instanceof Error
+                ? error.message
+                : "Failed to create login request.",
           });
         }
       });
@@ -163,7 +188,11 @@ export default function TestLoginInstructionPage() {
           setShowResult(true);
         }
       } catch (error) {
-        if (disposed || (error instanceof DOMException && error.name === "AbortError")) return;
+        if (
+          disposed ||
+          (error instanceof DOMException && error.name === "AbortError")
+        )
+          return;
         // Silently retry on next interval
       } finally {
         if (activeController === controller) activeController = null;
@@ -204,7 +233,10 @@ export default function TestLoginInstructionPage() {
               {state.kind === "loading" && (
                 <div className="text-center" role="status" aria-live="polite">
                   <div className="mb-5 flex justify-center">
-                    <div aria-hidden="true" className="h-10 w-10 animate-spin rounded-full border-[3px] border-border border-t-accent" />
+                    <div
+                      aria-hidden="true"
+                      className="h-10 w-10 animate-spin rounded-full border-[3px] border-border border-t-accent"
+                    />
                   </div>
                   <p className="text-sm text-muted">Creating a test request.</p>
                 </div>
@@ -214,7 +246,10 @@ export default function TestLoginInstructionPage() {
                 <div className="text-center" role="status" aria-live="polite">
                   <p className="text-sm text-muted">{state.message}</p>
                   <div className="mt-6">
-                    <Button variant="primary" onClick={() => setAttempt((c) => c + 1)}>
+                    <Button
+                      variant="primary"
+                      onClick={() => setAttempt((c) => c + 1)}
+                    >
                       Retry
                     </Button>
                   </div>
@@ -232,11 +267,13 @@ export default function TestLoginInstructionPage() {
                   </p>
 
                   <div className="animate-[fade-in_0.4s_ease-out_250ms_both]">
-                    <ButtonLink href={state.request.deepLink} variant="secondary">
+                    <ButtonLink
+                      href={state.request.deepLink}
+                      variant="secondary"
+                    >
                       Open in Cookey
                     </ButtonLink>
                   </div>
-
                 </div>
               )}
             </div>

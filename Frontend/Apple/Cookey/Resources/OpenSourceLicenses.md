@@ -1,7 +1,5 @@
 # Open Source Licenses
 
-
-
 ## AlertController
 
 MIT License
@@ -276,10 +274,7 @@ THE SOFTWARE.
     See the License for the specific language governing permissions and
     limitations under the License.
 
-
-
-## Runtime Library Exception to the Apache 2.0 License: ##
-
+## Runtime Library Exception to the Apache 2.0 License:
 
     As an exception, if you use this Software to compile your source code and
     portions of this Software are embedded into the binary product as a result,

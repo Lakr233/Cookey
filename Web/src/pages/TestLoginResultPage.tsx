@@ -60,8 +60,18 @@ function ResultIcon({ status }: { status: RequestStatus | null }) {
     return (
       <div className="relative flex items-center justify-center">
         <div className="w-20 h-20 rounded-full border-2 border-border bg-surface flex items-center justify-center">
-          <svg className="w-10 h-10 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <svg
+            className="w-10 h-10 text-muted"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
           </svg>
         </div>
       </div>
@@ -72,8 +82,18 @@ function ResultIcon({ status }: { status: RequestStatus | null }) {
     return (
       <div className="relative flex items-center justify-center animate-scale-in">
         <div className="w-20 h-20 rounded-full border-2 border-accent bg-accent/10 shadow-[0_0_32px_rgba(74,222,128,0.12)] flex items-center justify-center">
-          <svg className="w-10 h-10 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          <svg
+            className="w-10 h-10 text-accent"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5 13l4 4L19 7"
+            />
           </svg>
         </div>
       </div>
@@ -102,11 +122,16 @@ export default function TestLoginResultPage() {
 
     const rid = (() => {
       try {
-        return validateRequestId(new URLSearchParams(window.location.search).get("rid"));
+        return validateRequestId(
+          new URLSearchParams(window.location.search).get("rid"),
+        );
       } catch (error) {
         setState({
           kind: "error",
-          message: error instanceof Error ? error.message : "Missing or invalid request ID.",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Missing or invalid request ID.",
         });
         return null;
       }
@@ -149,7 +174,10 @@ export default function TestLoginResultPage() {
 
         setState({
           kind: "error",
-          message: error instanceof Error ? error.message : "Unable to load request result.",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Unable to load request result.",
         });
         stopPolling();
       } finally {
@@ -187,7 +215,9 @@ export default function TestLoginResultPage() {
 
             <div className="mx-auto max-w-[620px] text-center">
               <h1 className="mb-[18px] font-bold tracking-[-0.03em] leading-[1.1] text-[clamp(2.2rem,6vw,3.2rem)] animate-[fade-in_0.4s_ease-out_75ms_both]">
-                {status ? getStatusHeading(status) : "Review the final request state."}
+                {status
+                  ? getStatusHeading(status)
+                  : "Review the final request state."}
               </h1>
               <p className="mx-auto mb-8 max-w-[540px] text-[1.05rem] text-muted animate-[fade-in_0.4s_ease-out_150ms_both]">
                 {status
@@ -204,19 +234,31 @@ export default function TestLoginResultPage() {
               {state.kind === "loading" && (
                 <div className="text-center" role="status" aria-live="polite">
                   <div className="mb-5 flex justify-center">
-                    <div aria-hidden="true" className="h-10 w-10 animate-spin rounded-full border-[3px] border-border border-t-accent" />
+                    <div
+                      aria-hidden="true"
+                      className="h-10 w-10 animate-spin rounded-full border-[3px] border-border border-t-accent"
+                    />
                   </div>
-                  <h2 className="text-xl font-semibold tracking-tight">Loading request result</h2>
-                  <p className="mt-3 text-sm text-muted">Fetching the latest state from the relay.</p>
+                  <h2 className="text-xl font-semibold tracking-tight">
+                    Loading request result
+                  </h2>
+                  <p className="mt-3 text-sm text-muted">
+                    Fetching the latest state from the relay.
+                  </p>
                 </div>
               )}
 
               {state.kind === "error" && (
                 <div className="text-center" role="status" aria-live="polite">
-                  <h2 className="text-xl font-semibold tracking-tight">Unable to load request result</h2>
+                  <h2 className="text-xl font-semibold tracking-tight">
+                    Unable to load request result
+                  </h2>
                   <p className="mt-3 text-sm text-muted">{state.message}</p>
                   <div className="mt-6 flex flex-wrap justify-center gap-3">
-                    <ButtonLink href="/test-login-instruction" variant="primary">
+                    <ButtonLink
+                      href="/test-login-instruction"
+                      variant="primary"
+                    >
                       Start another request
                     </ButtonLink>
                     <ButtonLink href="/" variant="secondary">
@@ -227,7 +269,11 @@ export default function TestLoginResultPage() {
               )}
 
               {result && (
-                <div className="flex flex-col items-center gap-5" role="status" aria-live="polite">
+                <div
+                  className="flex flex-col items-center gap-5"
+                  role="status"
+                  aria-live="polite"
+                >
                   <ResultIcon status={status} />
 
                   <div className="text-center">
@@ -239,7 +285,10 @@ export default function TestLoginResultPage() {
                   </div>
 
                   <div className="mt-4 flex flex-wrap justify-center gap-3">
-                    <ButtonLink href="/test-login-instruction" variant="primary">
+                    <ButtonLink
+                      href="/test-login-instruction"
+                      variant="primary"
+                    >
                       Run another test
                     </ButtonLink>
                     <ButtonLink href="/" variant="secondary">

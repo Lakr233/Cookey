@@ -11,14 +11,14 @@ Trust model: user trusts CLI + mobile device; relay server is untrusted (zero-kn
 
 ## Repository Layout
 
-| Directory                                           | Purpose                     | Details                                                                   |
-| --------------------------------------------------- | --------------------------- | ------------------------------------------------------------------------- |
-| [CommandLineTool/](CommandLineTool/AGENTS.md)       | Go CLI tool (`cookey`)      | login, status, export commands; background daemon; ed25519/x25519 crypto  |
-| [Server/](Server/AGENTS.md)                         | Go relay server             | In-memory request storage; WebSocket transport; APNs                      |
-| [Frontend/Apple/](Frontend/Apple/AGENTS.md)         | Apple app (SwiftUI)         | QR scanner, in-app browser, cookie/localStorage capture, encrypted upload |
+| Directory                                                                         | Purpose                     | Details                                                                   |
+| --------------------------------------------------------------------------------- | --------------------------- | ------------------------------------------------------------------------- |
+| [CommandLineTool/](CommandLineTool/AGENTS.md)                                     | Go CLI tool (`cookey`)      | login, status, export commands; background daemon; ed25519/x25519 crypto  |
+| [Server/](Server/AGENTS.md)                                                       | Go relay server             | In-memory request storage; WebSocket transport; APNs                      |
+| [Frontend/Apple/](Frontend/Apple/AGENTS.md)                                       | Apple app (SwiftUI)         | QR scanner, in-app browser, cookie/localStorage capture, encrypted upload |
 | [Frontend/Apple/Packages/CryptoBox/](Frontend/Apple/Packages/CryptoBox/AGENTS.md) | Shared Swift crypto library | XSalsa20-Poly1305 authenticated encryption with Curve25519 key agreement  |
-| [Web/](Web/AGENTS.md)                               | Static marketing/docs site  | Landing page, get-started guide, llms.txt; served via nginx/Docker        |
-| [Scripts/](Scripts/AGENTS.md)                       | Build and CI scripts        | Universal binary builds, code signing, notarization, CI keychain setup    |
+| [Web/](Web/AGENTS.md)                                                             | Static marketing/docs site  | Landing page, get-started guide, llms.txt; served via nginx/Docker        |
+| [Scripts/](Scripts/AGENTS.md)                                                     | Build and CI scripts        | Universal binary builds, code signing, notarization, CI keychain setup    |
 
 ## Cross-Cutting Conventions
 

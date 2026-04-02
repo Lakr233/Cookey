@@ -1,22 +1,22 @@
 {
-  "images" : [
+  "images": [
     {
-      "filename" : "AppIcon-iOS-Default-1024x1024@1x.png",
-      "idiom" : "universal"
+      "filename": "AppIcon-iOS-Default-1024x1024@1x.png",
+      "idiom": "universal"
     },
     {
-      "appearances" : [
+      "appearances": [
         {
-          "appearance" : "luminosity",
-          "value" : "dark"
+          "appearance": "luminosity",
+          "value": "dark"
         }
       ],
-      "filename" : "AppIcon-iOS-Dark-1024x1024@1x.png",
-      "idiom" : "universal"
+      "filename": "AppIcon-iOS-Dark-1024x1024@1x.png",
+      "idiom": "universal"
     }
   ],
-  "info" : {
-    "author" : "xcode",
-    "version" : 1
+  "info": {
+    "author": "xcode",
+    "version": 1
   }
 }

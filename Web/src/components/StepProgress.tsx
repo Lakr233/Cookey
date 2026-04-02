@@ -10,7 +10,10 @@ const steps = [
 
 export default function StepProgress({ current }: StepProgressProps) {
   return (
-    <nav aria-label="Test login progress" className="flex items-center justify-center">
+    <nav
+      aria-label="Test login progress"
+      className="flex items-center justify-center"
+    >
       {steps.map((step, index) => {
         const isActive = step.num === current;
         const isCompleted = step.num < current;
@@ -34,8 +37,19 @@ export default function StepProgress({ current }: StepProgressProps) {
                 `}
               >
                 {isCompleted ? (
-                  <svg aria-hidden="true" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  <svg
+                    aria-hidden="true"
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2.5}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                 ) : (
                   <span>{step.num}</span>
@@ -54,7 +68,10 @@ export default function StepProgress({ current }: StepProgressProps) {
               </span>
             </div>
             {!isLast && (
-              <div aria-hidden="true" className={`mx-2 h-[2px] w-8 sm:w-12 transition-colors duration-300 ${isCompleted ? "bg-accent/40" : "bg-border"}`} />
+              <div
+                aria-hidden="true"
+                className={`mx-2 h-[2px] w-8 sm:w-12 transition-colors duration-300 ${isCompleted ? "bg-accent/40" : "bg-border"}`}
+              />
             )}
           </div>
         );

@@ -29,8 +29,18 @@ export default function TestLoginSitePage() {
           <div className="animate-[fade-in_0.4s_ease-out_both]">
             <div className="text-center mb-8">
               <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-surface border border-border mb-5">
-                <svg className="w-7 h-7 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                <svg
+                  className="w-7 h-7 text-accent"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+                  />
                 </svg>
               </div>
               <h1 className="text-2xl font-bold tracking-tight">
@@ -68,8 +78,18 @@ export default function TestLoginSitePage() {
           <div className="animate-[fade-in_0.4s_ease-out_both]">
             <div className="text-center mb-8">
               <div className="animate-scale-in inline-flex items-center justify-center w-20 h-20 rounded-full border-2 border-accent bg-accent/10 shadow-[0_0_32px_rgba(74,222,128,0.12)] mb-5">
-                <svg className="w-10 h-10 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                <svg
+                  className="w-10 h-10 text-accent"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
               </div>
               <h1 className="text-2xl font-bold tracking-tight">
@@ -82,8 +102,12 @@ export default function TestLoginSitePage() {
                 The agent will have access to
               </p>
               <div className="rounded-lg bg-terminal-bg border border-border px-4 py-3">
-                <span className="text-[11px] uppercase tracking-[0.18em] text-muted">Email</span>
-                <p className="mt-1 text-sm font-mono text-ink break-all">{email}</p>
+                <span className="text-[11px] uppercase tracking-[0.18em] text-muted">
+                  Email
+                </span>
+                <p className="mt-1 text-sm font-mono text-ink break-all">
+                  {email}
+                </p>
               </div>
             </div>
 
@@ -91,8 +115,18 @@ export default function TestLoginSitePage() {
               <p className="text-sm text-ink">
                 Tap the <strong>send button</strong>{" "}
                 <span className="inline-block translate-y-[-1px]">
-                  <svg className="inline w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+                  <svg
+                    className="inline w-4 h-4 text-accent"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"
+                    />
                   </svg>
                 </span>{" "}
                 in the top-right corner to deliver your session.

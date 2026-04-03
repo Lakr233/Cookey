@@ -37,8 +37,8 @@ final class BrowserCaptureModel: NSObject, ObservableObject, WKScriptMessageHand
         let configuration = WKWebViewConfiguration()
         configuration.websiteDataStore = .nonPersistent()
         #if os(iOS) || os(visionOS)
-        configuration.allowsInlineMediaPlayback = true
-        configuration.ignoresViewportScaleLimits = true
+            configuration.allowsInlineMediaPlayback = true
+            configuration.ignoresViewportScaleLimits = true
         #endif
         configuration.preferences.javaScriptCanOpenWindowsAutomatically = true
 
@@ -61,8 +61,8 @@ final class BrowserCaptureModel: NSObject, ObservableObject, WKScriptMessageHand
         let configuration = WKWebViewConfiguration()
         configuration.websiteDataStore = .nonPersistent()
         #if os(iOS) || os(visionOS)
-        configuration.allowsInlineMediaPlayback = true
-        configuration.ignoresViewportScaleLimits = true
+            configuration.allowsInlineMediaPlayback = true
+            configuration.ignoresViewportScaleLimits = true
         #endif
         configuration.preferences.javaScriptCanOpenWindowsAutomatically = true
 

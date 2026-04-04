@@ -57,7 +57,7 @@ export default function HomePage() {
                   Get started &rarr;
                 </Button>
                 <ButtonLink
-                  href="https://apps.apple.com/app/cookey/id6745136531"
+                  href="https://testflight.apple.com/join/qNDy5p2b"
                   variant="primary"
                 >
                   <svg className="h-[16px] w-[16px] fill-current" viewBox="0 0 24 24" aria-hidden="true">

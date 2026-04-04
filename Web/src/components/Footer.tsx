@@ -14,7 +14,7 @@ export default function Footer({
           </p>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
             <a
-              href="https://apps.apple.com/app/cookey/id6745136531"
+              href="https://testflight.apple.com/join/qNDy5p2b"
               className="text-[13px] text-muted no-underline transition-colors duration-150 hover:text-ink"
             >
               Get iOS App

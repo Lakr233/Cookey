@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useRef, useEffect, useState, type ReactNode } from "react";
 
 export default function StepCard({
   number,
@@ -11,16 +11,38 @@ export default function StepCard({
   children: ReactNode;
   position: "first" | "last";
 }) {
-  const radiusClass =
-    position === "first"
-      ? "xs:rounded-l-xl xs:rounded-r-none max-xs:rounded-t-[10px] max-xs:rounded-b-none"
-      : "xs:rounded-r-xl xs:rounded-l-none max-xs:rounded-b-[10px] max-xs:rounded-t-none";
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.15 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const delay = position === "first" ? "0ms" : "150ms";
 
   return (
     <div
-      className={`border border-border bg-surface p-[28px_24px] ${radiusClass}`}
+      ref={ref}
+      className="rounded-xl bg-surface p-[28px_24px] transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
+      style={{
+        opacity: visible ? 1 : 0,
+        transform: visible ? "translateY(0)" : "translateY(24px)",
+        transitionDelay: delay,
+      }}
     >
-      <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.1em] text-muted">
+      <p className="mb-4 font-mono text-[28px] font-bold tracking-[-0.04em] text-muted/30">
         {number}
       </p>
       <h3 className="mb-2 text-[15px] font-semibold tracking-[-0.01em]">

@@ -16,7 +16,7 @@ export default function SectionBlock({
         <p className="mb-4 text-xs font-semibold uppercase tracking-[0.1em] text-muted">
           {label}
         </p>
-        <h2 className="mb-14 font-bold tracking-[-0.02em] text-[clamp(1.6rem,4vw,2.2rem)] leading-tight">
+        <h2 className="mb-8 font-mono font-bold tracking-[-0.06em] text-[clamp(1.6rem,4vw,2.2rem)] leading-tight" style={{ transform: "scaleY(0.9)" }}>
           {heading}
         </h2>
         {children}

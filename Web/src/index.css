@@ -1,5 +1,29 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "SF Mono";
+  src: local("SFMono-Regular"), local("SF Mono Regular"), local("SF Mono");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SF Mono";
+  src: local("SFMono-Medium"), local("SF Mono Medium");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SF Mono";
+  src: local("SFMono-Bold"), local("SF Mono Bold");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
   --color-bg: #ffffff;
   --color-surface: #f5f5f5;
@@ -89,4 +113,100 @@
 
 .animate-ping-slow {
   animation: ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.animate-blink {
+  animation: blink 0.7s step-end infinite;
+  font-weight: 300;
+  margin-left: -2px;
+}
+
+@keyframes lock-shake {
+  0%, 100% { transform: translateY(0); }
+  20% { transform: translateY(-3px); }
+  40% { transform: translateY(0); }
+  60% { transform: translateY(-2px); }
+  80% { transform: translateY(0); }
+}
+
+@keyframes lock-glow {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+@keyframes draw-stroke {
+  from { stroke-dashoffset: var(--dash-length); }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes fade-in-icon {
+  from { opacity: 0; }
+  to { opacity: var(--target-opacity, 1); }
+}
+
+/* Entry animations (when card becomes visible) */
+.group\/card[data-visible="true"] .icon-lock-shackle {
+  animation: lock-shake 0.6s ease-in-out 0.4s;
+}
+
+.group\/card[data-visible="true"] .icon-lock-dot {
+  animation: lock-glow 1.2s ease-in-out 0.4s;
+}
+
+.group\/card[data-visible="true"] .icon-draw {
+  stroke-dashoffset: var(--dash-length);
+  animation: draw-stroke 1s ease-out 0.4s forwards;
+}
+
+.group\/card[data-visible="true"] .icon-fade {
+  opacity: 0;
+  animation: fade-in-icon 0.3s ease-out forwards;
+  animation-delay: calc(0.4s + var(--fade-delay, 0s));
+}
+
+/* Hover re-trigger: use a different animation name to force restart */
+@keyframes lock-shake-hover {
+  0%, 100% { transform: translateY(0); }
+  20% { transform: translateY(-3px); }
+  40% { transform: translateY(0); }
+  60% { transform: translateY(-2px); }
+  80% { transform: translateY(0); }
+}
+
+@keyframes lock-glow-hover {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+@keyframes draw-stroke-hover {
+  from { stroke-dashoffset: var(--dash-length); }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes fade-in-icon-hover {
+  from { opacity: 0; }
+  to { opacity: var(--target-opacity, 1); }
+}
+
+.group\/card:hover .icon-lock-shackle {
+  animation: lock-shake-hover 0.6s ease-in-out;
+}
+
+.group\/card:hover .icon-lock-dot {
+  animation: lock-glow-hover 1.2s ease-in-out;
+}
+
+.group\/card:hover .icon-draw {
+  animation: draw-stroke-hover 1s ease-out forwards;
+}
+
+.group\/card:hover .icon-fade {
+  animation: fade-in-icon-hover 0.3s ease-out forwards;
+  animation-delay: var(--fade-delay, 0s);
+  opacity: 0;
 }

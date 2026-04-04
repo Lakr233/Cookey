@@ -5,7 +5,7 @@ const base =
 
 const variants = {
   primary: "bg-ink text-bg",
-  secondary: "bg-transparent text-muted border border-border",
+  secondary: "bg-[#f5f5f5] text-muted border border-border dark:bg-[#1a1a1a]",
 } as const;
 
 type Variant = keyof typeof variants;

@@ -28,15 +28,17 @@ export default function Typewriter({
   charDelay?: number;
   lineDelay?: number;
 }) {
-  const [displayed, setDisplayed] = useState<string[]>(
-    lines.map(() => ""),
-  );
+  const [displayed, setDisplayed] = useState<string[]>(lines.map(() => ""));
   const [cursorLine, setCursorLine] = useState(0);
 
   useEffect(() => {
     let lineIdx = 0;
     let charIdx = 0;
     let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    setDisplayed(lines.map(() => ""));
+    setCursorLine(0);
 
     function tick() {
       if (cancelled) return;
@@ -56,23 +58,27 @@ export default function Typewriter({
         setCursorLine(lineIdx);
         const typed = line[charIdx] ?? " ";
         charIdx++;
-        setTimeout(tick, nextDelay(typed, charDelay));
+        timer = setTimeout(tick, nextDelay(typed, charDelay));
       } else {
         lineIdx++;
         charIdx = 0;
-        setTimeout(tick, lineDelay);
+        timer = setTimeout(tick, lineDelay);
       }
     }
 
-    const startTimer = setTimeout(tick, 500);
+    timer = setTimeout(tick, 500);
+
     return () => {
       cancelled = true;
-      clearTimeout(startTimer);
+      if (timer) clearTimeout(timer);
     };
   }, [lines, charDelay, lineDelay]);
 
   return (
-    <h1 className="relative mb-5 font-mono font-bold tracking-[-0.06em] text-ink leading-[1.1] text-[clamp(2.2rem,6vw,3.6rem)]" style={{ transform: "scaleY(0.9)" }}>
+    <h1
+      className="relative mb-5 font-mono font-bold tracking-[-0.06em] text-ink leading-[1.1] text-[clamp(2.2rem,6vw,3.6rem)]"
+      style={{ transform: "scaleY(0.9)" }}
+    >
       <span className="invisible" aria-hidden="true">
         {lines.map((line, i) => (
           <span key={i}>
@@ -87,9 +93,7 @@ export default function Typewriter({
             {i > 0 && <br />}
             <span className={line.className}>
               {displayed[i]}
-              {cursorLine === i && (
-                <span className="animate-blink">|</span>
-              )}
+              {cursorLine === i && <span className="animate-blink">|</span>}
             </span>
           </span>
         ))}

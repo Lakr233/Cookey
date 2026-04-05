@@ -19,16 +19,23 @@ export default function TerminalLines({
   const [visible, setVisible] = useState(0);
 
   useEffect(() => {
+    let interval: ReturnType<typeof setInterval> | undefined;
     const start = setTimeout(() => {
       let i = 0;
-      const interval = setInterval(() => {
+      interval = setInterval(() => {
         i++;
         setVisible(i);
-        if (i >= items.length) clearInterval(interval);
+        if (i >= items.length && interval) {
+          clearInterval(interval);
+          interval = undefined;
+        }
       }, lineDelay);
-      return () => clearInterval(interval);
     }, startDelay);
-    return () => clearTimeout(start);
+
+    return () => {
+      clearTimeout(start);
+      if (interval) clearInterval(interval);
+    };
   }, [items.length, lineDelay, startDelay]);
 
   return (

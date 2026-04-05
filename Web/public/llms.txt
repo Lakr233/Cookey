@@ -3,7 +3,7 @@
 > Site: https://cookey.sh
 
 Cookey captures authenticated browser sessions from a mobile device and delivers
-them encrypted to a CLI terminal as Playwright-compatible storageState files.
+them encrypted to a CLI terminal as Playwright-compatible `storageState` JSON.
 
 ## Install
 Download the latest binary from GitHub Releases:
@@ -17,18 +17,69 @@ Assets:
   https://github.com/Lakr233/Cookey/releases/latest/download/cookey-linux-aarch64.zip
     Linux aarch64
   https://github.com/Lakr233/Cookey/releases/latest/download/skills.md
-    Tool description file for LLM agents
+    Detailed CLI reference and skill file for agent/tool harnesses
+
+`llms.txt` is the concise discovery document. `skills.md` is the detailed CLI
+reference and skill file for agent and tool-call workflows.
+
+## Skill File
+Install and use the skill by downloading:
+  https://github.com/Lakr233/Cookey/releases/latest/download/skills.md
+
+Reference documentation:
+  https://github.com/Lakr233/Cookey/blob/main/skills.md
+
+Suggested agent workflow:
+  1. Install the `cookey` binary for the local platform.
+  2. Load `skills.md` into the tool-call harness as the CLI contract and usage reference.
+  3. Prefer grouped commands such as `cookey request start`, `cookey request status`, and `cookey session export`.
 
 ## Commands
-  cookey request start <url>    Start session capture
-  cookey request refresh <url>  Refresh a prior session for the same target
-  cookey request status [rid]   Check request status
-  cookey session export [rid]   Export Playwright storageState.json to stdout
+  cookey request start <url>
+    Create a new login request, print the pair key / jump link, and start a local waiter
+  cookey request refresh <url>
+    Reuse the latest local session for the same target as seed state and request a refreshed session
+  cookey request status [rid]
+    Inspect local request state, or the latest local daemon/session summary when no rid is provided
+  cookey session export [rid]
+    Export a local session as Playwright `storageState` JSON
+  cookey session list
+    List local request/session records
+  cookey session delete <rid>
+    Delete one inactive local request/session pair
+  cookey session clean
+    Delete all inactive local request/session pairs
+  cookey config get [key]
+    Read configured defaults
+  cookey config set <key> <value>
+    Persist configured defaults
+
+## Process Model
+Default request behavior is detached:
+  `cookey request start` and `cookey request refresh` launch a background daemon
+  process that waits for the encrypted session and writes the local session file
+  under `~/.cookey/sessions/<rid>.json`.
+
+Foreground behavior:
+  `--attach` runs the same wait/decrypt/write flow inline in the current process.
+
+Warning:
+  Unless your tool call harness supports automatic process detach (e.g., `nohup`
+  or an init system), DO NOT use `--attach`. Without detach, the verification code
+  will expire when the parent process exits.
 
 ## Workflow
-  cookey request start https://example.com/login
+  cookey request start https://example.com/login --qr
   # -> Pair key / QR appears in terminal
-  # -> User scans with Cookey app, logs in
-  # -> Encrypted session delivered to CLI
-  cookey session export <rid> > storageState.json
-  # -> Use with Playwright, Puppeteer, or any automation tool
+  # -> User scans with the Cookey app and logs in
+  # -> Detached daemon waits for encrypted session delivery
+  cookey request status --latest --watch
+  # -> Wait until the request becomes ready
+  cookey session export --latest --out storageState.json --pretty
+  # -> Export Playwright-compatible storageState JSON
+
+## Playwright Usage
+  import { chromium } from "@playwright/test";
+  const browser = await chromium.launch();
+  const context = await browser.newContext({ storageState: "storageState.json" });
+  const page = await context.newPage();

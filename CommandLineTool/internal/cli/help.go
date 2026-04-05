@@ -51,7 +51,9 @@ func printConfigSetUsage() {
 }
 
 func rootUsage() string {
-	return `Usage:
+	return `AGENTS: see https://github.com/Lakr233/Cookey/blob/main/skills.md
+
+Usage:
   cookey request start <target_url> [--server URL] [--timeout SECONDS] [--qr] [--json] [--attach]
   cookey request refresh <target_url> [--server URL] [--timeout SECONDS] [--qr] [--json] [--attach]
   cookey request status [rid] [--latest] [--watch] [--json]

@@ -8,8 +8,12 @@ on:
     inputs:
       version:
         description: Release tag (for example v1.2.3)
-        required: true
+        required: false
         type: string
+      publish_packages:
+        description: "Publish to npm and PyPI"
+        type: boolean
+        default: false
 
 concurrency:
   group: release-${{ github.ref }}
@@ -26,6 +30,7 @@ jobs:
     outputs:
       build_version: ${{ steps.prepare.outputs.build_version }}
       publish_release: ${{ steps.prepare.outputs.publish_release }}
+      publish_packages: ${{ steps.prepare.outputs.publish_packages }}
       artifact_name: ${{ steps.prepare.outputs.artifact_name }}
     steps:
       - name: Resolve build metadata
@@ -44,6 +49,7 @@ jobs:
 
           echo "build_version=${VERSION}" >> "$GITHUB_OUTPUT"
           echo "publish_release=true" >> "$GITHUB_OUTPUT"
+          echo "publish_packages=${{ inputs.publish_packages || github.event_name == 'push' }}" >> "$GITHUB_OUTPUT"
           echo "artifact_name=cookey-${VERSION}-unsigned" >> "$GITHUB_OUTPUT"
 
   build_macos:
@@ -248,3 +254,119 @@ jobs:
             build/release-assets/final/cookey-linux-aarch64.zip
             build/release-assets/final/skills.md
             build/release-assets/final/checksums.txt
+
+  build_packages:
+    if: github.actor == 'Lakr233'
+    name: Build npm and pip packages
+    runs-on: ubuntu-latest
+    needs: prepare
+    defaults:
+      run:
+        working-directory: CommandLineTool
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: CommandLineTool/go.mod
+          cache-dependency-path: CommandLineTool/go.sum
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run CLI tests
+        run: go test ./...
+
+      - name: Build npm packages
+        run: node ./scripts/build-npm-package.mjs
+
+      - name: Build pip package source
+        run: node ./scripts/build-pip-package.mjs
+
+      - name: Build pip distributions
+        run: |
+          python -m pip install --upgrade build
+          python -m build --outdir ./dist/pip/dist ./dist/pip/package
+
+      - name: Upload npm packages
+        uses: actions/upload-artifact@v7.0.0
+        with:
+          name: cookey-npm-packages
+          path: CommandLineTool/dist/npm/**/*
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload pip distributions
+        uses: actions/upload-artifact@v7.0.0
+        with:
+          name: cookey-pip-distributions
+          path: CommandLineTool/dist/pip/dist/**/*
+          if-no-files-found: error
+          retention-days: 14
+
+  publish_npm:
+    if: github.actor == 'Lakr233' && needs.prepare.outputs.publish_packages == 'true'
+    name: Publish npm packages
+    needs: [prepare, build_packages]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    defaults:
+      run:
+        working-directory: CommandLineTool
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      - name: Download npm packages
+        uses: actions/download-artifact@v8.0.1
+        with:
+          name: cookey-npm-packages
+          path: CommandLineTool/dist/npm
+
+      - name: Restore executable bits
+        run: |
+          find ./dist/npm -type f \( -path '*/bin/cookey' -o -path '*/bin/cookey.js' \) -exec chmod 755 {} +
+
+      - name: Install latest npm
+        run: npm install -g npm@latest
+
+      - name: Publish npm packages
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: "true"
+        run: node ./scripts/publish-npm-packages.mjs --skip-build
+
+  publish_pypi:
+    if: github.actor == 'Lakr233' && needs.prepare.outputs.publish_packages == 'true'
+    name: Publish PyPI package
+    needs: [prepare, build_packages]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - name: Download pip distributions
+        uses: actions/download-artifact@v8.0.1
+        with:
+          name: cookey-pip-distributions
+          path: dist/pip
+
+      - name: Publish PyPI package
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/pip
+          skip-existing: true

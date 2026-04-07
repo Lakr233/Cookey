@@ -196,17 +196,22 @@ build_universal_cli() {
     local x86_bin
     x86_bin="$CLI_BUILD_DIR/cookey-x86_64"
 
+    local ldflags="-s -w"
+    if [[ -n "${RELEASE_VERSION:-}" ]]; then
+        ldflags="${ldflags} -X cookey/internal/cli.Version=${RELEASE_VERSION}"
+    fi
+
     log "Building arm64 CLI"
     (
         cd CommandLineTool
-        GOOS=darwin GOARCH=arm64 go build -o "$arm64_bin" .
+        CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -trimpath -ldflags "$ldflags" -o "$arm64_bin" .
     )
     [[ -f "$arm64_bin" ]] || fail "arm64 binary not found at $arm64_bin"
 
     log "Building x86_64 CLI"
     (
         cd CommandLineTool
-        GOOS=darwin GOARCH=amd64 go build -o "$x86_bin" .
+        CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -trimpath -ldflags "$ldflags" -o "$x86_bin" .
     )
     [[ -f "$x86_bin" ]] || fail "x86_64 binary not found at $x86_bin"
 

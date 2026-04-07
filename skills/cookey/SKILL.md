@@ -10,10 +10,17 @@ and exporting it as Playwright-compatible `storageState` JSON.
 
 ## Install
 
+```sh
+npm install -g @cookey/cli
+# or
+pip install cookey
+```
+
+Alternatively, download prebuilt binaries:
+
 - macOS: https://github.com/Lakr233/Cookey/releases/latest/download/cookey-macOS.zip
 - Linux x86_64: https://github.com/Lakr233/Cookey/releases/latest/download/cookey-linux-x86_64.zip
 - Linux aarch64: https://github.com/Lakr233/Cookey/releases/latest/download/cookey-linux-aarch64.zip
-- CLI documentation / skill file: https://github.com/Lakr233/Cookey/releases/latest/download/skills.md
 
 ## What Cookey Produces
 

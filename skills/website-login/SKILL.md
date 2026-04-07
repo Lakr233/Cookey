@@ -1,12 +1,25 @@
 ---
-name: cookey
-description: CLI tool for capturing authenticated mobile browser sessions and exporting them as Playwright-compatible storageState JSON. Use when you need to automate login flows, import authenticated state into Playwright tests, or access mobile-only / MFA-heavy login flows from the CLI.
+name: website-login
+description: Use when the user needs to log in to a website and reuse that session locally as Playwright storageState JSON. You run Cookey CLI in your current environment; the user signs in on their iPhone in the Cookey app. End-to-end encrypted handoff via a relay. Use for MFA, SMS, passkeys, or flows that are hard to automate headlessly.
 ---
 
-# cookey
+# Website login
 
-Cookey is a CLI-first tool for capturing an authenticated mobile browser session
-and exporting it as Playwright-compatible `storageState` JSON.
+**You** run the Cookey **CLI** in your current environment. The **user** completes the actual website login on **their iPhone** inside the Cookey app’s in-app browser—never on a browser you control remotely.
+
+## How it works
+
+Cookey splits “where login happens” from “where automation runs”:
+
+1. **Local environment (`cookey` CLI + local daemon)** — You run commands here. The CLI creates a short-lived login request, agrees cryptographic keys with the phone, and waits for an encrypted payload. After delivery, you export **Playwright-compatible `storageState` JSON** (cookies + `origins` / localStorage) for local scripts.
+
+2. **User’s iPhone (Cookey app)** — The user scans the QR or opens the deep link. The app opens the **target URL** in its **embedded browser**. The user signs in like a normal mobile session (password, OTP, authenticator app, passkeys, etc.). The app reads cookies and storage, **encrypts** them, and uploads **ciphertext** to the relay.
+
+3. **Relay server** — Only moves opaque encrypted blobs and request metadata. It is **not** trusted with plaintext cookies or credentials; design assumes zero-knowledge transport.
+
+4. **Result** — The CLI decrypts locally and writes session material under `~/.cookey/`. `cookey session export` strips Cookey-only metadata and outputs the same shape Playwright expects for `browser.newContext({ storageState })`.
+
+**Why use this:** Many real sites are easier or only possible to log into on a **phone** (MFA apps, SMS, mobile-only UI). Cookey turns that authenticated mobile browser state into something **local Playwright** can load.
 
 ## Install
 
@@ -22,30 +35,29 @@ Alternatively, download prebuilt binaries:
 - Linux x86_64: https://github.com/Lakr233/Cookey/releases/latest/download/cookey-linux-x86_64.zip
 - Linux aarch64: https://github.com/Lakr233/Cookey/releases/latest/download/cookey-linux-aarch64.zip
 
-## What Cookey Produces
+## What you export
 
 `cookey session export` writes standard Playwright `storageState` JSON:
 
 - `cookies`
 - `origins`
 
-Cookey keeps extra local metadata in its own session files under `~/.cookey/`,
-but `session export` strips that metadata and emits only the Playwright-facing
-payload.
+Cookey keeps extra local metadata under `~/.cookey/`; `session export` strips
+that and emits only what Playwright consumes.
 
-## Quick Workflow
+## Quick workflow (you and the user)
 
-1. Start a login request:
+1. **You** start a login request in your local environment:
 
    `cookey request start https://example.com/login --qr`
 
-2. Scan the QR code with the Cookey iPhone app, then finish login in the app.
+2. The **user** scans the QR (or opens the link) **on their iPhone** with the Cookey app, then finishes login in the app’s browser.
 
-3. Export the delivered session:
+3. **You** export after the session is delivered:
 
    `cookey session export --latest --out storageState.json --pretty`
 
-4. Use the file with Playwright:
+4. **You** (or the user’s code) load it in Playwright:
 
 ```ts
 import { chromium } from "@playwright/test";
@@ -58,35 +70,26 @@ const page = await context.newPage();
 await page.goto("https://example.com/account");
 ```
 
-You can also pipe directly to a file:
+You can also pipe to a file:
 
 `cookey session export r_xxxxxxxxxxxxxxxxxxxxxx > storageState.json`
 
-## Agent Presentation Requirement
+## What you must show the user
 
-When an agent starts or refreshes a Cookey request on behalf of a user, it must
-present the human-readable verification strings from the CLI output directly in
-the reply, not just a deep link or jump link.
+When **you** start or refresh a Cookey request for the user, paste the **human-readable** strings from the CLI into your reply—not only a deep link.
 
-- Always include the pair key as plain text.
-- Always include the CLI fingerprint / verification string as plain text when it
-  is available.
-- You may also include the deep link or jump link, but never as the only thing
-  the user can act on.
+- Always include the **pair key** as plain text.
+- Always include the **CLI fingerprint / verification string** when the CLI prints it.
+- You may add the deep link or jump link, but **never** as the only actionable content.
 
-Reason: the mobile app may ask the user to type the pair key manually and to
-verify that the fingerprint shown on the phone matches what the terminal shows.
+The Cookey app on **the user’s iPhone** may ask them to type the pair key and confirm the fingerprint matches the terminal.
 
-## Important Warning About `--attach`
+## Important warning about `--attach`
 
-Unless your tool call harness supports automatic process detach (e.g., `nohup`
-or an init system), DO NOT use `--attach`. Without detach, the verification code
-will expire when the parent process exits.
+Unless **your** tool-call environment keeps a detached process alive (e.g. `nohup`
+or similar), do **not** use `--attach`. If the parent exits, verification can expire.
 
-Default behavior is detached: `cookey request start` or `cookey request refresh`
-launches a background daemon process and returns immediately after the local
-descriptor is written. `--attach` keeps the current process alive and waits in
-the foreground for session delivery.
+Default is detached: `cookey request start` / `cookey request refresh` spawns a **background daemon** and returns once the local descriptor exists. `--attach` blocks in the foreground until the session arrives.
 
 ## Command Reference
 
@@ -202,7 +205,7 @@ Notes:
 
 - If `--out` is relative, it is resolved against the current working directory.
 - If the session file is missing but a daemon descriptor exists, Cookey reports
-  the descriptor status so you can distinguish `expired` and `error` cases.
+  the descriptor status so **you** can tell `expired` from `error`.
 - The exported file is suitable for Playwright's `browser.newContext({ storageState })`.
 
 ### `cookey session list`
@@ -317,7 +320,7 @@ Notes:
   - `3` when the request expires before session delivery
   - `5` when the daemon encounters a relay, decrypt, or local write failure
 
-## Suggested Automation Patterns
+## Suggested automation patterns (you)
 
 Detached start + watch:
 

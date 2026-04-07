@@ -43,7 +43,7 @@ Cookey is a minimal, self-hostable, CLI-first tool that lets you sign in on your
 Install the Cookey CLI skill for Claude Code and other AI agents via [Vercel Skills CLI](https://github.com/vercel-labs/skills):
 
 ```sh
-npx skills add Lakr233/Cookey --skill cookey
+npx skills add Lakr233/Cookey --skill website-login
 ```
 
 ## Status

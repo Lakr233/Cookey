@@ -6,28 +6,28 @@ const TARGETS = {
     platform: "darwin",
     arch: "x64",
     binaryName: "cookey",
-    packageName: "@cookey/cookey-darwin-x64",
+    packageName: "cookey-darwin-x64",
     packageDirName: "cookey-darwin-x64",
   },
   "darwin-arm64": {
     platform: "darwin",
     arch: "arm64",
     binaryName: "cookey",
-    packageName: "@cookey/cookey-darwin-arm64",
+    packageName: "cookey-darwin-arm64",
     packageDirName: "cookey-darwin-arm64",
   },
   "linux-x64": {
     platform: "linux",
     arch: "x64",
     binaryName: "cookey",
-    packageName: "@cookey/cookey-linux-x64",
+    packageName: "cookey-linux-x64",
     packageDirName: "cookey-linux-x64",
   },
   "linux-arm64": {
     platform: "linux",
     arch: "arm64",
     binaryName: "cookey",
-    packageName: "@cookey/cookey-linux-arm64",
+    packageName: "cookey-linux-arm64",
     packageDirName: "cookey-linux-arm64",
   },
 };
@@ -49,7 +49,7 @@ function resolveTarget(platform = process.platform, arch = process.arch) {
 
 function packageDirs(rootDir, target = resolveTarget()) {
   return [
-    path.join(rootDir, "node_modules", "@cookey", target.packageDirName),
+    path.join(rootDir, "node_modules", target.packageDirName),
     path.resolve(rootDir, "..", target.packageDirName),
   ];
 }
@@ -63,7 +63,7 @@ function resolveBinaryPath(rootDir, target = resolveTarget()) {
   }
 
   throw new Error(
-    `Missing platform package ${target.packageName}. Reinstall @cookey/cookey for ${formatTarget(target.platform, target.arch)}.`,
+    `Missing platform package ${target.packageName}. Reinstall cookey for ${formatTarget(target.platform, target.arch)}.`,
   );
 }
 

@@ -26,15 +26,12 @@ for (const target of targets) {
 publishPackage(rootPackageName, path.join(distRoot, rootPackageDirName));
 
 function publishPackage(name, cwd) {
-  const args = ["publish", "--access", "public"];
+  const args = ["publish", "--access", "public", "--provenance"];
   if (options.dryRun) {
     args.push("--dry-run");
   }
   if (options.tag) {
     args.push("--tag", options.tag);
-  }
-  if (options.otp) {
-    args.push("--otp", options.otp);
   }
 
   console.log(`Publishing ${name} from ${cwd}`);
@@ -58,7 +55,6 @@ function parseArgs(argv) {
     dryRun: false,
     skipBuild: false,
     tag: "",
-    otp: process.env.NPM_OTP ?? "",
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -73,11 +69,6 @@ function parseArgs(argv) {
     }
     if (arg === "--tag" && index + 1 < argv.length) {
       options.tag = argv[index + 1];
-      index += 1;
-      continue;
-    }
-    if (arg === "--otp" && index + 1 < argv.length) {
-      options.otp = argv[index + 1];
       index += 1;
       continue;
     }

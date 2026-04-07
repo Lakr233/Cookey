@@ -8,11 +8,16 @@ on:
   push:
     branches:
       - main
-    tags:
-      - "v*"
     paths:
       - "CommandLineTool/**"
       - ".github/workflows/cli-package-release.yml"
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Publish to npm and PyPI"
+        required: true
+        type: boolean
+        default: false
 
 concurrency:
   group: cli-package-${{ github.workflow }}-${{ github.ref }}
@@ -23,7 +28,6 @@ permissions:
 
 jobs:
   build:
-    if: ${{ !startsWith(github.ref, 'refs/tags/') }}
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -65,82 +69,6 @@ jobs:
 
       - name: Build pip distributions
         run: python -m build --outdir ./dist/pip/dist ./dist/pip/package
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: cookey-cli-build-artifacts
-          path: |
-            CommandLineTool/dist/releases/**/*
-            CommandLineTool/dist/npm/**/*
-            CommandLineTool/dist/pip/dist/**/*
-          if-no-files-found: error
-          retention-days: 7
-
-  release-build:
-    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: CommandLineTool
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: CommandLineTool/go.mod
-          cache-dependency-path: CommandLineTool/go.sum
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Verify tag matches CLI version
-        run: |
-          tag_version="${GITHUB_REF_NAME#v}"
-          cli_version="$(sed -n 's/^var Version = "\(.*\)"$/\1/p' ./internal/cli/version.go)"
-          if [ -z "$cli_version" ]; then
-            echo "Unable to read CLI version from internal/cli/version.go." >&2
-            exit 1
-          fi
-          if [ "$tag_version" != "$cli_version" ]; then
-            echo "Tag version ($tag_version) does not match internal/cli/version.go version ($cli_version)." >&2
-            exit 1
-          fi
-
-      - name: Run CLI tests
-        run: go test ./...
-
-      - name: Build release binaries
-        run: node ./scripts/build-releases.mjs
-
-      - name: Build npm packages
-        run: node ./scripts/build-npm-package.mjs
-
-      - name: Build pip package source
-        run: node ./scripts/build-pip-package.mjs
-
-      - name: Install Python build tooling
-        run: python -m pip install --upgrade build
-
-      - name: Build pip distributions
-        run: python -m build --outdir ./dist/pip/dist ./dist/pip/package
-
-      - name: Upload release artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: cookey-cli-release-artifacts
-          path: CommandLineTool/dist/releases/**/*
-          if-no-files-found: error
-          retention-days: 14
 
       - name: Upload npm packages
         uses: actions/upload-artifact@v4
@@ -159,8 +87,8 @@ jobs:
           retention-days: 14
 
   publish-npm:
-    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
-    needs: release-build
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish }}
+    needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -188,15 +116,18 @@ jobs:
         run: |
           find ./dist/npm -type f \( -path '*/bin/cookey' -o -path '*/bin/cookey.js' \) -exec chmod 755 {} +
 
+      - name: Install latest npm
+        run: npm install -g npm@latest
+
       - name: Publish npm packages
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_CONFIG_PROVENANCE: "false"
+          NPM_CONFIG_PROVENANCE: "true"
         run: node ./scripts/publish-npm-packages.mjs --skip-build
 
   publish-pypi:
-    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
-    needs: release-build
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish }}
+    needs: build
     runs-on: ubuntu-latest
     permissions:
       id-token: write

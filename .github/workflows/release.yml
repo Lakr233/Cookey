@@ -347,7 +347,6 @@ jobs:
 
       - name: Publish npm packages
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: "true"
         run: node ./scripts/publish-npm-packages.mjs --skip-build
 

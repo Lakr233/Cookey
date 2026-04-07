@@ -2,9 +2,9 @@ import { spawnSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-export const packageScope = "@aspect-build";
-export const rootPackageName = `${packageScope}/cookey`;
-export const rootPackageDirName = "cookey";
+export const packageScope = "@cookey";
+export const rootPackageName = `${packageScope}/cli`;
+export const rootPackageDirName = "cli";
 
 export const targets = [
   { goos: "darwin", goarch: "amd64", platform: "darwin", arch: "x64", exe: false },

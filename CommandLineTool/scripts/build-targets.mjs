@@ -2,8 +2,9 @@ import { spawnSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-export const rootPackageName = "cookey";
-export const rootPackageDirName = "cookey";
+export const packageScope = "@cookey";
+export const rootPackageName = `${packageScope}/cli`;
+export const rootPackageDirName = "cli";
 
 export const targets = [
   { goos: "darwin", goarch: "amd64", platform: "darwin", arch: "x64", exe: false },
@@ -25,11 +26,11 @@ export function releaseAssetName(version, target) {
 }
 
 export function platformPackageDirName(target) {
-  return `cookey-${target.platform}-${target.arch}`;
+  return `cli-${target.platform}-${target.arch}`;
 }
 
 export function platformPackageName(target) {
-  return platformPackageDirName(target);
+  return `${packageScope}/${platformPackageDirName(target)}`;
 }
 
 export async function readVersion(cliRoot) {

@@ -1,5 +1,5 @@
 {
-  "name": "cookey",
+  "name": "@cookey/cli",
   "version": "0.0.0-dev",
   "description": "Cookey CLI — capture authenticated mobile browser sessions as Playwright storageState JSON",
   "license": "MIT",

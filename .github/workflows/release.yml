@@ -13,7 +13,7 @@ on:
       publish_packages:
         description: "Publish to npm and PyPI"
         type: boolean
-        default: false
+        default: true
 
 concurrency:
   group: release-${{ github.ref }}

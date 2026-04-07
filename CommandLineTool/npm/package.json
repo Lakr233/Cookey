@@ -1,0 +1,33 @@
+{
+  "name": "@aspect-build/cookey",
+  "version": "0.0.0-dev",
+  "description": "Cookey CLI — capture authenticated mobile browser sessions as Playwright storageState JSON",
+  "license": "MIT",
+  "preferGlobal": true,
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Lakr233/Cookey.git"
+  },
+  "bin": {
+    "cookey": "bin/cookey.js"
+  },
+  "files": [
+    "bin",
+    "lib",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "optionalDependencies": {},
+  "keywords": [
+    "cookey",
+    "cli",
+    "playwright",
+    "session",
+    "automation"
+  ]
+}

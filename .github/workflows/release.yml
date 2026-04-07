@@ -229,7 +229,7 @@ jobs:
           cp "build/release-assets/macos/cookey-${{ needs.prepare.outputs.build_version }}-macOS-cli.zip" "build/release-assets/final/cookey-macOS.zip"
           cp "build/release-assets/linux-x86_64/cookey-${{ needs.prepare.outputs.build_version }}-linux-x86_64.zip" "build/release-assets/final/cookey-linux-x86_64.zip"
           cp "build/release-assets/linux-aarch64/cookey-${{ needs.prepare.outputs.build_version }}-linux-aarch64.zip" "build/release-assets/final/cookey-linux-aarch64.zip"
-          cp skills.md build/release-assets/final/skills.md
+          cp skills/cookey/SKILL.md build/release-assets/final/skills.md
           # IMPORTANT: These stable names must match the URLs in:
           #   Web/get-started.html, Web/llms.txt, skills.md
           (

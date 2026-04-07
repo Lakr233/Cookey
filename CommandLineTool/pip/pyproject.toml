@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cookey-cli"
+version = "0.0.0-dev"
+description = "Cookey CLI — capture authenticated mobile browser sessions as Playwright storageState JSON"
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+keywords = ["cookey", "cli", "playwright", "session", "automation"]
+authors = [{ name = "Lakr233" }]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Operating System :: MacOS",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Topic :: Utilities",
+]
+
+[project.urls]
+Homepage = "https://github.com/Lakr233/Cookey"
+Repository = "https://github.com/Lakr233/Cookey"
+
+[project.scripts]
+cookey = "cookey_cli.__main__:main"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["cookey_cli*"]
+
+[tool.setuptools.package-data]
+"cookey_cli" = ["bin/*"]

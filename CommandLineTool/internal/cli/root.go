@@ -1,5 +1,6 @@
 package cli
 
+import "fmt"
 
 const defaultServerURL = "https://api.cookey.sh"
 
@@ -26,6 +27,9 @@ func Run(args []string) error {
 		return runConfig(args[1:])
 	case "__daemon":
 		return handleDaemon(args[1:])
+	case "version", "-v", "--version":
+		fmt.Println(Version)
+		return nil
 	case "help", "-h", "--help":
 		return runHelp(args[1:])
 	default:

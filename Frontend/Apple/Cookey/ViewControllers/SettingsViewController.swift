@@ -67,7 +67,7 @@ final class SettingsViewController: StackScrollController {
         ).then {
             $0.menu = UIMenu(children: [
                 UIAction(
-                    title: String(localized: "What's New"),
+                    title: String(localized: "Guide"),
                     image: UIImage(systemName: "sparkles")
                 ) { [weak self] _ in
                     self?.presentWhatsNew()

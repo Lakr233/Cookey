@@ -17,6 +17,15 @@
         }
       }
     },
+    "1. Install the Skill" : {
+
+    },
+    "2. Ask your Agent" : {
+
+    },
+    "3. Scan & Approve" : {
+
+    },
     "A login request was received. Would you like to start?" : {
       "localizations" : {
         "zh-Hans" : {
@@ -180,6 +189,10 @@
           }
         }
       }
+    },
+    "Bridge your AI agents with any website securely." : {
+
+
     },
     "Browser" : {
       "localizations" : {
@@ -765,6 +778,12 @@
         }
       }
     },
+    "Guide" : {
+
+    },
+    "How to use" : {
+
+    },
     "If you enable push notifications, future login or session refresh requests for %@ can be sent directly to this device — no need to scan a QR code or enter a pairing code again.\n\nThis is optional — Cookey works perfectly without notifications. You can change this later in Settings." : {
       "localizations" : {
         "en" : {
@@ -995,6 +1014,9 @@
         }
       }
     },
+    "Next" : {
+
+    },
     "No accounts or enrollment. The CLI generates its own key pair on first run." : {
       "localizations" : {
         "en" : {
@@ -1178,6 +1200,9 @@
           }
         }
       }
+    },
+    "Outputs Playwright-compatible JSON. Pipe into any browser automation tool." : {
+
     },
     "Outputs Playwright-compatible storageState JSON. Pipe into any browser automation tool." : {
       "localizations" : {
@@ -1384,6 +1409,7 @@
       }
     },
     "Scan or enter the pair key from your terminal\nto transfer a login session." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1531,6 +1557,9 @@
         }
       }
     },
+    "Session data is encrypted on-device. The relay never sees plaintext." : {
+
+    },
     "Settings" : {
       "localizations" : {
         "en" : {
@@ -1572,6 +1601,13 @@
           }
         }
       }
+    },
+    "Simply paste and send this command to your AI agent (like Cursor or Claude) to install the skill." : {
+
+    },
+    "Simply tell your AI to \"log in to a website\". It will generate a secure QR code in the terminal or chat." : {
+
+
     },
     "Single Docker image, memory-only storage, auto-expiring sessions." : {
       "localizations" : {
@@ -1953,6 +1989,9 @@
         }
       }
     },
+    "Use this app to scan the code, log in normally, and securely deliver the session back to your AI." : {
+
+    },
     "View Logs" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1979,7 +2018,11 @@
         }
       }
     },
+    "Welcome to Cookey" : {
+
+    },
     "What's New" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {

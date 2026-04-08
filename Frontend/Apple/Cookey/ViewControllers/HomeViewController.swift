@@ -21,11 +21,28 @@ class HomeViewController: UIViewController {
     }
 
     private let subtitleLabel = UILabel().then {
-        $0.text = String(localized: "Scan or enter the pair key from your terminal\nto transfer a login session.")
+        $0.text = String(localized: "Bridge your AI agents with any website securely.")
         $0.font = .preferredFont(forTextStyle: .subheadline)
         $0.textColor = .secondaryLabel
         $0.textAlignment = .center
         $0.numberOfLines = 0
+    }
+
+    private lazy var howToUseButton = UIButton(type: .system).then {
+        var config = UIButton.Configuration.plain()
+        config.title = String(localized: "How to use")
+        config.image = UIImage(systemName: "questionmark.circle.fill")
+        config.imagePlacement = .leading
+        config.imagePadding = 6
+        config.baseForegroundColor = .systemBlue
+        
+        let titleAttr = AttributeContainer([
+            .font: UIFont.systemFont(ofSize: 14, weight: .medium)
+        ])
+        config.attributedTitle = AttributedString(config.title!, attributes: titleAttr)
+        
+        $0.configuration = config
+        $0.addTarget(self, action: #selector(showHowToUseTapped), for: .touchUpInside)
     }
 
     private lazy var scanButton = UIButton(configuration: .filled()).then {
@@ -114,38 +131,52 @@ class HomeViewController: UIViewController {
     }
 
     private func setupLayout() {
-        let stack = UIStackView(arrangedSubviews: [iconView, titleLabel, subtitleLabel]).then {
-            $0.axis = .vertical
-            $0.alignment = .center
-            $0.spacing = 8
-            $0.setCustomSpacing(24, after: iconView)
-        }
-
         let buttonStack = UIStackView(arrangedSubviews: [scanButton, typeButton]).then {
             $0.axis = .horizontal
             $0.distribution = .fillEqually
             $0.spacing = 12
         }
 
+        let stack = UIStackView(arrangedSubviews: [
+            iconView, 
+            titleLabel, 
+            subtitleLabel, 
+            howToUseButton
+        ]).then {
+            $0.axis = .vertical
+            $0.alignment = .center
+            $0.spacing = 16
+            
+            $0.setCustomSpacing(24, after: iconView)
+            $0.setCustomSpacing(12, after: titleLabel)
+            $0.setCustomSpacing(8, after: subtitleLabel)
+        }
+
         view.addSubview(stack)
         view.addSubview(websiteButton)
         view.addSubview(buttonStack)
 
-        stack.snp.makeConstraints {
-            $0.center.equalToSuperview()
-            $0.leading.trailing.equalToSuperview().inset(32)
-        }
-
         buttonStack.snp.makeConstraints {
             $0.leading.trailing.equalToSuperview().inset(32)
             $0.bottom.equalTo(websiteButton.snp.top).offset(-16)
-            $0.height.equalTo(50)
+            $0.height.equalTo(52)
         }
 
         websiteButton.snp.makeConstraints {
             $0.centerX.equalToSuperview()
             $0.bottom.equalTo(view.safeAreaLayoutGuide).inset(16)
         }
+
+        stack.snp.makeConstraints {
+            $0.centerY.equalToSuperview().offset(-40) // slightly above center to balance the bottom buttons
+            $0.leading.trailing.equalToSuperview().inset(32)
+        }
+    }
+
+    @objc private func showHowToUseTapped() {
+        Logger.ui.infoFile("Opening how to use (Welcome) from home screen")
+        let vc = WelcomePageViewController.makePresentedController()
+        present(vc, animated: true)
     }
 
     @objc private func settingsTapped() {

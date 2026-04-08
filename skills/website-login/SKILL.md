@@ -1,6 +1,6 @@
 ---
 name: website-login
-description: Use when the user needs to log in to a website and reuse that session locally as Playwright storageState JSON. You run Cookey CLI in your current environment; the user signs in on their iPhone in the Cookey app. End-to-end encrypted handoff via a relay. Use for MFA, SMS, passkeys, or flows that are hard to automate headlessly.
+description: Use whenever the user needs to log in to a website on their phone and reuse that authenticated session locally, especially for Playwright storageState JSON, cookies/localStorage capture, MFA, SMS codes, passkeys, or mobile-first login flows that are awkward in headless automation. You run Cookey CLI in your current environment; the user signs in on their iPhone in the Cookey app; the relay only transports encrypted blobs. Trigger even if the user asks more loosely for help logging in, reusing an authenticated browser state, exporting cookies, or getting a local automation session from a phone login.
 ---
 
 # Website login
@@ -49,7 +49,7 @@ that and emits only what Playwright consumes.
 
 1. **You** start a login request in your local environment:
 
-   `cookey request start https://example.com/login --qr`
+   `cookey request start https://example.com/login --json --qr`
 
 2. The **user** scans the QR (or opens the link) **on their iPhone** with the Cookey app, then finishes login in the app’s browser.
 
@@ -74,16 +74,39 @@ You can also pipe to a file:
 
 `cookey session export r_xxxxxxxxxxxxxxxxxxxxxx > storageState.json`
 
+## Required execution order
+
+When you start or refresh a request for the user, follow this order:
+
+1. Run `cookey request start ... --json --qr` or `cookey request refresh ... --json --qr` without `--attach`.
+2. Immediately reply to the user with the pair key, fingerprint, and QR code from the command output.
+3. Only after that reply is sent, wait for completion with `cookey request status <rid> --watch` or poll until the request is `ready`.
+4. Export the session with `cookey session export`.
+
+If you skip step 2 and start waiting first, the user may never see the pair key in tool-call environments where terminal output is hidden.
+
 ## What you must show the user
 
-When **you** start or refresh a Cookey request for the user, paste the **human-readable** strings from the CLI into your reply—not only a deep link.
+When **you** start or refresh a Cookey request for the user, paste the required values from the CLI into your reply before you wait for completion. Do not only mention that a login request was started.
 
 - Always include the **pair key** as plain text.
 - Always include the **CLI fingerprint / verification string** when the CLI prints it.
 - If you render the QR code using `--qr` or `--json --qr`, **always** wrap the ASCII QR code in a ```text ... ``` code block to prevent Markdown from destroying the line breaks. If using `--json`, the QR code is in the `qr_text` field with `\n` characters.
 - You may add the deep link or jump link, but **never** as the only actionable content.
+- If using `--json`, copy `pair_key`, `cli_public_key_fingerprint`, `jump_link`, and `qr_text` from the JSON output exactly.
 
 The Cookey app on **the user’s iPhone** may ask them to type the pair key and confirm the fingerprint matches the terminal.
+
+Use a reply shape like this:
+
+- Pair key: `ABCD-1234`
+- Fingerprint: `xxxxxx`
+- Deep link: `https://...`
+- QR code:
+
+```text
+<ascii qr code>
+```
 
 ## Important warning about `--attach`
 
@@ -91,6 +114,8 @@ Unless **your** tool-call environment keeps a detached process alive (e.g. `nohu
 or similar), do **not** use `--attach`. If the parent exits, verification can expire.
 
 Default is detached: `cookey request start` / `cookey request refresh` spawns a **background daemon** and returns once the local descriptor exists. `--attach` blocks in the foreground until the session arrives.
+
+For agent or tool-call environments where the user cannot directly inspect stdout, treat `--attach` as unsafe by default even if it technically works. It makes it too easy to block before you have echoed the pair key and fingerprint back to the user.
 
 ## Command Reference
 
@@ -112,6 +137,7 @@ Examples:
 
 - `cookey request start https://example.com/login`
 - `cookey request start https://example.com/login --qr`
+- `cookey request start https://example.com/login --json --qr`
 - `cookey request start https://example.com/login --timeout 900 --server https://api.cookey.sh`
 - `cookey request start https://example.com/login --json`
 
@@ -122,6 +148,7 @@ Notes:
   available.
 - Without `--attach`, the command exits as soon as the detached daemon is ready
   to wait for the encrypted session.
+- In agent workflows, prefer `--json --qr`, send the returned pair key / fingerprint / QR code to the user immediately, then watch status in a separate step.
 
 ### `cookey request refresh <target_url>`
 
@@ -136,6 +163,7 @@ Examples:
 
 - `cookey request refresh https://example.com/login`
 - `cookey request refresh https://example.com/login --qr`
+- `cookey request refresh https://example.com/login --json --qr`
 - `cookey request refresh https://example.com/login --attach`
 
 Notes:

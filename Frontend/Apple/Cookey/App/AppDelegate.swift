@@ -5,6 +5,7 @@ import UserNotifications
 
 class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate {
     let pushCoordinator = PushRegistrationCoordinator()
+    let launchBackendReachabilityCoordinator = LaunchBackendReachabilityCoordinator()
     lazy var sessionModel = SessionUploadModel(pushCoordinator: pushCoordinator)
 
     func application(
@@ -15,6 +16,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         Logger.app.infoFile("Application finished launching")
         UNUserNotificationCenter.current().delegate = self
         configureAlertController()
+        launchBackendReachabilityCoordinator.warmUpIfNeeded()
         refreshPushTokenIfAuthorized(application)
         return true
     }

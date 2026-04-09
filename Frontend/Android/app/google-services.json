@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "595805695465",
+    "project_id": "cookey-app",
+    "storage_bucket": "cookey-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:595805695465:android:70662a7f5417f55fd0ef78",
+        "android_client_info": {
+          "package_name": "wiki.qaq.cookey"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDu41oUd6PRJl1eE5wwQfMKifwEnryvK3Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

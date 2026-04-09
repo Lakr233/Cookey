@@ -232,13 +232,20 @@ jobs:
           COOKEY_VERSION_NAME: ${{ steps.android_version.outputs.version_name }}
         run: ./gradlew --no-daemon assembleRelease bundleRelease
 
+      - name: Stage Android release artifact files
+        run: |
+          set -euo pipefail
+          mkdir -p build/release-exports/android
+          cp app/build/outputs/apk/release/app-release.apk build/release-exports/android/cookey-android.apk
+          cp app/build/outputs/bundle/release/app-release.aab build/release-exports/android/cookey-android.aab
+
       - name: Upload signed Android artifact
         uses: actions/upload-artifact@v7.0.0
         with:
           name: cookey-${{ needs.prepare.outputs.build_version }}-android
           path: |
-            Frontend/Android/app/build/outputs/apk/release/app-release.apk
-            Frontend/Android/app/build/outputs/bundle/release/app-release.aab
+            Frontend/Android/build/release-exports/android/cookey-android.apk
+            Frontend/Android/build/release-exports/android/cookey-android.aab
           if-no-files-found: error
 
   sign_notarize_macos:
@@ -310,8 +317,8 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p build/release-assets/final
-          cp "build/release-assets/android/app-release.apk" "build/release-assets/final/cookey-android.apk"
-          cp "build/release-assets/android/app-release.aab" "build/release-assets/final/cookey-android.aab"
+          cp "build/release-assets/android/cookey-android.apk" "build/release-assets/final/cookey-android.apk"
+          cp "build/release-assets/android/cookey-android.aab" "build/release-assets/final/cookey-android.aab"
           cp skills/website-login/SKILL.md build/release-assets/final/skills.md
           # IMPORTANT: These stable names must match the URLs in:
           #   Web/get-started.html, Web/llms.txt, skills.md

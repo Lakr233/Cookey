@@ -388,8 +388,9 @@ jobs:
           fi
 
           if [[ "${{ needs.prepare.outputs.release_android }}" == "true" ]]; then
+            cp "build/release-assets/android/app-release.apk" "build/release-assets/final/cookey-android.apk"
             cp "build/release-assets/android/app-release.aab" "build/release-assets/final/cookey-android.aab"
-            checksum_inputs+=(cookey-android.aab)
+            checksum_inputs+=(cookey-android.apk cookey-android.aab)
           fi
 
           cp skills/website-login/SKILL.md build/release-assets/final/skills.md

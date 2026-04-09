@@ -247,7 +247,7 @@ jobs:
             --version-name "${VERSION_NAME}" \
             --output-file "$GITHUB_OUTPUT"
 
-      - name: Build signed Android App Bundle
+      - name: Build signed Android release artifacts
         env:
           COOKEY_UPLOAD_STORE_FILE: ${{ steps.android_signing.outputs.keystore_path }}
           COOKEY_UPLOAD_STORE_PASSWORD: ${{ secrets.ANDROID_UPLOAD_STORE_PASSWORD }}
@@ -255,13 +255,15 @@ jobs:
           COOKEY_UPLOAD_KEY_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}
           COOKEY_VERSION_CODE: ${{ steps.android_version.outputs.version_code }}
           COOKEY_VERSION_NAME: ${{ steps.android_version.outputs.version_name }}
-        run: ./gradlew --no-daemon bundleRelease
+        run: ./gradlew --no-daemon assembleRelease bundleRelease
 
       - name: Upload signed Android artifact
         uses: actions/upload-artifact@v7.0.0
         with:
           name: cookey-${{ needs.prepare.outputs.build_version }}-android
-          path: Frontend/Android/app/build/outputs/bundle/release/app-release.aab
+          path: |
+            Frontend/Android/app/build/outputs/apk/release/app-release.apk
+            Frontend/Android/app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
 
   sign_notarize_macos:

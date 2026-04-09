@@ -5,6 +5,11 @@ on:
     tags:
       - "*"
   workflow_dispatch:
+    inputs:
+      version:
+        description: Release tag (for example v1.2.3)
+        required: true
+        type: string
 
 concurrency:
   group: release-${{ github.ref }}
@@ -20,26 +25,23 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       build_version: ${{ steps.prepare.outputs.build_version }}
-      publish_release: ${{ steps.prepare.outputs.publish_release }}
-      publish_packages: ${{ steps.prepare.outputs.publish_packages }}
       artifact_name: ${{ steps.prepare.outputs.artifact_name }}
     steps:
       - name: Resolve build metadata
         id: prepare
         run: |
-          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
-            VERSION="${GITHUB_REF_NAME}"
-            PUBLISH_RELEASE=true
-            PUBLISH_PACKAGES=true
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            VERSION="${{ inputs.version }}"
           else
-            VERSION="manual-${GITHUB_RUN_NUMBER}"
-            PUBLISH_RELEASE=false
-            PUBLISH_PACKAGES=false
+            VERSION="${GITHUB_REF_NAME}"
+          fi
+
+          if [[ -z "${VERSION}" ]]; then
+            echo "Release version is required." >&2
+            exit 1
           fi
 
           echo "build_version=${VERSION}" >> "$GITHUB_OUTPUT"
-          echo "publish_release=${PUBLISH_RELEASE}" >> "$GITHUB_OUTPUT"
-          echo "publish_packages=${PUBLISH_PACKAGES}" >> "$GITHUB_OUTPUT"
           echo "artifact_name=cookey-${VERSION}-unsigned" >> "$GITHUB_OUTPUT"
 
   build_macos:
@@ -284,7 +286,7 @@ jobs:
           if-no-files-found: error
 
   collect_release:
-    if: (github.actor == 'Lakr233' || github.actor == 'eyhn') && needs.prepare.outputs.publish_release == 'true'
+    if: github.actor == 'Lakr233' || github.actor == 'eyhn'
     name: Collect and publish release
     runs-on: ubuntu-latest
     needs:
@@ -402,7 +404,7 @@ jobs:
           retention-days: 14
 
   publish_npm:
-    if: (github.actor == 'Lakr233' || github.actor == 'eyhn') && needs.prepare.outputs.publish_packages == 'true'
+    if: github.actor == 'Lakr233' || github.actor == 'eyhn'
     name: Publish npm packages
     needs: [prepare, build_packages]
     runs-on: ubuntu-latest
@@ -440,7 +442,7 @@ jobs:
         run: node ./scripts/publish-npm-packages.mjs --skip-build
 
   publish_pypi:
-    if: (github.actor == 'Lakr233' || github.actor == 'eyhn') && needs.prepare.outputs.publish_packages == 'true'
+    if: github.actor == 'Lakr233' || github.actor == 'eyhn'
     name: Publish PyPI package
     needs: [prepare, build_packages]
     runs-on: ubuntu-latest

@@ -22,6 +22,7 @@ type Routes struct {
 	storage     *Storage
 	config      ServerConfig
 	apnsClient  notificationSender
+	fcmClient   *FCMClient
 	apnBlocker  *APNTokenBlocker
 	pushLimiter *APNPushRateLimiter
 }
@@ -316,9 +317,19 @@ func (rt *Routes) handleUploadSeedSession(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	sourceIP := requestSourceIP(r)
+
+	// Send APNs push if configured
 	if rt.apnsClient != nil && stored.APNToken != "" && stored.APNEnvironment != "" {
 		if rt.pushLimiter == nil || rt.pushLimiter.Allow(stored.APNToken) {
-			go rt.apnsClient.SendNotificationWithToken(stored, rt.config.PublicURL, stored.APNToken, stored.APNEnvironment, rt.apnBlocker, requestSourceIP(r))
+			go rt.apnsClient.SendNotificationWithToken(stored, rt.config.PublicURL, stored.APNToken, stored.APNEnvironment, rt.apnBlocker, sourceIP)
+		}
+	}
+
+	// Send FCM push if configured
+	if rt.fcmClient != nil && stored.FCMToken != "" {
+		if rt.pushLimiter == nil || rt.pushLimiter.Allow(stored.FCMToken) {
+			go rt.fcmClient.SendNotification(stored, rt.config.PublicURL, stored.FCMToken, rt.apnBlocker, sourceIP)
 		}
 	}
 

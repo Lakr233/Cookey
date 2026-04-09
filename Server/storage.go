@@ -56,6 +56,7 @@ func (s *Storage) Store(req LoginRequest) (*StoredRequest, error) {
 		DeviceFingerprint: req.DeviceFingerprint,
 		APNEnvironment:    req.APNEnvironment,
 		APNToken:          req.APNToken,
+		FCMToken:          req.FCMToken,
 		CreatedAt:         time.Now().UTC(),
 		ExpiresAt:         req.ExpiresAt.Time,
 		RequestType:       NormalizeRequestType(req.RequestType),

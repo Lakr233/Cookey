@@ -68,6 +68,7 @@ func (c *Client) Register(manifest models.LoginManifest) (string, error) {
 	body, err := json.Marshal(models.RelayRegisterRequest{
 		APNEnvironment:    manifest.APNEnvironment,
 		APNToken:          manifest.APNToken,
+		FCMToken:          manifest.FCMToken,
 		RID:               manifest.RID,
 		TargetURL:         manifest.TargetURL,
 		CLIPublicKey:      manifest.CLIPublicKey,

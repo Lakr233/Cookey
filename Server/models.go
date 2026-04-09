@@ -61,6 +61,7 @@ type LoginRequest struct {
 	DeviceFingerprint string      `json:"device_fingerprint"`
 	DeviceID          string      `json:"device_id"`
 	ExpiresAt         ISO8601Time `json:"expires_at"`
+	FCMToken          string      `json:"fcm_token,omitempty"`
 	RequestType       string      `json:"request_type,omitempty"`
 	RequestProof      string      `json:"request_proof"`
 	RequestSecret     string      `json:"request_secret,omitempty"`
@@ -77,6 +78,7 @@ type StoredRequest struct {
 	DeviceFingerprint    string            `json:"-"`
 	APNEnvironment       string            `json:"-"`
 	APNToken             string            `json:"-"`
+	FCMToken             string            `json:"-"`
 	CreatedAt            time.Time         `json:"-"`
 	ExpiresAt            time.Time         `json:"-"`
 	RequestType          string            `json:"-"`
@@ -197,6 +199,7 @@ type ServerConfig struct {
 	MaxPayloadSize    int
 	PublicURL         string
 	APNSConfiguration *APNSConfiguration
+	FCMConfiguration  *FCMConfiguration
 }
 
 // APNSConfiguration holds APNs push notification settings.
@@ -205,6 +208,12 @@ type APNSConfiguration struct {
 	KeyID          string
 	BundleID       string
 	PrivateKeyPath string
+}
+
+// FCMConfiguration holds Firebase Cloud Messaging settings.
+type FCMConfiguration struct {
+	ServiceAccountKeyPath string
+	ProjectID             string
 }
 
 // encodeJSON marshals a value to JSON with sorted keys via struct field order.

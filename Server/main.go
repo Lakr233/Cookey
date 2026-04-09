@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -23,6 +24,11 @@ func main() {
 	} else {
 		log.Println("   APNs: disabled")
 	}
+	if config.FCMConfiguration != nil {
+		log.Println("   FCM: enabled")
+	} else {
+		log.Println("   FCM: disabled")
+	}
 
 	storage := NewStorage(config.MaxPayloadSize)
 	apnBlocker := NewAPNTokenBlocker()
@@ -33,10 +39,16 @@ func main() {
 		apnsClient = NewAPNSClient(*config.APNSConfiguration)
 	}
 
+	var fcmClient *FCMClient
+	if config.FCMConfiguration != nil {
+		fcmClient = NewFCMClient(*config.FCMConfiguration)
+	}
+
 	routes := &Routes{
 		storage:     storage,
 		config:      config,
 		apnsClient:  apnsClient,
+		fcmClient:   fcmClient,
 		apnBlocker:  apnBlocker,
 		pushLimiter: pushLimiter,
 	}
@@ -160,6 +172,9 @@ func parseConfig(args []string) ServerConfig {
 	// Load APNs configuration from environment
 	config.APNSConfiguration = loadAPNSConfiguration()
 
+	// Load FCM configuration from environment
+	config.FCMConfiguration = loadFCMConfiguration()
+
 	return config
 }
 
@@ -178,6 +193,35 @@ func loadAPNSConfiguration() *APNSConfiguration {
 		KeyID:          keyID,
 		BundleID:       bundleID,
 		PrivateKeyPath: privateKeyPath,
+	}
+}
+
+func loadFCMConfiguration() *FCMConfiguration {
+	serviceAccountPath := os.Getenv("COOKEY_FCM_SERVICE_ACCOUNT_PATH")
+	projectID := os.Getenv("COOKEY_FCM_PROJECT_ID")
+
+	if serviceAccountPath == "" {
+		return nil
+	}
+
+	// If project ID not set, try to read from service account file
+	if projectID == "" {
+		data, err := os.ReadFile(serviceAccountPath)
+		if err == nil {
+			var sa serviceAccountKey
+			if json.Unmarshal(data, &sa) == nil && sa.ProjectID != "" {
+				projectID = sa.ProjectID
+			}
+		}
+	}
+
+	if projectID == "" {
+		return nil
+	}
+
+	return &FCMConfiguration{
+		ServiceAccountKeyPath: serviceAccountPath,
+		ProjectID:             projectID,
 	}
 }
 
@@ -202,6 +246,8 @@ Environment Variables:
   COOKEY_APNS_KEY_ID      APNs key ID
   COOKEY_APNS_BUNDLE_ID   App bundle identifier
   COOKEY_APNS_PRIVATE_KEY_PATH Path to APNs .p8 key
+  COOKEY_FCM_SERVICE_ACCOUNT_PATH Path to Firebase service account JSON
+  COOKEY_FCM_PROJECT_ID        Firebase project ID (auto-detected from SA file)
 
 Examples:
   server

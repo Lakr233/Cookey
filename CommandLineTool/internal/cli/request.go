@@ -296,6 +296,7 @@ func buildSeedEnvelope(context config.BootstrapContext, manifest *models.LoginMa
 
 	manifest.APNToken = deviceInfo.APNToken
 	manifest.APNEnvironment = deviceInfo.APNEnvironment
+	manifest.FCMToken = deviceInfo.FCMToken
 
 	seedPayload, err := encodeJSON(models.SeedSessionPayload{
 		Cookies: previousSession.Cookies,

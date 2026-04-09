@@ -107,12 +107,14 @@ type DeviceInfo struct {
 	DeviceID       string `json:"device_id"`
 	APNEnvironment string `json:"apn_environment"`
 	APNToken       string `json:"apn_token"`
+	FCMToken       string `json:"fcm_token,omitempty"`
 	PublicKey      string `json:"public_key"`
 }
 
 type LoginManifest struct {
 	APNEnvironment    string      `json:"apn_environment,omitempty"`
 	APNToken          string      `json:"apn_token,omitempty"`
+	FCMToken          string      `json:"fcm_token,omitempty"`
 	RID               string      `json:"rid"`
 	TargetURL         string      `json:"target_url"`
 	ServerURL         string      `json:"server_url"`
@@ -154,6 +156,7 @@ type DaemonLaunchPayload struct {
 type RelayRegisterRequest struct {
 	APNEnvironment    string      `json:"apn_environment,omitempty"`
 	APNToken          string      `json:"apn_token,omitempty"`
+	FCMToken          string      `json:"fcm_token,omitempty"`
 	RID               string      `json:"rid"`
 	TargetURL         string      `json:"target_url"`
 	CLIPublicKey      string      `json:"cli_public_key"`

@@ -484,6 +484,7 @@ func SyncDeviceInfo(paths AppPaths, currentRID string, deviceInfo *models.Device
 
 		if session.DeviceInfo.APNEnvironment == deviceInfo.APNEnvironment &&
 			session.DeviceInfo.APNToken == deviceInfo.APNToken &&
+			session.DeviceInfo.FCMToken == deviceInfo.FCMToken &&
 			session.DeviceInfo.PublicKey == deviceInfo.PublicKey {
 			continue
 		}
@@ -492,6 +493,7 @@ func SyncDeviceInfo(paths AppPaths, currentRID string, deviceInfo *models.Device
 			DeviceID:       deviceInfo.DeviceID,
 			APNEnvironment: deviceInfo.APNEnvironment,
 			APNToken:       deviceInfo.APNToken,
+			FCMToken:       deviceInfo.FCMToken,
 			PublicKey:      deviceInfo.PublicKey,
 		}
 

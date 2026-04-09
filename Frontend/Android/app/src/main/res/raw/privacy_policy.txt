@@ -1,0 +1,57 @@
+Privacy Policy
+
+Last updated: April 2, 2026
+
+Overview
+
+Cookey is designed with privacy as a core principle. The app facilitates secure login session transfer between your mobile device and a CLI tool using end-to-end encryption.
+
+Data Collection
+
+We do not collect any personal data. Specifically:
+
+- No analytics or usage tracking
+- No crash reporting to external services
+- No advertising identifiers
+- No user accounts or registration
+
+Network Communication
+
+Cookey communicates with a relay server solely to transfer encrypted session data between your mobile device and CLI tool. All session data is encrypted end-to-end using X25519 key agreement and XSalsa20-Poly1305 authenticated encryption before leaving your device. The relay server cannot read the content of your sessions.
+
+Camera Access
+
+The app uses your device's camera exclusively to scan QR codes displayed by the CLI tool. No images or video are stored, transmitted, or processed beyond QR code recognition.
+
+Browser Data
+
+When you log in to a website within Cookey's in-app browser, the app captures cookies and localStorage from that session. This captured data is:
+
+- Encrypted end-to-end before transmission
+- Sent only to the relay server specified in the QR code
+- Never stored permanently on your device
+- Readable only by the CLI tool that initiated the request
+
+Push Notifications
+
+If you enable session refresh notifications, your device's push token is registered with the relay server. This token is used solely to deliver session refresh requests and is not shared with third parties.
+
+Device Keys
+
+Cookey generates a device keypair (Ed25519/X25519) stored in the iOS Keychain. These keys are used for encryption and device identity with the relay server. They never leave your device in unencrypted form.
+
+Third-Party Services
+
+This app does not integrate with any third-party analytics, advertising, or tracking services.
+
+Children's Privacy
+
+This app does not collect any data from anyone, including children under the age of 13.
+
+Changes to This Policy
+
+If this privacy policy is updated, the revised version will be included in the app update. The "Last updated" date at the top of this page will be changed accordingly.
+
+Contact
+
+If you have any questions about this privacy policy, please contact us through the App Store support link.

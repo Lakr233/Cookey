@@ -167,15 +167,21 @@ jobs:
           java-version: "17"
           cache: gradle
 
+      - name: Set up Python 3
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Validate Android signing secrets
+      - name: Validate Android release secrets
         env:
           ANDROID_UPLOAD_KEYSTORE_BASE64: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_BASE64 }}
           ANDROID_UPLOAD_STORE_PASSWORD: ${{ secrets.ANDROID_UPLOAD_STORE_PASSWORD }}
           ANDROID_UPLOAD_KEY_ALIAS: ${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}
           ANDROID_UPLOAD_KEY_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON_BASE64: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON_BASE64 }}
         run: |
           set -euo pipefail
           missing=()
@@ -183,7 +189,8 @@ jobs:
             ANDROID_UPLOAD_KEYSTORE_BASE64 \
             ANDROID_UPLOAD_STORE_PASSWORD \
             ANDROID_UPLOAD_KEY_ALIAS \
-            ANDROID_UPLOAD_KEY_PASSWORD
+            ANDROID_UPLOAD_KEY_PASSWORD \
+            GOOGLE_PLAY_SERVICE_ACCOUNT_JSON_BASE64
           do
             if [[ -z "${!name}" ]]; then
               missing+=("${name}")
@@ -205,12 +212,27 @@ jobs:
           printf '%s' "${ANDROID_UPLOAD_KEYSTORE_BASE64}" | base64 --decode > "${KEYSTORE_PATH}"
           echo "keystore_path=${KEYSTORE_PATH}" >> "$GITHUB_OUTPUT"
 
+      - name: Resolve Android version metadata
+        id: android_version
+        env:
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON_BASE64: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON_BASE64 }}
+        run: |
+          set -euo pipefail
+          VERSION_NAME="${{ needs.prepare.outputs.build_version }}"
+          VERSION_NAME="${VERSION_NAME#v}"
+          zsh ../../Scripts/resolve-android-version.sh \
+            --package-name "wiki.qaq.cookey" \
+            --version-name "${VERSION_NAME}" \
+            --output-file "$GITHUB_OUTPUT"
+
       - name: Build signed Android App Bundle
         env:
           COOKEY_UPLOAD_STORE_FILE: ${{ steps.android_signing.outputs.keystore_path }}
           COOKEY_UPLOAD_STORE_PASSWORD: ${{ secrets.ANDROID_UPLOAD_STORE_PASSWORD }}
           COOKEY_UPLOAD_KEY_ALIAS: ${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}
           COOKEY_UPLOAD_KEY_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}
+          COOKEY_VERSION_CODE: ${{ steps.android_version.outputs.version_code }}
+          COOKEY_VERSION_NAME: ${{ steps.android_version.outputs.version_name }}
         run: ./gradlew --no-daemon bundleRelease
 
       - name: Upload signed Android artifact

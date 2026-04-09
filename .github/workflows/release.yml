@@ -38,6 +38,7 @@ jobs:
     outputs:
       build_version: ${{ steps.prepare.outputs.build_version }}
       publish_release: ${{ steps.prepare.outputs.publish_release }}
+      collect_release: ${{ steps.prepare.outputs.collect_release }}
       release_ios: ${{ steps.prepare.outputs.release_ios }}
       release_android: ${{ steps.prepare.outputs.release_android }}
       release_cli_packages: ${{ steps.prepare.outputs.release_cli_packages }}
@@ -69,6 +70,11 @@ jobs:
 
           echo "build_version=${VERSION}" >> "$GITHUB_OUTPUT"
           echo "publish_release=true" >> "$GITHUB_OUTPUT"
+          if [[ "${RELEASE_IOS}" == "true" || "${RELEASE_ANDROID}" == "true" || "${RELEASE_CLI_PACKAGES}" == "true" ]]; then
+            echo "collect_release=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "collect_release=false" >> "$GITHUB_OUTPUT"
+          fi
           echo "release_ios=${RELEASE_IOS}" >> "$GITHUB_OUTPUT"
           echo "release_android=${RELEASE_ANDROID}" >> "$GITHUB_OUTPUT"
           echo "release_cli_packages=${RELEASE_CLI_PACKAGES}" >> "$GITHUB_OUTPUT"
@@ -316,21 +322,7 @@ jobs:
           if-no-files-found: error
 
   collect_release:
-    if: >
-      (github.actor == 'Lakr233' || github.actor == 'eyhn') &&
-      always() &&
-      needs.prepare.outputs.publish_release == 'true' &&
-      (
-        needs.prepare.outputs.release_ios == 'true' ||
-        needs.prepare.outputs.release_android == 'true' ||
-        needs.prepare.outputs.release_cli_packages == 'true'
-      ) &&
-      (needs.prepare.outputs.release_ios != 'true' || needs.sign_notarize_macos.result == 'success') &&
-      (needs.prepare.outputs.release_android != 'true' || needs.build_android.result == 'success') &&
-      (
-        needs.prepare.outputs.release_cli_packages != 'true' ||
-        (needs.build_linux_x86_64.result == 'success' && needs.build_linux_aarch64.result == 'success')
-      )
+    if: (github.actor == 'Lakr233' || github.actor == 'eyhn') && always() && needs.prepare.outputs.collect_release == 'true'
     name: Collect and publish release
     runs-on: ubuntu-latest
     needs:
@@ -341,6 +333,27 @@ jobs:
       - sign_notarize_macos
     steps:
       - uses: actions/checkout@v4
+
+      - name: Validate enabled release jobs
+        run: |
+          set -euo pipefail
+
+          if [[ "${{ needs.prepare.outputs.release_ios }}" == "true" && "${{ needs.sign_notarize_macos.result }}" != "success" ]]; then
+            echo "iOS release lane did not complete successfully." >&2
+            exit 1
+          fi
+
+          if [[ "${{ needs.prepare.outputs.release_android }}" == "true" && "${{ needs.build_android.result }}" != "success" ]]; then
+            echo "Android release lane did not complete successfully." >&2
+            exit 1
+          fi
+
+          if [[ "${{ needs.prepare.outputs.release_cli_packages }}" == "true" ]]; then
+            if [[ "${{ needs.build_linux_x86_64.result }}" != "success" || "${{ needs.build_linux_aarch64.result }}" != "success" ]]; then
+              echo "CLI package release lanes did not complete successfully." >&2
+              exit 1
+            fi
+          fi
 
       - name: Download macOS artifact
         if: needs.prepare.outputs.release_ios == 'true'

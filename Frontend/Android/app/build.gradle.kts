@@ -23,6 +23,15 @@ val releaseStoreFile = signingValue("COOKEY_UPLOAD_STORE_FILE", "storeFile")
 val releaseStorePassword = signingValue("COOKEY_UPLOAD_STORE_PASSWORD", "storePassword")
 val releaseKeyAlias = signingValue("COOKEY_UPLOAD_KEY_ALIAS", "keyAlias")
 val releaseKeyPassword = signingValue("COOKEY_UPLOAD_KEY_PASSWORD", "keyPassword")
+// CI injects Play-derived values for release builds. Local defaults track the latest shipped bundle.
+val configuredVersionCode = providers.environmentVariable("COOKEY_VERSION_CODE").orNull
+    ?.toIntOrNull()
+    ?: providers.gradleProperty("cookeyVersionCode").orNull?.toIntOrNull()
+    ?: 2
+val configuredVersionName = providers.environmentVariable("COOKEY_VERSION_NAME").orNull
+    ?.takeIf { it.isNotBlank() }
+    ?: providers.gradleProperty("cookeyVersionName").orNull?.takeIf { it.isNotBlank() }
+    ?: "1.0.1"
 
 val hasReleaseSigning = listOf(
     releaseStoreFile,
@@ -54,8 +63,8 @@ android {
         applicationId = "wiki.qaq.cookey"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = configuredVersionCode
+        versionName = configuredVersionName
 
         buildConfigField("String", "DEFAULT_SERVER_ENDPOINT", "\"https://api.cookey.sh\"")
     }

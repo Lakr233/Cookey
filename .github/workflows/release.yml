@@ -8,12 +8,8 @@ on:
     inputs:
       version:
         description: Release tag (for example v1.2.3)
-        required: false
+        required: true
         type: string
-      publish_packages:
-        description: "Publish to npm and PyPI"
-        type: boolean
-        default: true
 
 concurrency:
   group: release-${{ github.ref }}
@@ -29,8 +25,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       build_version: ${{ steps.prepare.outputs.build_version }}
-      publish_release: ${{ steps.prepare.outputs.publish_release }}
-      publish_packages: ${{ steps.prepare.outputs.publish_packages }}
       artifact_name: ${{ steps.prepare.outputs.artifact_name }}
     steps:
       - name: Resolve build metadata
@@ -48,8 +42,6 @@ jobs:
           fi
 
           echo "build_version=${VERSION}" >> "$GITHUB_OUTPUT"
-          echo "publish_release=true" >> "$GITHUB_OUTPUT"
-          echo "publish_packages=${{ inputs.publish_packages || github.event_name == 'push' }}" >> "$GITHUB_OUTPUT"
           echo "artifact_name=cookey-${VERSION}-unsigned" >> "$GITHUB_OUTPUT"
 
   build_macos:
@@ -167,15 +159,26 @@ jobs:
           java-version: "17"
           cache: gradle
 
+      - name: Set up Python 3
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install zsh
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y zsh
+
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Validate Android signing secrets
+      - name: Validate Android release secrets
         env:
           ANDROID_UPLOAD_KEYSTORE_BASE64: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_BASE64 }}
           ANDROID_UPLOAD_STORE_PASSWORD: ${{ secrets.ANDROID_UPLOAD_STORE_PASSWORD }}
           ANDROID_UPLOAD_KEY_ALIAS: ${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}
           ANDROID_UPLOAD_KEY_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON_BASE64: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON_BASE64 }}
         run: |
           set -euo pipefail
           missing=()
@@ -183,7 +186,8 @@ jobs:
             ANDROID_UPLOAD_KEYSTORE_BASE64 \
             ANDROID_UPLOAD_STORE_PASSWORD \
             ANDROID_UPLOAD_KEY_ALIAS \
-            ANDROID_UPLOAD_KEY_PASSWORD
+            ANDROID_UPLOAD_KEY_PASSWORD \
+            GOOGLE_PLAY_SERVICE_ACCOUNT_JSON_BASE64
           do
             if [[ -z "${!name}" ]]; then
               missing+=("${name}")
@@ -205,19 +209,43 @@ jobs:
           printf '%s' "${ANDROID_UPLOAD_KEYSTORE_BASE64}" | base64 --decode > "${KEYSTORE_PATH}"
           echo "keystore_path=${KEYSTORE_PATH}" >> "$GITHUB_OUTPUT"
 
-      - name: Build signed Android App Bundle
+      - name: Resolve Android version metadata
+        id: android_version
+        env:
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON_BASE64: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON_BASE64 }}
+        run: |
+          set -euo pipefail
+          VERSION_NAME="${{ needs.prepare.outputs.build_version }}"
+          VERSION_NAME="${VERSION_NAME#v}"
+          zsh ../../Scripts/resolve-android-version.sh \
+            --package-name "wiki.qaq.cookey" \
+            --version-name "${VERSION_NAME}" \
+            --output-file "$GITHUB_OUTPUT"
+
+      - name: Build signed Android release artifacts
         env:
           COOKEY_UPLOAD_STORE_FILE: ${{ steps.android_signing.outputs.keystore_path }}
           COOKEY_UPLOAD_STORE_PASSWORD: ${{ secrets.ANDROID_UPLOAD_STORE_PASSWORD }}
           COOKEY_UPLOAD_KEY_ALIAS: ${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}
           COOKEY_UPLOAD_KEY_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}
-        run: ./gradlew --no-daemon bundleRelease
+          COOKEY_VERSION_CODE: ${{ steps.android_version.outputs.version_code }}
+          COOKEY_VERSION_NAME: ${{ steps.android_version.outputs.version_name }}
+        run: ./gradlew --no-daemon assembleRelease bundleRelease
+
+      - name: Stage Android release artifact files
+        run: |
+          set -euo pipefail
+          mkdir -p build/release-exports/android
+          cp app/build/outputs/apk/release/app-release.apk build/release-exports/android/cookey-android.apk
+          cp app/build/outputs/bundle/release/app-release.aab build/release-exports/android/cookey-android.aab
 
       - name: Upload signed Android artifact
         uses: actions/upload-artifact@v7.0.0
         with:
           name: cookey-${{ needs.prepare.outputs.build_version }}-android
-          path: Frontend/Android/app/build/outputs/bundle/release/app-release.aab
+          path: |
+            Frontend/Android/build/release-exports/android/cookey-android.apk
+            Frontend/Android/build/release-exports/android/cookey-android.aab
           if-no-files-found: error
 
   sign_notarize_macos:
@@ -270,7 +298,7 @@ jobs:
           if-no-files-found: error
 
   collect_release:
-    if: (github.actor == 'Lakr233' || github.actor == 'eyhn') && needs.prepare.outputs.publish_release == 'true'
+    if: github.actor == 'Lakr233' || github.actor == 'eyhn'
     name: Collect and publish release
     runs-on: ubuntu-latest
     needs:
@@ -313,13 +341,14 @@ jobs:
           cp "build/release-assets/macos/cookey-${{ needs.prepare.outputs.build_version }}-macOS-cli.zip" "build/release-assets/final/cookey-macOS.zip"
           cp "build/release-assets/linux-x86_64/cookey-${{ needs.prepare.outputs.build_version }}-linux-x86_64.zip" "build/release-assets/final/cookey-linux-x86_64.zip"
           cp "build/release-assets/linux-aarch64/cookey-${{ needs.prepare.outputs.build_version }}-linux-aarch64.zip" "build/release-assets/final/cookey-linux-aarch64.zip"
-          cp "build/release-assets/android/app-release.aab" "build/release-assets/final/cookey-android.aab"
+          cp "build/release-assets/android/cookey-android.apk" "build/release-assets/final/cookey-android.apk"
+          cp "build/release-assets/android/cookey-android.aab" "build/release-assets/final/cookey-android.aab"
           cp skills/website-login/SKILL.md build/release-assets/final/skills.md
           # IMPORTANT: These stable names must match the URLs in:
           #   Web/get-started.html, Web/llms.txt, skills.md
           (
             cd build/release-assets/final
-            sha256sum cookey-macOS.zip cookey-linux-x86_64.zip cookey-linux-aarch64.zip cookey-android.aab skills.md > checksums.txt
+            sha256sum cookey-macOS.zip cookey-linux-x86_64.zip cookey-linux-aarch64.zip cookey-android.apk cookey-android.aab skills.md > checksums.txt
           )
 
       - name: Publish GitHub release
@@ -327,13 +356,7 @@ jobs:
         with:
           tag_name: ${{ needs.prepare.outputs.build_version }}
           generate_release_notes: true
-          files: |
-            build/release-assets/final/cookey-macOS.zip
-            build/release-assets/final/cookey-linux-x86_64.zip
-            build/release-assets/final/cookey-linux-aarch64.zip
-            build/release-assets/final/cookey-android.aab
-            build/release-assets/final/skills.md
-            build/release-assets/final/checksums.txt
+          files: build/release-assets/final/*
 
   build_packages:
     if: github.actor == 'Lakr233' || github.actor == 'eyhn'
@@ -393,7 +416,7 @@ jobs:
           retention-days: 14
 
   publish_npm:
-    if: (github.actor == 'Lakr233' || github.actor == 'eyhn') && needs.prepare.outputs.publish_packages == 'true'
+    if: github.actor == 'Lakr233' || github.actor == 'eyhn'
     name: Publish npm packages
     needs: [prepare, build_packages]
     runs-on: ubuntu-latest
@@ -431,7 +454,7 @@ jobs:
         run: node ./scripts/publish-npm-packages.mjs --skip-build
 
   publish_pypi:
-    if: (github.actor == 'Lakr233' || github.actor == 'eyhn') && needs.prepare.outputs.publish_packages == 'true'
+    if: github.actor == 'Lakr233' || github.actor == 'eyhn'
     name: Publish PyPI package
     needs: [prepare, build_packages]
     runs-on: ubuntu-latest

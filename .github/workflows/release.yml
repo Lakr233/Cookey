@@ -248,6 +248,18 @@ jobs:
             Frontend/Android/build/release-exports/android/cookey-android.aab
           if-no-files-found: error
 
+      - name: Publish Android internal release to Google Play
+        env:
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON_BASE64: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON_BASE64 }}
+        run: |
+          set -euo pipefail
+          zsh ../../Scripts/publish-android-to-play.sh \
+            --package-name "wiki.qaq.cookey" \
+            --track "internal" \
+            --bundle-file "app/build/outputs/bundle/release/app-release.aab" \
+            --release-name "${{ steps.android_version.outputs.version_name }}" \
+            --version-code "${{ steps.android_version.outputs.version_code }}"
+
   sign_notarize_macos:
     if: github.actor == 'Lakr233' || github.actor == 'eyhn'
     name: Sign and notarize macOS CLI
@@ -348,7 +360,7 @@ jobs:
           #   Web/get-started.html, Web/llms.txt, skills.md
           (
             cd build/release-assets/final
-            sha256sum cookey-macOS.zip cookey-linux-x86_64.zip cookey-linux-aarch64.zip cookey-android.apk cookey-android.aab skills.md > checksums.txt
+            find . -maxdepth 1 -type f ! -name checksums.txt -print0 | sort -z | xargs -0 sha256sum > checksums.txt
           )
 
       - name: Publish GitHub release

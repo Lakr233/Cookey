@@ -94,6 +94,8 @@ jobs:
   ios-tests:
     name: iOS Tests (${{ matrix.shard.name }})
     runs-on: macos-26
+    env:
+      IOS_TEST_DESTINATION: platform=iOS Simulator,name=iPhone 17,OS=26.2
     strategy:
       fail-fast: false
       matrix:
@@ -141,25 +143,6 @@ jobs:
             -clonedSourcePackagesDirPath .spm \
             | xcbeautify
 
-      - name: Detect simulator destination
-        id: simulator
-        run: |
-          set -euo pipefail
-          SIMULATOR_ID="$(
-            xcodebuild \
-              -project Cookey.xcodeproj \
-              -scheme Cookey \
-              -showdestinations \
-            | awk -F'id:' '/platform:iOS Simulator/ {split($2, parts, ","); gsub(/ /, "", parts[1]); print parts[1]; exit}'
-          )"
-
-          if [[ -z "${SIMULATOR_ID}" ]]; then
-            echo "No iOS Simulator destination found." >&2
-            exit 1
-          fi
-
-          echo "destination=platform=iOS Simulator,id=${SIMULATOR_ID}" >> "$GITHUB_OUTPUT"
-
       - name: Run iOS tests with ad-hoc signing
         run: |
           set -o pipefail
@@ -167,7 +150,7 @@ jobs:
             -project Cookey.xcodeproj \
             -scheme Cookey \
             -configuration Debug \
-            -destination "${{ steps.simulator.outputs.destination }}" \
+            -destination "${IOS_TEST_DESTINATION}" \
             -clonedSourcePackagesDirPath .spm \
             -parallel-testing-enabled YES \
             AD_HOC_CODE_SIGNING_ALLOWED=YES \

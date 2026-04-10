@@ -91,4 +91,5 @@ CommandLineTool/cookey
 Server/cookey-server
 
 # Auto-generated build info
-Frontend/Apple/Cookey/DerivedSources/
+Frontend/Apple/Cookey/DerivedSources/*
+!Frontend/Apple/Cookey/DerivedSources/BuildInfo.swift

@@ -35,12 +35,12 @@ class HomeViewController: UIViewController {
         config.imagePlacement = .leading
         config.imagePadding = 6
         config.baseForegroundColor = .systemBlue
-        
+
         let titleAttr = AttributeContainer([
-            .font: UIFont.systemFont(ofSize: 14, weight: .medium)
+            .font: UIFont.systemFont(ofSize: 14, weight: .medium),
         ])
         config.attributedTitle = AttributedString(config.title!, attributes: titleAttr)
-        
+
         $0.configuration = config
         $0.addTarget(self, action: #selector(showHowToUseTapped), for: .touchUpInside)
     }
@@ -138,15 +138,15 @@ class HomeViewController: UIViewController {
         }
 
         let stack = UIStackView(arrangedSubviews: [
-            iconView, 
-            titleLabel, 
-            subtitleLabel, 
-            howToUseButton
+            iconView,
+            titleLabel,
+            subtitleLabel,
+            howToUseButton,
         ]).then {
             $0.axis = .vertical
             $0.alignment = .center
             $0.spacing = 16
-            
+
             $0.setCustomSpacing(24, after: iconView)
             $0.setCustomSpacing(12, after: titleLabel)
             $0.setCustomSpacing(8, after: subtitleLabel)

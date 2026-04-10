@@ -12,7 +12,7 @@ extension BrowserCaptureModel: WKUIDelegate {
         if navigationAction.targetFrame == nil {
             // If it's a regular target="_blank" link click without explicit popup dimensions,
             // just load it in the current webview instead of opening a drawer.
-            if navigationAction.navigationType == .linkActivated && windowFeatures.width == nil && windowFeatures.height == nil {
+            if navigationAction.navigationType == .linkActivated, windowFeatures.width == nil, windowFeatures.height == nil {
                 webView.load(navigationAction.request)
                 return nil
             }
@@ -125,7 +125,7 @@ extension BrowserCaptureModel: WKUIDelegate {
     }
 
     private func topViewController(for window: UIWindow?) -> UIViewController? {
-        guard let window = window else { return nil }
+        guard let window else { return nil }
         var topVC = window.rootViewController
         while let presented = topVC?.presentedViewController {
             topVC = presented

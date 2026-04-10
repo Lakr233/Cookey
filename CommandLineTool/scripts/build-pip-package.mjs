@@ -24,7 +24,10 @@ await writeFile(
 
 const pyprojectPath = path.join(packageOutDir, "pyproject.toml");
 const pyproject = await readFile(pyprojectPath, "utf8");
-await writeFile(pyprojectPath, pyproject.replace('version = "0.0.0-dev"', `version = "${version}"`));
+await writeFile(
+  pyprojectPath,
+  pyproject.replace('version = "0.0.0-dev"', `version = "${version}"`),
+);
 
 for (const target of targets) {
   const output = path.join(

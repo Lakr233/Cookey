@@ -244,7 +244,7 @@ final class SettingsViewController: StackScrollController {
                 BuildInfo.buildTime.isEmpty ? nil : BuildInfo.buildTime,
                 BuildInfo.commitID.isEmpty ? nil : String(BuildInfo.commitID.prefix(7)),
             ]
-            .compactMap { $0 }
+            .compactMap(\.self)
             .filter { !$0.isEmpty }
 
             $0.text = lines.joined(separator: "\n")

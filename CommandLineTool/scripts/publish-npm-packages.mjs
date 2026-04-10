@@ -17,11 +17,16 @@ const distRoot = path.join(cliRoot, "dist", "npm");
 const options = parseArgs(process.argv.slice(2));
 
 if (!options.skipBuild) {
-  run("node", [path.join(cliRoot, "scripts", "build-npm-package.mjs")], { cwd: cliRoot });
+  run("node", [path.join(cliRoot, "scripts", "build-npm-package.mjs")], {
+    cwd: cliRoot,
+  });
 }
 
 for (const target of targets) {
-  publishPackage(platformPackageName(target), path.join(distRoot, platformPackageDirName(target)));
+  publishPackage(
+    platformPackageName(target),
+    path.join(distRoot, platformPackageDirName(target)),
+  );
 }
 publishPackage(rootPackageName, path.join(distRoot, rootPackageDirName));
 

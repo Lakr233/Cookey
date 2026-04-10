@@ -1,57 +1,52 @@
 {
-  "fill" : {
-    "linear-gradient" : [
+  "fill": {
+    "linear-gradient": [
       "display-p3:0.89995,0.94737,0.96783,1.00000",
       "extended-gray:1.00000,1.00000"
     ],
-    "orientation" : {
-      "start" : {
-        "x" : 0.5,
-        "y" : 0
+    "orientation": {
+      "start": {
+        "x": 0.5,
+        "y": 0
       },
-      "stop" : {
-        "x" : 0.5,
-        "y" : 0.7
+      "stop": {
+        "x": 0.5,
+        "y": 0.7
       }
     }
   },
-  "groups" : [
+  "groups": [
     {
-      "layers" : [
+      "layers": [
         {
-          "glass" : true,
-          "image-name" : "ChatGPT Image Apr 8, 2026, 02_34_42 PM.png",
-          "name" : "ChatGPT Image Apr 8, 2026, 02_34_42 PM",
-          "position" : {
-            "scale" : 1,
-            "translation-in-points" : [
-              -50.5,
-              17.703125
-            ]
+          "glass": true,
+          "image-name": "ChatGPT Image Apr 8, 2026, 02_34_42 PM.png",
+          "name": "ChatGPT Image Apr 8, 2026, 02_34_42 PM",
+          "position": {
+            "scale": 1,
+            "translation-in-points": [-50.5, 17.703125]
           }
         },
         {
-          "blend-mode" : "plus-lighter",
-          "fill" : "none",
-          "image-name" : "ChatGPT Image Apr 8, 2026, 02_34_47 PM.png",
-          "name" : "ChatGPT Image Apr 8, 2026, 02_34_47 PM",
-          "opacity" : 0.2
+          "blend-mode": "plus-lighter",
+          "fill": "none",
+          "image-name": "ChatGPT Image Apr 8, 2026, 02_34_47 PM.png",
+          "name": "ChatGPT Image Apr 8, 2026, 02_34_47 PM",
+          "opacity": 0.2
         }
       ],
-      "shadow" : {
-        "kind" : "neutral",
-        "opacity" : 0.5
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.5
       },
-      "translucency" : {
-        "enabled" : true,
-        "value" : 0.5
+      "translucency": {
+        "enabled": true,
+        "value": 0.5
       }
     }
   ],
-  "supported-platforms" : {
-    "circles" : [
-      "watchOS"
-    ],
-    "squares" : "shared"
+  "supported-platforms": {
+    "circles": ["watchOS"],
+    "squares": "shared"
   }
 }

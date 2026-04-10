@@ -11,8 +11,8 @@ class WelcomePageViewController: UIViewController, UIScrollViewDelegate {
         let subtitle: String.LocalizationValue
         let icon: String?
         let color: UIColor?
-        var command: String? = nil
-        var features: [(icon: String, color: UIColor, title: String.LocalizationValue, subtitle: String.LocalizationValue)]? = nil
+        var command: String?
+        var features: [(icon: String, color: UIColor, title: String.LocalizationValue, subtitle: String.LocalizationValue)]?
     }
 
     private let pages: [Page] = [
@@ -24,7 +24,7 @@ class WelcomePageViewController: UIViewController, UIScrollViewDelegate {
             features: [
                 (icon: "lock.shield.fill", color: .systemGreen, title: "End-to-end Encrypted", subtitle: "Session data is encrypted on-device. The relay never sees plaintext."),
                 (icon: "key.fill", color: .systemBlue, title: "Zero Registration", subtitle: "No accounts or enrollment. The CLI generates its own key pair on first run."),
-                (icon: "terminal.fill", color: .systemPurple, title: "Built for Automation", subtitle: "Outputs Playwright-compatible JSON. Pipe into any browser automation tool.")
+                (icon: "terminal.fill", color: .systemPurple, title: "Built for Automation", subtitle: "Outputs Playwright-compatible JSON. Pipe into any browser automation tool."),
             ]
         ),
         Page(
@@ -45,7 +45,7 @@ class WelcomePageViewController: UIViewController, UIScrollViewDelegate {
             subtitle: "Use this app to scan the code, log in normally, and securely deliver the session back to your AI.",
             icon: "qrcode.viewfinder",
             color: .accent
-        )
+        ),
     ]
 
     private let scrollView = UIScrollView().then {
@@ -73,7 +73,7 @@ class WelcomePageViewController: UIViewController, UIScrollViewDelegate {
         $0.addTarget(self, action: #selector(handleAction), for: .touchUpInside)
     }
 
-    init(config: Configuration = .default, onComplete: (() -> Void)? = nil) {
+    init(config _: Configuration = .default, onComplete: (() -> Void)? = nil) {
         // the original parameter `config` is ignored but kept for compatibility
         self.onComplete = onComplete
         super.init(nibName: nil, bundle: nil)
@@ -93,11 +93,11 @@ class WelcomePageViewController: UIViewController, UIScrollViewDelegate {
         view.backgroundColor = .systemBackground
         setupLayout()
         setupPages()
-        
+
         pageControl.numberOfPages = pages.count
         pageControl.addTarget(self, action: #selector(pageChanged), for: .valueChanged)
     }
-    
+
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: false)
@@ -136,9 +136,9 @@ class WelcomePageViewController: UIViewController, UIScrollViewDelegate {
     private func setupPages() {
         for page in pages {
             let pageView = UIView()
-            
+
             let contentContainer = UIView()
-            
+
             let titleLabel = UILabel().then {
                 $0.text = String(localized: page.title)
                 $0.font = .systemFont(ofSize: 28, weight: .bold)
@@ -157,7 +157,7 @@ class WelcomePageViewController: UIViewController, UIScrollViewDelegate {
             pageView.addSubview(contentContainer)
             contentContainer.addSubview(titleLabel)
             contentContainer.addSubview(subtitleLabel)
-            
+
             if let icon = page.icon, let color = page.color {
                 let iconContainer = UIView().then {
                     $0.backgroundColor = color.withAlphaComponent(0.15)
@@ -171,10 +171,10 @@ class WelcomePageViewController: UIViewController, UIScrollViewDelegate {
                     $0.contentMode = .scaleAspectFit
                     $0.preferredSymbolConfiguration = .init(pointSize: 64, weight: .light)
                 }
-                
+
                 contentContainer.addSubview(iconContainer)
                 iconContainer.addSubview(iconView)
-                
+
                 iconContainer.snp.makeConstraints { make in
                     make.top.centerX.equalToSuperview()
                     make.width.height.equalTo(120)
@@ -184,7 +184,7 @@ class WelcomePageViewController: UIViewController, UIScrollViewDelegate {
                     make.center.equalToSuperview()
                     make.width.height.equalTo(64)
                 }
-                
+
                 titleLabel.snp.makeConstraints { make in
                     make.top.equalTo(iconContainer.snp.bottom).offset(40)
                     make.leading.trailing.equalToSuperview()
@@ -199,66 +199,66 @@ class WelcomePageViewController: UIViewController, UIScrollViewDelegate {
             subtitleLabel.snp.makeConstraints { make in
                 make.top.equalTo(titleLabel.snp.bottom).offset(16)
                 make.leading.trailing.equalToSuperview()
-                if page.command == nil && page.features == nil {
+                if page.command == nil, page.features == nil {
                     make.bottom.equalToSuperview()
                 }
             }
-            
+
             if let features = page.features {
                 let featuresStack = UIStackView().then {
                     $0.axis = .vertical
                     $0.spacing = 28
                     $0.alignment = .fill
                 }
-                
+
                 for feature in features {
                     let row = UIView()
-                    
+
                     let fIcon = UIImageView(image: UIImage(systemName: feature.icon)).then {
                         $0.tintColor = feature.color
                         $0.contentMode = .scaleAspectFit
                         $0.preferredSymbolConfiguration = .init(pointSize: 28, weight: .regular)
                     }
-                    
+
                     let textStack = UIStackView().then {
                         $0.axis = .vertical
                         $0.spacing = 4
                         $0.alignment = .leading
                     }
-                    
+
                     let fTitle = UILabel().then {
                         $0.text = String(localized: feature.title)
                         $0.font = .systemFont(ofSize: 17, weight: .semibold)
                     }
-                    
+
                     let fSub = UILabel().then {
                         $0.text = String(localized: feature.subtitle)
                         $0.font = .systemFont(ofSize: 15)
                         $0.textColor = .secondaryLabel
                         $0.numberOfLines = 0
                     }
-                    
+
                     textStack.addArrangedSubview(fTitle)
                     textStack.addArrangedSubview(fSub)
-                    
+
                     row.addSubview(fIcon)
                     row.addSubview(textStack)
-                    
+
                     fIcon.snp.makeConstraints { make in
                         make.leading.equalToSuperview()
                         make.top.equalToSuperview()
                         make.width.height.equalTo(36)
                     }
-                    
+
                     textStack.snp.makeConstraints { make in
                         make.leading.equalTo(fIcon.snp.trailing).offset(16)
                         make.trailing.equalToSuperview()
                         make.top.bottom.equalToSuperview()
                     }
-                    
+
                     featuresStack.addArrangedSubview(row)
                 }
-                
+
                 contentContainer.addSubview(featuresStack)
                 featuresStack.snp.makeConstraints { make in
                     make.top.equalTo(subtitleLabel.snp.bottom).offset(40)
@@ -266,11 +266,11 @@ class WelcomePageViewController: UIViewController, UIScrollViewDelegate {
                     make.bottom.equalToSuperview()
                 }
             }
-            
+
             if let command = page.command {
                 let cmdButton = CommandButton(command: command)
                 contentContainer.addSubview(cmdButton)
-                
+
                 cmdButton.snp.makeConstraints { make in
                     make.top.equalTo(subtitleLabel.snp.bottom).offset(32)
                     make.leading.trailing.equalToSuperview()
@@ -300,7 +300,7 @@ class WelcomePageViewController: UIViewController, UIScrollViewDelegate {
             dismiss(animated: true)
         }
     }
-    
+
     @objc private func pageChanged() {
         let offset = CGPoint(x: view.bounds.width * CGFloat(pageControl.currentPage), y: 0)
         scrollView.setContentOffset(offset, animated: true)
@@ -309,7 +309,7 @@ class WelcomePageViewController: UIViewController, UIScrollViewDelegate {
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         let page = round(scrollView.contentOffset.x / view.bounds.width)
         pageControl.currentPage = Int(page)
-        
+
         let isLastPage = pageControl.currentPage == pages.count - 1
         UIView.animate(withDuration: 0.2) {
             self.actionButton.configuration?.title = isLastPage ? String(localized: "Get Started") : String(localized: "Next")
@@ -323,12 +323,12 @@ extension WelcomePageViewController {
         onComplete: (() -> Void)? = nil
     ) -> UIViewController {
         let controller = WelcomePageViewController(config: config, onComplete: onComplete)
-        
+
         let navigationController = UINavigationController(rootViewController: controller)
         navigationController.navigationBar.prefersLargeTitles = false
         navigationController.view.backgroundColor = .systemBackground
         navigationController.isModalInPresentation = true
-        
+
         #if targetEnvironment(macCatalyst)
             return AlertBaseController(
                 rootViewController: navigationController,
@@ -346,92 +346,93 @@ extension WelcomePageViewController {
 
 private class CommandButton: UIControl {
     private let commandText: String
-    
+
     private let copyIcon = UIImageView().then {
         $0.image = UIImage(systemName: "square.on.square")
         $0.tintColor = .secondaryLabel
         $0.contentMode = .scaleAspectFit
         $0.preferredSymbolConfiguration = .init(pointSize: 14, weight: .medium)
     }
-    
+
     init(command: String) {
-        self.commandText = command
+        commandText = command
         super.init(frame: .zero)
-        
+
         backgroundColor = .secondarySystemBackground
         layer.cornerRadius = 16
         layer.cornerCurve = .continuous
         layer.borderWidth = 1
         layer.borderColor = UIColor.separator.withAlphaComponent(0.2).cgColor
-        
+
         let promptLabel = UILabel().then {
             $0.text = "$"
             $0.font = .monospacedSystemFont(ofSize: 12, weight: .bold)
             $0.textColor = .tertiaryLabel
         }
-        
+
         let commandLabel = UILabel().then {
             $0.text = command
             $0.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
             $0.textColor = .label
             $0.numberOfLines = 0
         }
-        
+
         addSubview(promptLabel)
         addSubview(commandLabel)
         addSubview(copyIcon)
-        
+
         promptLabel.snp.makeConstraints { make in
             make.leading.equalToSuperview().inset(16)
             make.top.equalToSuperview().inset(16)
         }
-        
+
         commandLabel.snp.makeConstraints { make in
             make.leading.equalTo(promptLabel.snp.trailing).offset(12)
             make.trailing.equalTo(copyIcon.snp.leading).offset(-16)
             make.top.bottom.equalToSuperview().inset(16)
         }
-        
+
         copyIcon.snp.makeConstraints { make in
             make.trailing.equalToSuperview().inset(16)
             make.centerY.equalToSuperview()
             make.width.height.equalTo(18)
         }
-        
+
         addTarget(self, action: #selector(touchDown), for: .touchDown)
         addTarget(self, action: #selector(touchUp), for: [.touchUpInside, .touchUpOutside, .touchCancel])
         addTarget(self, action: #selector(copyCommandTapped), for: .touchUpInside)
     }
-    
-    required init?(coder: NSCoder) {
+
+    @available(*, unavailable)
+    required init?(coder _: NSCoder) {
         fatalError()
     }
-    
+
     @objc private func touchDown() {
         UIView.animate(withDuration: 0.1) {
             self.alpha = 0.7
             self.transform = CGAffineTransform(scaleX: 0.98, y: 0.98)
         }
     }
-    
+
     @objc private func touchUp() {
         UIView.animate(withDuration: 0.2) {
             self.alpha = 1.0
             self.transform = .identity
         }
     }
-    
+
     @objc private func copyCommandTapped() {
         UIPasteboard.general.string = commandText
-        
+
         let notification = UINotificationFeedbackGenerator()
         notification.notificationOccurred(.success)
-        
+
         UIView.transition(with: copyIcon, duration: 0.2, options: .transitionCrossDissolve, animations: {
             self.copyIcon.image = UIImage(systemName: "checkmark")
             self.copyIcon.tintColor = .systemGreen
         })
-        
+
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
             UIView.transition(with: self.copyIcon, duration: 0.2, options: .transitionCrossDissolve, animations: {
                 self.copyIcon.image = UIImage(systemName: "square.on.square")

@@ -33,7 +33,7 @@ final class BrowserCaptureModel: NSObject, ObservableObject, WKScriptMessageHand
     init(targetURL: URL, deviceID: String) {
         self.targetURL = targetURL
         self.deviceID = deviceID
-        self.pageDomain = targetURL.host() ?? ""
+        pageDomain = targetURL.host() ?? ""
         Logger.browser.infoFile("Creating browser capture model for target \(targetURL.host() ?? targetURL.absoluteString) without seed session")
 
         let configuration = WKWebViewConfiguration()
@@ -63,7 +63,7 @@ final class BrowserCaptureModel: NSObject, ObservableObject, WKScriptMessageHand
     init(targetURL: URL, deviceID: String, seedSession: CapturedSession) {
         self.targetURL = targetURL
         self.deviceID = deviceID
-        self.pageDomain = targetURL.host() ?? ""
+        pageDomain = targetURL.host() ?? ""
         Logger.browser.infoFile("Creating browser capture model for target \(targetURL.host() ?? targetURL.absoluteString) with seed session cookies=\(seedSession.cookies.count) origins=\(seedSession.origins.count)")
 
         let configuration = WKWebViewConfiguration()

@@ -92,7 +92,7 @@ When **you** start or refresh a Cookey request for the user, paste the required 
 - Always include the **pair key** as plain text.
 - Always include the **CLI fingerprint / verification string** when the CLI prints it.
 - Always include the CLI-provided **`jump_link`** as a clickable HTTPS link.
-- If you render the QR code using `--qr` or `--json --qr`, **always** wrap the ASCII QR code in a ```text ... ``` code block to prevent Markdown from destroying the line breaks. If using `--json`, the QR code is in the `qr_text` field with `\n` characters.
+- If you render the QR code using `--qr` or `--json --qr`, **always** wrap the ASCII QR code in a `text ... ` code block to prevent Markdown from destroying the line breaks. If using `--json`, the QR code is in the `qr_text` field with `\n` characters.
 - Do not rely on a bare `cookey://` deep link as the primary user action; many chat surfaces will not expose it as a tappable link.
 - The CLI-provided `jump_link` is **not** enough by itself; still include the pair key and fingerprint alongside it.
 - If using `--json`, copy `pair_key`, `cli_public_key_fingerprint`, `jump_link`, and `qr_text` from the JSON output exactly.
@@ -369,7 +369,7 @@ cookey request status --latest --json
 cookey session export --latest --out storageState.json
 ```
 
-*(Tip: When testing the login flow, avoid stateless domains like `example.com` which will yield an empty session. Use a real site like `github.com/login` or `x.com/login` to verify cookies and localStorage are captured correctly.)*
+_(Tip: When testing the login flow, avoid stateless domains like `example.com` which will yield an empty session. Use a real site like `github.com/login` or `x.com/login` to verify cookies and localStorage are captured correctly.)_
 
 Playwright usage:
 

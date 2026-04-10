@@ -25,9 +25,14 @@ for (const target of targets) {
   const output = path.join(releaseDir, asset);
   buildBinary({ cliRoot, output, target, version });
 
-  const hash = createHash("sha256").update(await readFile(output)).digest("hex");
+  const hash = createHash("sha256")
+    .update(await readFile(output))
+    .digest("hex");
   checksums.push(`${hash}  ${asset}`);
 }
 
-await writeFile(path.join(releaseDir, "SHASUMS256.txt"), `${checksums.join("\n")}\n`);
+await writeFile(
+  path.join(releaseDir, "SHASUMS256.txt"),
+  `${checksums.join("\n")}\n`,
+);
 console.log(`Built cookey release artifacts in ${releaseDir}`);

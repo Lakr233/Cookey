@@ -85,6 +85,9 @@ async function buildPlatformPackage(target) {
     "",
   ].join("\n");
 
-  await writeFile(path.join(outDir, "package.json"), `${JSON.stringify(pkg, null, 2)}\n`);
+  await writeFile(
+    path.join(outDir, "package.json"),
+    `${JSON.stringify(pkg, null, 2)}\n`,
+  );
   await writeFile(path.join(outDir, "README.md"), readme);
 }

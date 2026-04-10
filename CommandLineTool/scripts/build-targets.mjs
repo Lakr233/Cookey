@@ -7,10 +7,34 @@ export const rootPackageName = `${packageScope}/cli`;
 export const rootPackageDirName = "cli";
 
 export const targets = [
-  { goos: "darwin", goarch: "amd64", platform: "darwin", arch: "x64", exe: false },
-  { goos: "darwin", goarch: "arm64", platform: "darwin", arch: "arm64", exe: false },
-  { goos: "linux", goarch: "amd64", platform: "linux", arch: "x64", exe: false },
-  { goos: "linux", goarch: "arm64", platform: "linux", arch: "arm64", exe: false },
+  {
+    goos: "darwin",
+    goarch: "amd64",
+    platform: "darwin",
+    arch: "x64",
+    exe: false,
+  },
+  {
+    goos: "darwin",
+    goarch: "arm64",
+    platform: "darwin",
+    arch: "arm64",
+    exe: false,
+  },
+  {
+    goos: "linux",
+    goarch: "amd64",
+    platform: "linux",
+    arch: "x64",
+    exe: false,
+  },
+  {
+    goos: "linux",
+    goarch: "arm64",
+    platform: "linux",
+    arch: "arm64",
+    exe: false,
+  },
 ];
 
 export function formatTarget(target) {
@@ -34,7 +58,10 @@ export function platformPackageName(target) {
 }
 
 export async function readVersion(cliRoot) {
-  const source = await readFile(path.join(cliRoot, "internal", "cli", "version.go"), "utf8");
+  const source = await readFile(
+    path.join(cliRoot, "internal", "cli", "version.go"),
+    "utf8",
+  );
   const match = source.match(/Version = "([^"]+)"/);
   if (!match) {
     throw new Error("Unable to read CLI version from internal/cli/version.go");

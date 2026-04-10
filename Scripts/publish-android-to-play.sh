@@ -91,9 +91,9 @@ import pathlib
 import subprocess
 import tempfile
 import time
-import urllib.error
 import urllib.parse
 import urllib.request
+import urllib.error
 
 
 def b64url(data: bytes) -> bytes:
@@ -145,6 +145,19 @@ def build_token(service_account: dict) -> str:
         return json.loads(response.read())["access_token"]
 
 
+class ApiHttpError(RuntimeError):
+    def __init__(self, method: str, url: str, status_code: int, reason: str, body: str):
+        message = f"{method} {url} failed: {status_code} {reason}"
+        if body.strip():
+            message = f"{message}\n{body}"
+        super().__init__(message)
+        self.method = method
+        self.url = url
+        self.status_code = status_code
+        self.reason = reason
+        self.body = body
+
+
 def api_json(token: str, method: str, url: str, data=None, content_type: str = "application/json"):
     payload = data
     if data is not None and isinstance(data, (dict, list)):
@@ -158,9 +171,13 @@ def api_json(token: str, method: str, url: str, data=None, content_type: str = "
             "Content-Type": content_type,
         },
     )
-    with urllib.request.urlopen(request) as response:
-        body = response.read()
-        return json.loads(body) if body else None
+    try:
+        with urllib.request.urlopen(request) as response:
+            body = response.read()
+            return json.loads(body) if body else None
+    except urllib.error.HTTPError as exc:
+        body = exc.read().decode("utf-8", errors="replace")
+        raise ApiHttpError(method, url, exc.code, exc.reason, body) from exc
 
 
 service_account = json.loads(pathlib.Path(os.environ["SERVICE_ACCOUNT_JSON"]).read_text())
@@ -218,9 +235,8 @@ try:
             data=track_payload,
         )
         release_status = "completed"
-    except urllib.error.HTTPError as exc:
-        error_body = exc.read().decode("utf-8", errors="replace")
-        if "Only releases with status draft may be created on draft app" not in error_body:
+    except ApiHttpError as exc:
+        if "Only releases with status draft may be created on draft app" not in exc.body:
             raise
         track_payload["releases"][0]["status"] = "draft"
         api_json(
@@ -231,11 +247,21 @@ try:
         )
         release_status = "draft"
 
-    api_json(
-        token,
-        "POST",
-        f"https://androidpublisher.googleapis.com/androidpublisher/v3/applications/{package_name}/edits/{edit['id']}:commit",
-    )
+    commit_url = f"https://androidpublisher.googleapis.com/androidpublisher/v3/applications/{package_name}/edits/{edit['id']}:commit"
+    try:
+        api_json(
+            token,
+            "POST",
+            commit_url,
+        )
+    except ApiHttpError as exc:
+        if exc.status_code != 400 or "changesNotSentForReview" not in exc.body:
+            raise
+        api_json(
+            token,
+            "POST",
+            f"{commit_url}?changesNotSentForReview=true",
+        )
 finally:
     try:
         api_json(

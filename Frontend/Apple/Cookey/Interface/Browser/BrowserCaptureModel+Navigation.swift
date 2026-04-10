@@ -18,6 +18,7 @@ extension BrowserCaptureModel: WKNavigationDelegate {
 
     func webView(_ webView: WKWebView, didFinish _: WKNavigation!) {
         pageTitle = webView.title ?? "Cookey"
+        pageDomain = webView.url?.host ?? ""
         if !initialLoadComplete {
             initialLoadComplete = true
         }

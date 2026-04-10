@@ -23,6 +23,7 @@ final class BrowserCaptureModel: NSObject, ObservableObject, WKScriptMessageHand
     @Published var errorMessage: String?
     @Published var isTransferring = false
     @Published var pageTitle = ""
+    @Published var pageDomain = ""
     @Published var passkeyAlertPresented = false
     @Published var initialLoadComplete = false
 
@@ -32,6 +33,7 @@ final class BrowserCaptureModel: NSObject, ObservableObject, WKScriptMessageHand
     init(targetURL: URL, deviceID: String) {
         self.targetURL = targetURL
         self.deviceID = deviceID
+        self.pageDomain = targetURL.host() ?? ""
         Logger.browser.infoFile("Creating browser capture model for target \(targetURL.host() ?? targetURL.absoluteString) without seed session")
 
         let configuration = WKWebViewConfiguration()
@@ -47,6 +49,7 @@ final class BrowserCaptureModel: NSObject, ObservableObject, WKScriptMessageHand
 
         webView = WKWebView(frame: .zero, configuration: configuration)
         webView.underPageBackgroundColor = .systemBackground
+        webView.allowsBackForwardNavigationGestures = true
         if #available(macOS 13.3, iOS 16.4, tvOS 16.4, *) {
             webView.isInspectable = true
         }
@@ -60,6 +63,7 @@ final class BrowserCaptureModel: NSObject, ObservableObject, WKScriptMessageHand
     init(targetURL: URL, deviceID: String, seedSession: CapturedSession) {
         self.targetURL = targetURL
         self.deviceID = deviceID
+        self.pageDomain = targetURL.host() ?? ""
         Logger.browser.infoFile("Creating browser capture model for target \(targetURL.host() ?? targetURL.absoluteString) with seed session cookies=\(seedSession.cookies.count) origins=\(seedSession.origins.count)")
 
         let configuration = WKWebViewConfiguration()
@@ -84,6 +88,7 @@ final class BrowserCaptureModel: NSObject, ObservableObject, WKScriptMessageHand
 
         webView = WKWebView(frame: .zero, configuration: configuration)
         webView.underPageBackgroundColor = .systemBackground
+        webView.allowsBackForwardNavigationGestures = true
         if #available(macOS 13.3, iOS 16.4, tvOS 16.4, *) {
             webView.isInspectable = true
         }

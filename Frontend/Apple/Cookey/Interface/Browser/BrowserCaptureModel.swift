@@ -46,7 +46,6 @@ final class BrowserCaptureModel: NSObject, ObservableObject, WKScriptMessageHand
         configuration.preferences.javaScriptCanOpenWindowsAutomatically = true
 
         Self.installPasskeyIntercept(on: configuration.userContentController)
-        Self.installViewportOverride(on: configuration.userContentController)
 
         webView = WKWebView(frame: .zero, configuration: configuration)
         webView.underPageBackgroundColor = .systemBackground
@@ -86,7 +85,6 @@ final class BrowserCaptureModel: NSObject, ObservableObject, WKScriptMessageHand
         }
 
         Self.installPasskeyIntercept(on: configuration.userContentController)
-        Self.installViewportOverride(on: configuration.userContentController)
 
         webView = WKWebView(frame: .zero, configuration: configuration)
         webView.underPageBackgroundColor = .systemBackground
@@ -281,44 +279,6 @@ final class BrowserCaptureModel: NSObject, ObservableObject, WKScriptMessageHand
     }
 
     // MARK: - Passkey Intercept
-
-    private static let viewportOverrideScript = """
-    (function() {
-        function fixViewport() {
-            var meta = document.querySelector('meta[name="viewport"]');
-            if (meta && meta.content.match(/viewport-fit=cover/i)) {
-                meta.content = meta.content.replace(/viewport-fit=cover/gi, 'viewport-fit=auto');
-            }
-        }
-        fixViewport();
-        var observer = new MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
-                if (mutation.type === 'childList') {
-                    for (var i = 0; i < mutation.addedNodes.length; i++) {
-                        var node = mutation.addedNodes[i];
-                        if (node.tagName === 'META' && node.name === 'viewport') {
-                            fixViewport();
-                        }
-                    }
-                } else if (mutation.type === 'attributes' && mutation.target.tagName === 'META' && mutation.target.name === 'viewport') {
-                    fixViewport();
-                }
-            });
-        });
-        if (document.documentElement) {
-            observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['content'] });
-        }
-    })();
-    """
-
-    private static func installViewportOverride(on controller: WKUserContentController) {
-        let script = WKUserScript(
-            source: viewportOverrideScript,
-            injectionTime: .atDocumentEnd,
-            forMainFrameOnly: true
-        )
-        controller.addUserScript(script)
-    }
 
     private static let passkeyMessageHandler = "passkeyInterceptHandler"
 

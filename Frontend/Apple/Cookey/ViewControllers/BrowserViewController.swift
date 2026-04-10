@@ -20,6 +20,24 @@ class BrowserViewController: UIViewController {
 
     private let activityIndicator = UIActivityIndicatorView(style: .medium)
 
+    private let titleLabel = UILabel().then {
+        $0.font = .systemFont(ofSize: 17, weight: .semibold)
+        $0.textAlignment = .center
+        $0.lineBreakMode = .byTruncatingTail
+    }
+
+    private let subtitleLabel = UILabel().then {
+        $0.font = .systemFont(ofSize: 12)
+        $0.textColor = .secondaryLabel
+        $0.textAlignment = .center
+        $0.lineBreakMode = .byTruncatingTail
+    }
+
+    private lazy var titleStackView = UIStackView(arrangedSubviews: [titleLabel, subtitleLabel]).then {
+        $0.axis = .vertical
+        $0.alignment = .center
+    }
+
     init(deepLink: DeepLink, sessionModel: SessionUploadModel) {
         self.deepLink = deepLink
         self.sessionModel = sessionModel
@@ -44,6 +62,12 @@ class BrowserViewController: UIViewController {
         edgesForExtendedLayout = .all
         extendedLayoutIncludesOpaqueBars = true
 
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithDefaultBackground()
+        navigationItem.standardAppearance = appearance
+        navigationItem.scrollEdgeAppearance = appearance
+        navigationItem.compactAppearance = appearance
+
         browser.webView.alpha = 0
         view.addSubview(browser.webView)
         browser.webView.snp.makeConstraints { $0.edges.equalTo(view) }
@@ -65,6 +89,7 @@ class BrowserViewController: UIViewController {
             action: #selector(backTapped)
         )
         navigationItem.rightBarButtonItem = sendButton
+        navigationItem.titleView = titleStackView
         title = String(localized: "Browser")
 
         bindModel()
@@ -95,10 +120,13 @@ class BrowserViewController: UIViewController {
             }
             .store(in: &cancellables)
 
-        browser.$pageTitle
+        Publishers.CombineLatest(browser.$pageTitle, browser.$pageDomain)
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] pageTitle in
+            .sink { [weak self] pageTitle, pageDomain in
                 self?.title = pageTitle.isEmpty ? String(localized: "Browser") : pageTitle
+                self?.titleLabel.text = pageTitle.isEmpty ? String(localized: "Browser") : pageTitle
+                self?.subtitleLabel.text = pageDomain
+                self?.subtitleLabel.isHidden = pageDomain.isEmpty
             }
             .store(in: &cancellables)
 

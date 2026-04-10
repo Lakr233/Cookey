@@ -23,6 +23,7 @@ final class BrowserCaptureModel: NSObject, ObservableObject, WKScriptMessageHand
     @Published var errorMessage: String?
     @Published var isTransferring = false
     @Published var pageTitle = ""
+    @Published var pageDomain = ""
     @Published var passkeyAlertPresented = false
     @Published var initialLoadComplete = false
 
@@ -32,6 +33,7 @@ final class BrowserCaptureModel: NSObject, ObservableObject, WKScriptMessageHand
     init(targetURL: URL, deviceID: String) {
         self.targetURL = targetURL
         self.deviceID = deviceID
+        self.pageDomain = targetURL.host() ?? ""
         Logger.browser.infoFile("Creating browser capture model for target \(targetURL.host() ?? targetURL.absoluteString) without seed session")
 
         let configuration = WKWebViewConfiguration()
@@ -44,9 +46,11 @@ final class BrowserCaptureModel: NSObject, ObservableObject, WKScriptMessageHand
         configuration.preferences.javaScriptCanOpenWindowsAutomatically = true
 
         Self.installPasskeyIntercept(on: configuration.userContentController)
+        Self.installViewportOverride(on: configuration.userContentController)
 
         webView = WKWebView(frame: .zero, configuration: configuration)
         webView.underPageBackgroundColor = .systemBackground
+        webView.allowsBackForwardNavigationGestures = true
         if #available(macOS 13.3, iOS 16.4, tvOS 16.4, *) {
             webView.isInspectable = true
         }
@@ -60,6 +64,7 @@ final class BrowserCaptureModel: NSObject, ObservableObject, WKScriptMessageHand
     init(targetURL: URL, deviceID: String, seedSession: CapturedSession) {
         self.targetURL = targetURL
         self.deviceID = deviceID
+        self.pageDomain = targetURL.host() ?? ""
         Logger.browser.infoFile("Creating browser capture model for target \(targetURL.host() ?? targetURL.absoluteString) with seed session cookies=\(seedSession.cookies.count) origins=\(seedSession.origins.count)")
 
         let configuration = WKWebViewConfiguration()
@@ -81,9 +86,11 @@ final class BrowserCaptureModel: NSObject, ObservableObject, WKScriptMessageHand
         }
 
         Self.installPasskeyIntercept(on: configuration.userContentController)
+        Self.installViewportOverride(on: configuration.userContentController)
 
         webView = WKWebView(frame: .zero, configuration: configuration)
         webView.underPageBackgroundColor = .systemBackground
+        webView.allowsBackForwardNavigationGestures = true
         if #available(macOS 13.3, iOS 16.4, tvOS 16.4, *) {
             webView.isInspectable = true
         }
@@ -274,6 +281,44 @@ final class BrowserCaptureModel: NSObject, ObservableObject, WKScriptMessageHand
     }
 
     // MARK: - Passkey Intercept
+
+    private static let viewportOverrideScript = """
+    (function() {
+        function fixViewport() {
+            var meta = document.querySelector('meta[name="viewport"]');
+            if (meta && meta.content.match(/viewport-fit=cover/i)) {
+                meta.content = meta.content.replace(/viewport-fit=cover/gi, 'viewport-fit=auto');
+            }
+        }
+        fixViewport();
+        var observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'childList') {
+                    for (var i = 0; i < mutation.addedNodes.length; i++) {
+                        var node = mutation.addedNodes[i];
+                        if (node.tagName === 'META' && node.name === 'viewport') {
+                            fixViewport();
+                        }
+                    }
+                } else if (mutation.type === 'attributes' && mutation.target.tagName === 'META' && mutation.target.name === 'viewport') {
+                    fixViewport();
+                }
+            });
+        });
+        if (document.documentElement) {
+            observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['content'] });
+        }
+    })();
+    """
+
+    private static func installViewportOverride(on controller: WKUserContentController) {
+        let script = WKUserScript(
+            source: viewportOverrideScript,
+            injectionTime: .atDocumentEnd,
+            forMainFrameOnly: true
+        )
+        controller.addUserScript(script)
+    }
 
     private static let passkeyMessageHandler = "passkeyInterceptHandler"
 

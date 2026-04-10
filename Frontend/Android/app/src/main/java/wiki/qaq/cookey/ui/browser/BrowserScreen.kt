@@ -1,17 +1,22 @@
 package wiki.qaq.cookey.ui.browser
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.net.Uri
+import android.view.ViewGroup
 import android.webkit.*
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -21,38 +26,10 @@ import wiki.qaq.cookey.model.CapturedCookie
 import wiki.qaq.cookey.model.CapturedOrigin
 import wiki.qaq.cookey.model.CapturedSession
 import wiki.qaq.cookey.model.CapturedStorageItem
+import wiki.qaq.cookey.service.LogCategory
+import wiki.qaq.cookey.service.LogStore
 import java.util.LinkedHashMap
 import kotlin.coroutines.resume
-
-// JavaScript to detect WebAuthn/Passkey requests
-private const val PASSKEY_DETECTION_JS = """
-(function() {
-    if (window.__cookeyPasskeyDetected) return;
-    window.__cookeyPasskeyDetected = true;
-
-    var origCreate = navigator.credentials && navigator.credentials.create;
-    var origGet = navigator.credentials && navigator.credentials.get;
-
-    if (origCreate) {
-        navigator.credentials.create = function(options) {
-            if (options && options.publicKey) {
-                window.__cookeyPasskeyRequested = true;
-                if (window.CookeyBridge) window.CookeyBridge.onPasskeyDetected();
-            }
-            return origCreate.apply(this, arguments);
-        };
-    }
-    if (origGet) {
-        navigator.credentials.get = function(options) {
-            if (options && options.publicKey) {
-                window.__cookeyPasskeyRequested = true;
-                if (window.CookeyBridge) window.CookeyBridge.onPasskeyDetected();
-            }
-            return origGet.apply(this, arguments);
-        };
-    }
-})();
-"""
 
 private const val HISTORY_BACK_GUARD_JS = """
 (function() {
@@ -97,33 +74,233 @@ private const val HISTORY_BACK_GUARD_JS = """
 fun BrowserScreen(
     targetURL: String,
     seedSession: CapturedSession?,
-    userAgent: String,
     onSendSession: (List<CapturedCookie>, List<CapturedOrigin>) -> Unit,
     onBack: () -> Unit
 ) {
     var webView by remember { mutableStateOf<WebView?>(null) }
+    var isRefreshing by remember { mutableStateOf(false) }
     var pageTitle by remember { mutableStateOf("Browser") }
+    var pageDomain by remember(targetURL) { mutableStateOf(extractPageDomain(targetURL)) }
+    var popupWebView by remember { mutableStateOf<WebView?>(null) }
+    var popupPageTitle by remember { mutableStateOf("Browser") }
+    var popupPageDomain by remember { mutableStateOf("") }
     var showSendDialog by remember { mutableStateOf(false) }
-    var showPasskeyAlert by remember { mutableStateOf(false) }
     val visitedUrls = remember { mutableStateListOf<String>() }
     val scope = rememberCoroutineScope()
-    val handleBackNavigation = {
-        val currentWebView = webView
-        if (currentWebView?.canGoBack() == true) {
-            currentWebView.goBack()
-        } else {
-            onBack()
+    val popupSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    fun updateMainPageState(title: String, domain: String) {
+        pageTitle = title
+        pageDomain = domain
+    }
+
+    fun updatePopupPageState(title: String, domain: String) {
+        popupPageTitle = title
+        popupPageDomain = domain
+    }
+
+    fun closePopup() {
+        val currentPopupWebView = popupWebView ?: return
+        popupWebView = null
+        popupPageTitle = "Browser"
+        popupPageDomain = ""
+        disposeWebView(currentPopupWebView)
+    }
+
+    fun configureBrowserWebView(
+        candidate: WebView,
+        setRefreshing: (Boolean) -> Unit,
+        updatePageState: (String, String) -> Unit,
+        onPopupCreated: (WebView, String) -> Unit
+    ) {
+        candidate.settings.apply {
+            javaScriptEnabled = true
+            domStorageEnabled = true
+            setSupportMultipleWindows(true)
+            javaScriptCanOpenWindowsAutomatically = true
+        }
+
+        candidate.webViewClient = object : WebViewClient() {
+            override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
+                super.onPageStarted(view, url, favicon)
+                LogStore.info(
+                    candidate.context,
+                    LogCategory.BROWSER,
+                    "page_started url=${url.orEmpty()}"
+                )
+            }
+
+            override fun onPageFinished(view: WebView?, url: String?) {
+                super.onPageFinished(view, url)
+                setRefreshing(false)
+                updatePageState(view?.title ?: "Browser", extractPageDomain(url ?: view?.url?.toString()))
+                recordVisitedUrl(url ?: view?.url?.toString(), visitedUrls)
+                LogStore.info(
+                    candidate.context,
+                    LogCategory.BROWSER,
+                    "page_finished title=${view?.title.orEmpty()} url=${url ?: view?.url.orEmpty()}"
+                )
+                view?.evaluateJavascript(HISTORY_BACK_GUARD_JS, null)
+            }
+
+            override fun shouldOverrideUrlLoading(
+                view: WebView?,
+                request: WebResourceRequest?
+            ): Boolean {
+                return false
+            }
+
+            override fun onReceivedError(
+                view: WebView?,
+                request: WebResourceRequest?,
+                error: WebResourceError?
+            ) {
+                super.onReceivedError(view, request, error)
+                if (request == null || request.isForMainFrame) {
+                    setRefreshing(false)
+                }
+                LogStore.error(
+                    candidate.context,
+                    LogCategory.BROWSER,
+                    "resource_error url=${request?.url} code=${error?.errorCode} desc=${error?.description}"
+                )
+            }
+
+            override fun onReceivedHttpError(
+                view: WebView?,
+                request: WebResourceRequest?,
+                errorResponse: WebResourceResponse?
+            ) {
+                super.onReceivedHttpError(view, request, errorResponse)
+                if (request?.isForMainFrame == true) {
+                    setRefreshing(false)
+                }
+                LogStore.error(
+                    candidate.context,
+                    LogCategory.BROWSER,
+                    "http_error url=${request?.url} status=${errorResponse?.statusCode} reason=${errorResponse?.reasonPhrase.orEmpty()}"
+                )
+            }
+        }
+
+        candidate.webChromeClient = object : WebChromeClient() {
+            override fun onConsoleMessage(consoleMessage: ConsoleMessage): Boolean {
+                LogStore.debug(
+                    candidate.context,
+                    LogCategory.BROWSER,
+                    "console level=${consoleMessage.messageLevel()} source=${consoleMessage.sourceId()}:${consoleMessage.lineNumber()} message=${consoleMessage.message()}"
+                )
+                return true
+            }
+
+            override fun onCreateWindow(
+                view: WebView?,
+                isDialog: Boolean,
+                isUserGesture: Boolean,
+                resultMsg: android.os.Message?
+            ): Boolean {
+                val requestedUrl = view?.hitTestResult?.extra?.takeIf { it.isNotBlank() }
+                val isNestedPopupRequest = view != null && view == popupWebView
+                LogStore.debug(
+                    candidate.context,
+                    LogCategory.BROWSER,
+                    "create_window isDialog=$isDialog isUserGesture=$isUserGesture requestedUrl=${requestedUrl.orEmpty()} nested=$isNestedPopupRequest"
+                )
+
+                // A popup should never spawn another popup. Keep follow-up window.open calls
+                // inside the existing popup instead of creating a nested drawer.
+                if (isNestedPopupRequest) {
+                    if (requestedUrl != null) {
+                        view.loadUrl(requestedUrl)
+                    }
+                    return false
+                }
+
+                // Regular target=_blank link clicks should stay in the current webview.
+                // Reserve a separate popup webview for real window.open / OAuth flows that
+                // need window.opener to remain intact.
+                if (isUserGesture && !isDialog && requestedUrl != null) {
+                    view.loadUrl(requestedUrl)
+                    return false
+                }
+
+                val popup = WebView(candidate.context)
+                configureBrowserWebView(
+                    candidate = popup,
+                    setRefreshing = {},
+                    updatePageState = ::updatePopupPageState,
+                    onPopupCreated = onPopupCreated
+                )
+
+                val initialDomain = extractPageDomain(view?.hitTestResult?.extra)
+                updatePopupPageState("Browser", initialDomain)
+                onPopupCreated(popup, initialDomain)
+
+                val transport = resultMsg?.obj as? WebView.WebViewTransport
+                transport?.webView = popup
+                resultMsg?.sendToTarget()
+                return true
+            }
+
+            override fun onCloseWindow(window: WebView?) {
+                LogStore.debug(
+                    candidate.context,
+                    LogCategory.BROWSER,
+                    "close_window url=${window?.url.orEmpty()}"
+                )
+                if (window != null && window == popupWebView) {
+                    closePopup()
+                } else if (window != null) {
+                    disposeWebView(window)
+                }
+            }
+
+            override fun onJsAlert(
+                view: WebView?,
+                url: String?,
+                message: String?,
+                result: JsResult?
+            ): Boolean {
+                return false
+            }
         }
     }
 
-    BackHandler(onBack = handleBackNavigation)
+    fun handleBackNavigation() {
+        val currentPopupWebView = popupWebView
+        when {
+            currentPopupWebView?.canGoBack() == true -> currentPopupWebView.goBack()
+            currentPopupWebView != null -> closePopup()
+            webView?.canGoBack() == true -> webView?.goBack()
+            else -> onBack()
+        }
+    }
+
+    BackHandler(onBack = ::handleBackNavigation)
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(pageTitle, maxLines = 1) },
+                title = {
+                    Column {
+                        Text(
+                            text = pageTitle,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        if (pageDomain.isNotEmpty()) {
+                            Text(
+                                text = pageDomain,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = ::handleBackNavigation) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
                     }
                 },
@@ -137,85 +314,18 @@ fun BrowserScreen(
     ) { padding ->
         AndroidView(
             factory = { context ->
-                WebView(context).apply {
-                    settings.apply {
-                        javaScriptEnabled = true
-                        domStorageEnabled = true
-                        userAgentString = settings.userAgentString.replace(
-                            Regex("\\bChrome/[\\S]+"),
-                            userAgent
-                        )
-                        setSupportMultipleWindows(true)
-                        javaScriptCanOpenWindowsAutomatically = true
-                    }
-
-                    // Add JavaScript bridge for passkey detection
-                    addJavascriptInterface(object {
-                        @JavascriptInterface
-                        fun onPasskeyDetected() {
-                            showPasskeyAlert = true
+                val candidate = WebView(context).apply {
+                    configureBrowserWebView(
+                        candidate = this,
+                        setRefreshing = { isRefreshing = it },
+                        updatePageState = ::updateMainPageState,
+                        onPopupCreated = { popup, _ ->
+                            popupWebView?.let(::disposeWebView)
+                            popupWebView = popup
                         }
-                    }, "CookeyBridge")
+                    )
 
-                    // Use non-persistent cookie store equivalent:
-                    // Clear cookies before loading
                     CookieManager.getInstance().removeAllCookies(null)
-
-                    webViewClient = object : WebViewClient() {
-                        override fun onPageFinished(view: WebView?, url: String?) {
-                            super.onPageFinished(view, url)
-                            pageTitle = view?.title ?: "Browser"
-                            recordVisitedUrl(url ?: view?.url?.toString(), visitedUrls)
-                            // Inject passkey detection script
-                            view?.evaluateJavascript(PASSKEY_DETECTION_JS, null)
-                            // Keep in-page JavaScript back navigation inside WebView history.
-                            view?.evaluateJavascript(HISTORY_BACK_GUARD_JS, null)
-                        }
-
-                        override fun shouldOverrideUrlLoading(
-                            view: WebView?,
-                            request: WebResourceRequest?
-                        ): Boolean {
-                            // Keep all navigation in-app (prevent app switching for OAuth)
-                            return false
-                        }
-                    }
-
-                    webChromeClient = object : WebChromeClient() {
-                        override fun onCreateWindow(
-                            view: WebView?,
-                            isDialog: Boolean,
-                            isUserGesture: Boolean,
-                            resultMsg: android.os.Message?
-                        ): Boolean {
-                            // Handle window.open() for OAuth popups
-                            val transport = resultMsg?.obj as? WebView.WebViewTransport
-                            val newWebView = WebView(context).apply {
-                                settings.javaScriptEnabled = true
-                                settings.domStorageEnabled = true
-                            }
-                            transport?.webView = newWebView
-                            resultMsg?.sendToTarget()
-                            // Load popup content in the main webview
-                            newWebView.webViewClient = object : WebViewClient() {
-                                override fun shouldOverrideUrlLoading(
-                                    view: WebView?,
-                                    request: WebResourceRequest?
-                                ): Boolean {
-                                    view?.loadUrl(request?.url.toString())
-                                    return true
-                                }
-                            }
-                            return true
-                        }
-
-                        override fun onJsAlert(
-                            view: WebView?, url: String?, message: String?,
-                            result: JsResult?
-                        ): Boolean {
-                            return false // Use default handling
-                        }
-                    }
 
                     // Pre-populate seed session cookies if present
                     if (seedSession != null) {
@@ -250,13 +360,74 @@ fun BrowserScreen(
                     }
 
                     loadUrl(targetURL)
-                    webView = this
                 }
+                webView = candidate
+                createSwipeRefreshContainer(
+                    context = context,
+                    webView = candidate,
+                    isRefreshing = isRefreshing,
+                    onRefresh = {
+                        isRefreshing = true
+                        candidate.reload()
+                    }
+                )
+            },
+            update = { container ->
+                container.isRefreshing = isRefreshing
             },
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
         )
+    }
+
+    if (popupWebView != null) {
+        ModalBottomSheet(
+            onDismissRequest = ::closePopup,
+            sheetState = popupSheetState,
+            dragHandle = null,
+            contentWindowInsets = { WindowInsets(0, 0, 0, 0) }
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.92f)
+            ) {
+                TopAppBar(
+                    title = {
+                        Column {
+                            Text(
+                                text = popupPageTitle,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            if (popupPageDomain.isNotEmpty()) {
+                                Text(
+                                    text = popupPageDomain,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = ::closePopup) {
+                            Icon(Icons.Filled.Close, "Close")
+                        }
+                    }
+                )
+
+                key(popupWebView) {
+                    AndroidView(
+                        factory = { popupWebView ?: error("Popup WebView missing") },
+                        modifier = Modifier
+                            .fillMaxSize()
+                    )
+                }
+            }
+        }
     }
 
     if (showSendDialog) {
@@ -290,20 +461,6 @@ fun BrowserScreen(
         )
     }
 
-    if (showPasskeyAlert) {
-        AlertDialog(
-            onDismissRequest = { showPasskeyAlert = false },
-            title = { Text("Passkey Not Supported") },
-            text = {
-                Text("This website is requesting Passkey authentication, which is not supported in the in-app browser. Please use an alternative login method such as password or SMS verification.")
-            },
-            confirmButton = {
-                TextButton(onClick = { showPasskeyAlert = false }) {
-                    Text("OK")
-                }
-            }
-        )
-    }
 }
 
 private suspend fun captureSession(
@@ -455,4 +612,42 @@ private fun normalizeCookieLookupURL(raw: String?): String? {
             append(uri.query)
         }
     }
+}
+
+private fun extractPageDomain(raw: String?): String {
+    val value = raw?.trim().orEmpty()
+    if (value.isEmpty()) return ""
+    return runCatching {
+        Uri.parse(value).host.orEmpty()
+    }.getOrDefault("")
+}
+
+private fun createSwipeRefreshContainer(
+    context: Context,
+    webView: WebView,
+    isRefreshing: Boolean,
+    onRefresh: () -> Unit
+): SwipeRefreshLayout {
+    (webView.parent as? ViewGroup)?.removeView(webView)
+    return SwipeRefreshLayout(context).apply {
+        setOnChildScrollUpCallback { _, _ ->
+            webView.canScrollVertically(-1)
+        }
+        setOnRefreshListener(onRefresh)
+        this.isRefreshing = isRefreshing
+        addView(
+            webView,
+            ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+        )
+    }
+}
+
+private fun disposeWebView(webView: WebView) {
+    (webView.parent as? ViewGroup)?.removeView(webView)
+    webView.stopLoading()
+    webView.webChromeClient = null
+    webView.destroy()
 }

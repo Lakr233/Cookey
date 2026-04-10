@@ -36,7 +36,7 @@ fun CookeyApp(
 
     LaunchedEffect(initialDeepLink) {
         if (initialDeepLink != null) {
-            viewModel.handleDeepLink(context, initialDeepLink)
+            viewModel.handleIncomingDeepLink(context, initialDeepLink)
         }
     }
 
@@ -75,7 +75,6 @@ fun CookeyApp(
         is Phase.Browsing -> BrowserScreen(
             targetURL = currentPhase.deepLink.targetURL,
             seedSession = viewModel.seedSession,
-            userAgent = "FxiOS/149.2 Safari/604.1",
             onSendSession = { cookies, origins ->
                 viewModel.captureAndUpload(context, cookies, origins)
             },

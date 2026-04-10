@@ -227,6 +227,9 @@ func (c BrowserCookie) MarshalJSON() ([]byte, error) {
 	type alias BrowserCookie
 	normalized := alias(c)
 	normalized.SameSite = normalizeBrowserCookieSameSite(normalized.SameSite)
+	if strings.HasPrefix(normalized.Name, "__Host-") && strings.HasPrefix(normalized.Domain, ".") {
+		normalized.Domain = strings.TrimPrefix(normalized.Domain, ".")
+	}
 	return json.Marshal(normalized)
 }
 

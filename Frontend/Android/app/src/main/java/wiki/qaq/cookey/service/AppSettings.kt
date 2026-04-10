@@ -9,6 +9,7 @@ object AppSettings {
     private const val PREFS_NAME = "wiki.qaq.cookey.settings"
     private const val KEY_DEFAULT_SERVER = "default_server"
     private const val KEY_ALLOW_REFRESH = "allow_refresh_requests"
+    private const val KEY_APP_ICON = "app_icon"
     private const val KEY_WELCOME_SEEN_VERSION = "welcome_seen_version"
 
     private fun prefs(context: Context): SharedPreferences =
@@ -32,6 +33,13 @@ object AppSettings {
 
     fun setAllowRefresh(context: Context, allow: Boolean) =
         prefs(context).edit { putBoolean(KEY_ALLOW_REFRESH, allow) }
+
+    // App icon
+    fun getAppIcon(context: Context): String =
+        prefs(context).getString(KEY_APP_ICON, "") ?: ""
+
+    fun setAppIcon(context: Context, value: String) =
+        prefs(context).edit { putString(KEY_APP_ICON, value) }
 
     // Notification prompt state (per-server)
     fun hasPromptedNotification(context: Context, serverURL: String): Boolean =

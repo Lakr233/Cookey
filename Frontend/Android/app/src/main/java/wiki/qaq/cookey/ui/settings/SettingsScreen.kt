@@ -4,10 +4,13 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
@@ -16,11 +19,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import wiki.qaq.cookey.BuildConfig
 import wiki.qaq.cookey.R
+import wiki.qaq.cookey.service.AppIconSettings
 import wiki.qaq.cookey.service.AppSettings
 
 enum class SettingsSubScreen {
@@ -36,10 +42,13 @@ fun SettingsScreen(
     var subScreen by remember { mutableStateOf(SettingsSubScreen.NONE) }
     val context = LocalContext.current
     var defaultServer by remember { mutableStateOf(AppSettings.getDefaultServer(context)) }
+    var selectedAppIcon by remember { mutableStateOf(AppIconSettings.getSelection(context)) }
+    var showAppIconDialog by remember { mutableStateOf(false) }
     var showServerDialog by remember { mutableStateOf(false) }
 
     BackHandler {
         when {
+            showAppIconDialog -> showAppIconDialog = false
             showServerDialog -> showServerDialog = false
             subScreen != SettingsSubScreen.NONE -> subScreen = SettingsSubScreen.NONE
             else -> onBack()
@@ -113,6 +122,32 @@ fun SettingsScreen(
                     Icon(Icons.Default.Dns, contentDescription = null)
                 },
                 modifier = Modifier.clickable { showServerDialog = true }
+            )
+
+            ListItem(
+                headlineContent = { Text("App Icon") },
+                supportingContent = {
+                    Text("Current: ${selectedAppIcon.title}")
+                },
+                leadingContent = {
+                    Box(
+                        modifier = Modifier
+                            .size(24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Image(
+                            painter = painterResource(selectedAppIcon.iconRes),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(RoundedCornerShape(7.dp))
+                        )
+                    }
+                },
+                trailingContent = {
+                    Icon(Icons.Default.ChevronRight, null)
+                },
+                modifier = Modifier.clickable { showAppIconDialog = true }
             )
 
             // Trusted Public Keys
@@ -236,6 +271,62 @@ fun SettingsScreen(
                 defaultServer = ""
                 AppSettings.setDefaultServer(context, "")
                 showServerDialog = false
+            }
+        )
+    }
+
+    if (showAppIconDialog) {
+        AlertDialog(
+            onDismissRequest = { showAppIconDialog = false },
+            title = { Text("App Icon") },
+            text = {
+                Column {
+                    Text(
+                        text = "Choose the icon shown on your Home Screen.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    AppIconSettings.Option.entries.forEach { option ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable {
+                                    selectedAppIcon = AppIconSettings.applySelection(context, option)
+                                    showAppIconDialog = false
+                                }
+                                .padding(vertical = 10.dp)
+                        ) {
+                            Image(
+                                painter = painterResource(option.iconRes),
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                text = option.title,
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.weight(1f)
+                            )
+                            RadioButton(
+                                selected = option == selectedAppIcon,
+                                onClick = {
+                                    selectedAppIcon = AppIconSettings.applySelection(context, option)
+                                    showAppIconDialog = false
+                                }
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showAppIconDialog = false }) {
+                    Text("Cancel")
+                }
             }
         )
     }

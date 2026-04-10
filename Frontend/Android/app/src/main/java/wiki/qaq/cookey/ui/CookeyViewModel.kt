@@ -46,6 +46,7 @@ class CookeyViewModel : ViewModel() {
     private var currentDeepLink: DeepLink? = null
     private var currentClient: RelayClient? = null
     private var pendingKeyVerificationContext: Context? = null
+    private var lastHandledIncomingUri: String? = null
 
     private val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
     private val healthCheck = HealthCheckModel()
@@ -59,6 +60,7 @@ class CookeyViewModel : ViewModel() {
         currentDeepLink = null
         currentClient = null
         seedSession = null
+        lastHandledIncomingUri = null
         _showKeyVerification.value = false
         _keyVerificationResult.value = null
     }
@@ -102,6 +104,19 @@ class CookeyViewModel : ViewModel() {
                 LogStore.debug(context, LogCategory.NETWORK, "Health check passed")
             }
         }
+    }
+
+    fun handleIncomingDeepLink(context: Context, uriString: String) {
+        val normalized = uriString.trim()
+        if (normalized.isEmpty()) {
+            return
+        }
+        if (lastHandledIncomingUri == normalized) {
+            LogStore.debug(context, LogCategory.MODEL, "Ignoring duplicate deep link during activity recreation")
+            return
+        }
+        lastHandledIncomingUri = normalized
+        handleDeepLink(context, normalized)
     }
 
     fun handleDeepLink(context: Context, uriString: String) {

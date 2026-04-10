@@ -138,6 +138,7 @@ dependencies {
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
     implementation("androidx.webkit:webkit:1.12.1")
     implementation("androidx.datastore:datastore-preferences:1.1.1")
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
 
     // Accompanist permissions
     implementation("com.google.accompanist:accompanist-permissions:0.36.0")

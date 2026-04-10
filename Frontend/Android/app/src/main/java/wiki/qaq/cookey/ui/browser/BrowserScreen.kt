@@ -3,6 +3,7 @@ package wiki.qaq.cookey.ui.browser
 import android.annotation.SuppressLint
 import android.net.Uri
 import android.webkit.*
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -53,6 +54,43 @@ private const val PASSKEY_DETECTION_JS = """
 })();
 """
 
+private const val HISTORY_BACK_GUARD_JS = """
+(function() {
+    if (window.__cookeyHistoryBackGuardInstalled) return;
+    window.__cookeyHistoryBackGuardInstalled = true;
+
+    var originalBack = window.history && window.history.back ? window.history.back.bind(window.history) : null;
+    var originalGo = window.history && window.history.go ? window.history.go.bind(window.history) : null;
+
+    function canGoBack(steps) {
+        try {
+            return window.history.length > Math.abs(steps);
+        } catch (e) {
+            return false;
+        }
+    }
+
+    if (originalBack) {
+        window.history.back = function() {
+            if (canGoBack(-1)) {
+                return originalBack();
+            }
+        };
+    }
+
+    if (originalGo) {
+        window.history.go = function(delta) {
+            if (typeof delta !== 'number' || delta >= 0) {
+                return originalGo(delta);
+            }
+            if (canGoBack(delta)) {
+                return originalGo(delta);
+            }
+        };
+    }
+})();
+"""
+
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
@@ -69,6 +107,16 @@ fun BrowserScreen(
     var showPasskeyAlert by remember { mutableStateOf(false) }
     val visitedUrls = remember { mutableStateListOf<String>() }
     val scope = rememberCoroutineScope()
+    val handleBackNavigation = {
+        val currentWebView = webView
+        if (currentWebView?.canGoBack() == true) {
+            currentWebView.goBack()
+        } else {
+            onBack()
+        }
+    }
+
+    BackHandler(onBack = handleBackNavigation)
 
     Scaffold(
         topBar = {
@@ -120,6 +168,8 @@ fun BrowserScreen(
                             recordVisitedUrl(url ?: view?.url?.toString(), visitedUrls)
                             // Inject passkey detection script
                             view?.evaluateJavascript(PASSKEY_DETECTION_JS, null)
+                            // Keep in-page JavaScript back navigation inside WebView history.
+                            view?.evaluateJavascript(HISTORY_BACK_GUARD_JS, null)
                         }
 
                         override fun shouldOverrideUrlLoading(

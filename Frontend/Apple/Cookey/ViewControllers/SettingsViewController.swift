@@ -239,8 +239,15 @@ final class SettingsViewController: StackScrollController {
         }()
 
         let label = UILabel().then {
-            $0.text = [version, BuildInfo.buildTime, String(BuildInfo.commitID.prefix(7))]
-                .joined(separator: "\n")
+            let lines = [
+                version,
+                BuildInfo.buildTime.isEmpty ? nil : BuildInfo.buildTime,
+                BuildInfo.commitID.isEmpty ? nil : String(BuildInfo.commitID.prefix(7)),
+            ]
+            .compactMap { $0 }
+            .filter { !$0.isEmpty }
+
+            $0.text = lines.joined(separator: "\n")
             $0.font = .monospacedSystemFont(
                 ofSize: UIFont.preferredFont(forTextStyle: .caption2).pointSize,
                 weight: .regular

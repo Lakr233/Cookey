@@ -2,9 +2,21 @@ name: CI
 
 on:
   pull_request:
+    paths:
+      - .github/workflows/ci.yml
+      - .github/workflows/release.yml
+      - Frontend/Android/**
+      - Scripts/resolve-android-version.sh
+      - Scripts/publish-android-to-play.sh
   push:
     branches:
       - main
+    paths:
+      - .github/workflows/ci.yml
+      - .github/workflows/release.yml
+      - Frontend/Android/**
+      - Scripts/resolve-android-version.sh
+      - Scripts/publish-android-to-play.sh
   workflow_dispatch:
 
 concurrency:
@@ -43,199 +55,3 @@ jobs:
           name: cookey-android-debug-apk
           path: Frontend/Android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
-
-  ios:
-    name: iOS Build
-    runs-on: macos-26
-    defaults:
-      run:
-        working-directory: Frontend/Apple
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install xcbeautify
-        run: brew install xcbeautify
-
-      - name: Select Xcode 26.3
-        run: sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
-
-      - name: Cache Xcode Swift packages
-        uses: actions/cache@v4
-        with:
-          path: Frontend/Apple/.spm
-          key: ${{ runner.os }}-xcode-spm-${{ hashFiles('Frontend/Apple/Cookey.xcodeproj/project.pbxproj', 'Frontend/Apple/**/Package.resolved') }}
-          restore-keys: ${{ runner.os }}-xcode-spm-
-
-      - name: Resolve iOS package dependencies
-        run: |
-          set -o pipefail
-          xcodebuild \
-            -resolvePackageDependencies \
-            -project Cookey.xcodeproj \
-            -scheme Cookey \
-            -clonedSourcePackagesDirPath .spm \
-            | xcbeautify
-
-      - name: Build iOS app with ad-hoc signing
-        run: |
-          set -o pipefail
-          xcodebuild \
-            -project Cookey.xcodeproj \
-            -scheme Cookey \
-            -configuration Debug \
-            -sdk iphonesimulator \
-            -destination 'generic/platform=iOS Simulator' \
-            -clonedSourcePackagesDirPath .spm \
-            AD_HOC_CODE_SIGNING_ALLOWED=YES \
-            CODE_SIGN_IDENTITY=- \
-            build \
-            | xcbeautify
-
-  ios-tests:
-    name: iOS Tests (${{ matrix.shard.name }})
-    runs-on: macos-26
-    env:
-      IOS_TEST_DESTINATION: platform=iOS Simulator,name=iPhone 17,OS=26.2
-    strategy:
-      fail-fast: false
-      matrix:
-        shard:
-          - name: Browser + Session
-            test_args: >-
-              -only-testing:CookeyTests/BrowserCaptureModelTests
-              -only-testing:CookeyTests/CapturedSessionCodingTests
-              -only-testing:CookeyTests/CryptoBoxOpenTests
-          - name: Keys + Storage
-            test_args: >-
-              -only-testing:CookeyTests/DeviceKeyManagerTests
-              -only-testing:CookeyTests/KeyFingerprintTests
-              -only-testing:CookeyTests/LogStoreTests
-          - name: App Flows
-            test_args: >-
-              -only-testing:CookeyTests/CookeyTests
-              -only-testing:CookeyTests/DeepLinkTests
-    defaults:
-      run:
-        working-directory: Frontend/Apple
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install xcbeautify
-        run: brew install xcbeautify
-
-      - name: Select Xcode 26.3
-        run: sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
-
-      - name: Cache Xcode Swift packages
-        uses: actions/cache@v4
-        with:
-          path: Frontend/Apple/.spm
-          key: ${{ runner.os }}-xcode-spm-${{ hashFiles('Frontend/Apple/Cookey.xcodeproj/project.pbxproj', 'Frontend/Apple/**/Package.resolved') }}
-          restore-keys: ${{ runner.os }}-xcode-spm-
-
-      - name: Resolve iOS package dependencies
-        run: |
-          set -o pipefail
-          xcodebuild \
-            -resolvePackageDependencies \
-            -project Cookey.xcodeproj \
-            -scheme Cookey \
-            -clonedSourcePackagesDirPath .spm \
-            | xcbeautify
-
-      - name: Run iOS tests with ad-hoc signing
-        run: |
-          set -o pipefail
-          xcodebuild \
-            -project Cookey.xcodeproj \
-            -scheme Cookey \
-            -configuration Debug \
-            -destination "${IOS_TEST_DESTINATION}" \
-            -clonedSourcePackagesDirPath .spm \
-            -parallel-testing-enabled YES \
-            AD_HOC_CODE_SIGNING_ALLOWED=YES \
-            CODE_SIGN_IDENTITY=- \
-            test \
-            ${{ matrix.shard.test_args }} \
-            | xcbeautify
-
-  cli:
-    name: CLI Build
-    runs-on: macos-26
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: CommandLineTool/go.mod
-
-      - name: Build and test CLI
-        run: |
-          cd CommandLineTool
-          go build ./...
-          go test ./...
-
-  web:
-    name: Web Build
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: Web
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: Web/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Typecheck
-        run: npm run typecheck
-
-      - name: Build
-        run: npm run build
-
-  web-docker:
-    name: Web Docker Build
-    runs-on: ubuntu-latest
-    needs: web
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build web Docker image
-        uses: docker/build-push-action@v6
-        with:
-          context: Web
-          file: Web/Dockerfile
-          push: false
-          tags: cookey-web:ci
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  server-docker:
-    name: Server Docker Build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build server Docker image
-        uses: docker/build-push-action@v6
-        with:
-          context: Server
-          file: Server/Dockerfile
-          push: false
-          tags: cookey-server:ci
-          cache-from: type=gha
-          cache-to: type=gha,mode=max

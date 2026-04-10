@@ -340,7 +340,7 @@ class CookeyViewModel : ViewModel() {
                 val ciphertextB64 = Base64.encodeToString(sealResult.ciphertext, Base64.NO_WRAP)
 
                 val capturedAt = DateTimeFormatter.ISO_INSTANT
-                    .format(Instant.now().atOffset(ZoneOffset.UTC))
+                    .format(Instant.now().truncatedTo(java.time.temporal.ChronoUnit.SECONDS).atOffset(ZoneOffset.UTC))
 
                 val requestSecret = Base64.decode(
                     deepLink.requestSecret, Base64.URL_SAFE or Base64.NO_PADDING

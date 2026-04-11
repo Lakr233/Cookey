@@ -72,18 +72,22 @@ func (c *FCMClient) sendNotification(request *StoredRequest, serverURL string, t
 	payload := fcmV1Request{
 		Message: fcmMessage{
 			Token: token,
-			Notification: &fcmNotification{
-				Title: title,
-				Body:  body,
-			},
 			Data: map[string]string{
+				"body":         body,
 				"pair_key":     request.PairKey,
 				"server_url":   serverURL,
 				"request_type": request.RequestType,
 				"target_url":   request.TargetURL,
+				"title":        title,
 			},
 			Android: &fcmAndroid{
 				Priority: "high",
+				Notification: &fcmAndroidNotification{
+					ChannelID:   "cookey_refresh_alerts_v2",
+					ClickAction: "wiki.qaq.cookey.OPEN_REQUEST",
+					Body:        body,
+					Title:       title,
+				},
 			},
 		},
 	}
@@ -248,7 +252,15 @@ type fcmNotification struct {
 }
 
 type fcmAndroid struct {
-	Priority string `json:"priority,omitempty"`
+	Priority     string                  `json:"priority,omitempty"`
+	Notification *fcmAndroidNotification `json:"notification,omitempty"`
+}
+
+type fcmAndroidNotification struct {
+	Body        string `json:"body,omitempty"`
+	ChannelID   string `json:"channel_id,omitempty"`
+	ClickAction string `json:"click_action,omitempty"`
+	Title       string `json:"title,omitempty"`
 }
 
 type serviceAccountKey struct {

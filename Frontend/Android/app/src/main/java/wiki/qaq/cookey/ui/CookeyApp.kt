@@ -82,8 +82,8 @@ fun CookeyApp(
         )
         is Phase.NotificationConsent -> NotificationConsentScreen(
             serverHost = currentPhase.serverHost,
-            onEnable = { viewModel.onNotificationConsentDone(context) },
-            onSkip = { viewModel.onNotificationConsentDone(context) }
+            onEnable = { viewModel.onNotificationConsentEnabled(context) },
+            onSkip = { viewModel.onNotificationConsentSkipped(context) }
         )
         is Phase.Uploading -> UploadProgressScreen(isUploading = true)
         is Phase.Done -> UploadProgressScreen(

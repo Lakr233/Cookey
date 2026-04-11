@@ -8,6 +8,7 @@ import com.google.firebase.messaging.FirebaseMessaging
 import wiki.qaq.cookey.service.LogCategory
 import wiki.qaq.cookey.service.LogStore
 import wiki.qaq.cookey.service.AppIconSettings
+import wiki.qaq.cookey.service.CookeyMessagingService
 import wiki.qaq.cookey.service.PushTokenStore
 
 class CookeyApplication : Application() {
@@ -21,6 +22,7 @@ class CookeyApplication : Application() {
         }
 
         AppIconSettings.synchronizeSelection(this)
+        CookeyMessagingService.ensureNotificationChannel(this)
 
         // Initialize Firebase (safe even without google-services.json for development)
         try {

@@ -19,6 +19,11 @@ func main() {
 	log.Printf("   Public URL: %s", config.PublicURL)
 	log.Printf("   Default TTL: %ds", int(config.DefaultTTL.Seconds()))
 	log.Printf("   Max Payload: %dKB", config.MaxPayloadSize/1024)
+	if config.DisablePushRateLimit {
+		log.Println("   Push Rate Limit: disabled")
+	} else {
+		log.Println("   Push Rate Limit: enabled")
+	}
 	if config.APNSConfiguration != nil {
 		log.Println("   APNs: enabled")
 	} else {
@@ -32,7 +37,10 @@ func main() {
 
 	storage := NewStorage(config.MaxPayloadSize)
 	apnBlocker := NewAPNTokenBlocker()
-	pushLimiter := NewAPNPushRateLimiter()
+	var pushLimiter *APNPushRateLimiter
+	if !config.DisablePushRateLimit {
+		pushLimiter = NewAPNPushRateLimiter()
+	}
 
 	var apnsClient notificationSender
 	if config.APNSConfiguration != nil {
@@ -163,6 +171,11 @@ func parseConfig(args []string) ServerConfig {
 	if v := os.Getenv("COOKEY_PUBLIC_URL"); v != "" {
 		config.PublicURL = v
 	}
+	if v := os.Getenv("COOKEY_DISABLE_PUSH_RATE_LIMIT"); v != "" {
+		if disabled, err := strconv.ParseBool(v); err == nil {
+			config.DisablePushRateLimit = disabled
+		}
+	}
 
 	// Default public URL if not set
 	if config.PublicURL == "" {
@@ -242,6 +255,7 @@ Environment Variables:
   COOKEY_HOST             Bind host
   COOKEY_PORT             Bind port
   COOKEY_PUBLIC_URL       Public URL
+  COOKEY_DISABLE_PUSH_RATE_LIMIT Disable APNs/FCM push rate limiting for testing
   COOKEY_APNS_TEAM_ID     Apple Developer team ID
   COOKEY_APNS_KEY_ID      APNs key ID
   COOKEY_APNS_BUNDLE_ID   App bundle identifier

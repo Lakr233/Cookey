@@ -1,8 +1,12 @@
 package wiki.qaq.cookey.service
 
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.Context
+import android.media.AudioAttributes
+import android.media.RingtoneManager
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -17,8 +21,38 @@ class CookeyMessagingService : FirebaseMessagingService() {
 
     companion object {
         private const val TAG = "CookeyFCM"
-        private const val CHANNEL_ID = "cookey_refresh"
+        const val ACTION_OPEN_REQUEST = "wiki.qaq.cookey.OPEN_REQUEST"
+        private const val CHANNEL_ID = "cookey_refresh_alerts_v2"
+        private const val LEGACY_CHANNEL_ID = "cookey_refresh"
         private const val CHANNEL_NAME = "Login Requests"
+        private val VIBRATION_PATTERN = longArrayOf(0, 250, 150, 250)
+
+        fun ensureNotificationChannel(context: Context) {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+                return
+            }
+
+            val soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+            val audioAttributes = AudioAttributes.Builder()
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                .build()
+
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                CHANNEL_NAME,
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Notifications for login and session refresh requests"
+                enableLights(true)
+                enableVibration(true)
+                vibrationPattern = VIBRATION_PATTERN
+                setSound(soundUri, audioAttributes)
+            }
+            val manager = context.getSystemService(NotificationManager::class.java)
+            manager.deleteNotificationChannel(LEGACY_CHANNEL_ID)
+            manager.createNotificationChannel(channel)
+        }
     }
 
     override fun onNewToken(token: String) {
@@ -66,6 +100,7 @@ class CookeyMessagingService : FirebaseMessagingService() {
         ensureNotificationChannel()
 
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(deepLinkUri)).apply {
+            action = ACTION_OPEN_REQUEST
             setClass(applicationContext, MainActivity::class.java)
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
@@ -80,8 +115,12 @@ class CookeyMessagingService : FirebaseMessagingService() {
         // Determine notification text from data or defaults
         val requestType = message.data["request_type"] ?: "refresh"
         val targetUrl = message.data["target_url"] ?: ""
-        val title = if (requestType == "refresh") "Session Refresh Request" else "Login Request"
-        val body = if (targetUrl.isNotBlank()) {
+        val title = message.data["title"] ?: if (requestType == "refresh") {
+            "Session Refresh Request"
+        } else {
+            "Login Request"
+        }
+        val body = message.data["body"] ?: if (targetUrl.isNotBlank()) {
             "Tap to approve the request for $targetUrl"
         } else {
             "Tap to approve the request"
@@ -91,7 +130,12 @@ class CookeyMessagingService : FirebaseMessagingService() {
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle(title)
             .setContentText(body)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(body))
+            .setPriority(NotificationCompat.PRIORITY_MAX)
+            .setCategory(NotificationCompat.CATEGORY_REMINDER)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setDefaults(Notification.DEFAULT_ALL)
+            .setVibrate(VIBRATION_PATTERN)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
             .build()
@@ -101,16 +145,6 @@ class CookeyMessagingService : FirebaseMessagingService() {
     }
 
     private fun ensureNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                CHANNEL_ID,
-                CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_HIGH
-            ).apply {
-                description = "Notifications for login and session refresh requests"
-            }
-            val manager = getSystemService(NotificationManager::class.java)
-            manager.createNotificationChannel(channel)
-        }
+        ensureNotificationChannel(applicationContext)
     }
 }

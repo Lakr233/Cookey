@@ -5,10 +5,12 @@ import android.util.Base64
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.serialization.json.Json
 import wiki.qaq.cookey.BuildConfig
 import wiki.qaq.cookey.crypto.DeviceKeyManager
@@ -23,12 +25,18 @@ import wiki.qaq.cookey.service.*
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import kotlin.coroutines.resume
 
 class CookeyViewModel : ViewModel() {
 
     companion object {
         private const val TAG = "CookeyViewModel"
     }
+
+    private data class PendingUpload(
+        val cookies: List<CapturedCookie>,
+        val origins: List<CapturedOrigin>
+    )
 
     private val _phase = MutableStateFlow<Phase>(Phase.Idle)
     val phase = _phase.asStateFlow()
@@ -46,6 +54,7 @@ class CookeyViewModel : ViewModel() {
     private var currentDeepLink: DeepLink? = null
     private var currentClient: RelayClient? = null
     private var pendingKeyVerificationContext: Context? = null
+    private var pendingUpload: PendingUpload? = null
     private var lastHandledIncomingUri: String? = null
 
     private val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
@@ -60,6 +69,7 @@ class CookeyViewModel : ViewModel() {
         currentDeepLink = null
         currentClient = null
         seedSession = null
+        pendingUpload = null
         lastHandledIncomingUri = null
         _showKeyVerification.value = false
         _keyVerificationResult.value = null
@@ -307,6 +317,69 @@ class CookeyViewModel : ViewModel() {
             return
         }
 
+        if (shouldPromptForNotificationConsent(context, deepLink.serverURL)) {
+            pendingUpload = PendingUpload(cookies = cookies, origins = origins)
+            val host = deepLink.serverURL
+                .removePrefix("https://")
+                .removePrefix("http://")
+            LogStore.info(context, LogCategory.PUSH, "Prompting for notification consent before first session upload")
+            _phase.value = Phase.NotificationConsent(host)
+            return
+        }
+
+        uploadCapturedSession(context, deepLink, client, cookies, origins)
+    }
+
+    fun onNotificationConsentEnabled(context: Context) {
+        val serverURL = currentDeepLink?.serverURL
+        if (serverURL != null) {
+            AppSettings.setPromptedNotification(context, serverURL)
+        }
+        LogStore.info(context, LogCategory.PUSH, "Notification consent granted; resuming session upload")
+        resumePendingUpload(context)
+    }
+
+    fun onNotificationConsentSkipped(context: Context) {
+        val serverURL = currentDeepLink?.serverURL
+        if (serverURL != null) {
+            AppSettings.setPromptedNotification(context, serverURL)
+        }
+        LogStore.info(context, LogCategory.PUSH, "Notification consent skipped; continuing without device info")
+        resumePendingUpload(context)
+    }
+
+    private fun shouldPromptForNotificationConsent(context: Context, serverURL: String): Boolean {
+        return !AppSettings.getAllowRefresh(context) &&
+            !AppSettings.hasPromptedNotification(context, serverURL)
+    }
+
+    private fun resumePendingUpload(context: Context) {
+        val upload = pendingUpload ?: run {
+            _phase.value = Phase.Done
+            return
+        }
+        val deepLink = currentDeepLink ?: run {
+            pendingUpload = null
+            _phase.value = Phase.Failed("Session upload could not be resumed.")
+            return
+        }
+        val client = currentClient ?: run {
+            pendingUpload = null
+            _phase.value = Phase.Failed("Session upload could not be resumed.")
+            return
+        }
+
+        pendingUpload = null
+        uploadCapturedSession(context, deepLink, client, upload.cookies, upload.origins)
+    }
+
+    private fun uploadCapturedSession(
+        context: Context,
+        deepLink: DeepLink,
+        client: RelayClient,
+        cookies: List<CapturedCookie>,
+        origins: List<CapturedOrigin>
+    ) {
         _phase.value = Phase.Uploading
         LogStore.info(context, LogCategory.NETWORK, "Starting session upload for rid=${deepLink.rid}")
 
@@ -367,16 +440,7 @@ class CookeyViewModel : ViewModel() {
 
                 client.uploadSession(deepLink.rid, envelope)
                 LogStore.info(context, LogCategory.NETWORK, "Session uploaded successfully")
-
-                // Show notification consent if not yet prompted for this server
-                if (!AppSettings.getAllowRefresh(context) &&
-                    !AppSettings.hasPromptedNotification(context, deepLink.serverURL)) {
-                    val host = deepLink.serverURL
-                        .removePrefix("https://").removePrefix("http://")
-                    _phase.value = Phase.NotificationConsent(host)
-                } else {
-                    _phase.value = Phase.Done
-                }
+                _phase.value = Phase.Done
             } catch (e: RelayException) {
                 LogStore.error(context, LogCategory.NETWORK, "Upload server error: ${e.code} ${e.message}")
                 _phase.value = Phase.Failed(UploadError.ServerError(e.code, e.message ?: "Unknown").userMessage)
@@ -388,18 +452,13 @@ class CookeyViewModel : ViewModel() {
         }
     }
 
-    fun onNotificationConsentDone(context: Context) {
-        val serverURL = currentDeepLink?.serverURL
-        if (serverURL != null) {
-            AppSettings.setPromptedNotification(context, serverURL)
-        }
-        _phase.value = Phase.Done
-    }
-
-    private fun buildDeviceInfo(context: Context, deviceID: String): DeviceInfo? {
+    private suspend fun buildDeviceInfo(context: Context, deviceID: String): DeviceInfo? {
         if (!AppSettings.getAllowRefresh(context)) return null
 
-        val fcmToken = PushTokenStore.getToken(context) ?: return null
+        val fcmToken = ensureFCMToken(context) ?: run {
+            LogStore.info(context, LogCategory.PUSH, "Refresh is enabled, but no FCM token is available yet")
+            return null
+        }
         val publicKeyBase64 = try {
             Base64.encodeToString(DeviceKeyManager.publicKey(context), Base64.NO_WRAP)
         } catch (_: Exception) {
@@ -412,5 +471,35 @@ class CookeyViewModel : ViewModel() {
             fcmToken = fcmToken,
             publicKey = publicKeyBase64
         )
+    }
+
+    private suspend fun ensureFCMToken(context: Context): String? {
+        PushTokenStore.getToken(context)?.let { return it }
+
+        return try {
+            val token = suspendCancellableCoroutine<String?> { continuation ->
+                FirebaseMessaging.getInstance().token
+                    .addOnSuccessListener { value ->
+                        val tokenValue = value?.takeIf { it.isNotBlank() }
+                        if (continuation.isActive) {
+                            continuation.resume(tokenValue)
+                        }
+                    }
+                    .addOnFailureListener { error ->
+                        LogStore.error(context, LogCategory.PUSH, "FCM token fetch failed during upload: ${error.message}")
+                        if (continuation.isActive) {
+                            continuation.resume(null)
+                        }
+                    }
+            }
+
+            token?.also {
+                PushTokenStore.setToken(context, it)
+                LogStore.info(context, LogCategory.PUSH, "FCM token obtained on demand before session upload")
+            }
+        } catch (e: Exception) {
+            LogStore.error(context, LogCategory.PUSH, "FCM token fetch error during upload: ${e.message}")
+            null
+        }
     }
 }

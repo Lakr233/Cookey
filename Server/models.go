@@ -117,15 +117,15 @@ func NewRequestStatusResponse(r *StoredRequest) RequestStatusResponse {
 // PairKeyResponse is the JSON response for pair key resolution.
 // Fields ordered alphabetically by JSON tag.
 type PairKeyResponse struct {
-	CLIPublicKey string      `json:"cli_public_key"`
-	DeviceID     string      `json:"device_id"`
-	ExpiresAt    ISO8601Time `json:"expires_at"`
-	RID          string      `json:"rid"`
+	CLIPublicKey  string      `json:"cli_public_key"`
+	DeviceID      string      `json:"device_id"`
+	ExpiresAt     ISO8601Time `json:"expires_at"`
+	RID           string      `json:"rid"`
 	RequestProof  string      `json:"request_proof"`
 	RequestSecret string      `json:"request_secret"`
 	RequestType   string      `json:"request_type"`
-	ServerURL    string      `json:"server_url"`
-	TargetURL    string      `json:"target_url"`
+	ServerURL     string      `json:"server_url"`
+	TargetURL     string      `json:"target_url"`
 }
 
 const (
@@ -193,13 +193,14 @@ type ErrorPayload struct {
 
 // ServerConfig holds the server configuration.
 type ServerConfig struct {
-	Host              string
-	Port              int
-	DefaultTTL        time.Duration
-	MaxPayloadSize    int
-	PublicURL         string
-	APNSConfiguration *APNSConfiguration
-	FCMConfiguration  *FCMConfiguration
+	Host                 string
+	Port                 int
+	DefaultTTL           time.Duration
+	MaxPayloadSize       int
+	PublicURL            string
+	DisablePushRateLimit bool
+	APNSConfiguration    *APNSConfiguration
+	FCMConfiguration     *FCMConfiguration
 }
 
 // APNSConfiguration holds APNs push notification settings.

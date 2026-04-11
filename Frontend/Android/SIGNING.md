@@ -49,6 +49,7 @@ For GitHub Actions, the common pattern is:
 - Export the four variables above before calling Gradle.
 - Grant the Play service account access to the app and `Release apps to testing tracks` so CI can query the latest published `versionCode`.
 - The release workflow strips the leading `v` from the Git tag for `versionName`, then sets `versionCode` to `max(existing Play versionCodes) + 1`.
+- The release workflow uploads the signed `.aab` to the Google Play `internal` track after storing both the `.apk` and `.aab` in GitHub Actions artifacts.
 
 Example command to produce the Base64 payload locally:
 

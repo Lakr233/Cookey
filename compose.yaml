@@ -12,8 +12,10 @@ services:
       COOKEY_APNS_KEY_ID: ${COOKEY_APNS_KEY_ID}
       COOKEY_APNS_BUNDLE_ID: ${COOKEY_APNS_BUNDLE_ID}
       COOKEY_APNS_PRIVATE_KEY_PATH: /keys/apns.p8
+      COOKEY_FCM_SERVICE_ACCOUNT_PATH: /keys/fcm-service-account.json
     volumes:
       - ./Secret/apns.p8:/keys/apns.p8:ro
+      - ./Secret/fcm-service-account.json:/keys/fcm-service-account.json:ro
     ports:
       - "5800:5800"
     healthcheck:

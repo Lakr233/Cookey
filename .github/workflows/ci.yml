@@ -143,6 +143,83 @@ jobs:
             -clonedSourcePackagesDirPath .spm \
             | xcbeautify
 
+      - name: Resolve iOS test destination
+        run: |
+          set -euo pipefail
+
+          devices_file="$(mktemp)"
+          attempts=0
+          until xcrun simctl list --json devices available > "${devices_file}"; do
+            attempts=$((attempts + 1))
+            if [ "${attempts}" -ge 3 ]; then
+              echo "Failed to query available simulators after ${attempts} attempts." >&2
+              exit 1
+            fi
+            sleep 5
+          done
+
+          python3 - "${devices_file}" "${GITHUB_ENV}" <<'PY'
+          import json
+          import pathlib
+          import sys
+
+          devices_payload = json.loads(
+              pathlib.Path(sys.argv[1]).read_text(encoding="utf-8")
+          )
+          candidates = []
+
+          for runtime_id, devices in devices_payload.get("devices", {}).items():
+              if ".SimRuntime.iOS-" not in runtime_id:
+                  continue
+
+              version_label = runtime_id.rsplit("iOS-", 1)[-1].replace("-", ".")
+              version_tuple = tuple(
+                  int(part) for part in version_label.split(".") if part.isdigit()
+              )
+
+              for device in devices:
+                  if not device.get("isAvailable", False):
+                      continue
+
+                  name = device["name"].strip()
+                  device_id = device["udid"].strip()
+                  state = device.get("state", "Unknown").strip()
+                  is_iphone = name.startswith("iPhone")
+                  is_clone = name.startswith("Clone ")
+                  candidates.append(
+                      (
+                          0 if is_iphone else 1,
+                          0 if not is_clone else 1,
+                          tuple(-part for part in version_tuple),
+                          name.lower(),
+                          name,
+                          version_label,
+                          device_id,
+                          state,
+                      )
+                  )
+
+          if not candidates:
+              print(devices_payload, file=sys.stderr)
+              raise SystemExit(
+                  "No available iOS Simulator devices were returned by simctl."
+              )
+
+          candidates.sort()
+          _, _, _, _, name, os_version, device_id, state = candidates[0]
+          with pathlib.Path(sys.argv[2]).open("a", encoding="utf-8") as env_file:
+              env_file.write(f"IOS_TEST_DESTINATION=id={device_id}\n")
+              env_file.write(f"IOS_TEST_DEVICE_ID={device_id}\n")
+
+          print(
+              "Using iOS Simulator destination: "
+              f"{name} ({os_version}) [{device_id}] state={state}"
+          )
+          PY
+
+          xcrun simctl boot "${IOS_TEST_DEVICE_ID}" || true
+          xcrun simctl bootstatus "${IOS_TEST_DEVICE_ID}" -b
+
       - name: Run iOS tests with ad-hoc signing
         run: |
           set -o pipefail
@@ -151,6 +228,7 @@ jobs:
             -scheme Cookey \
             -configuration Debug \
             -destination "${IOS_TEST_DESTINATION}" \
+            -destination-timeout 180 \
             -clonedSourcePackagesDirPath .spm \
             -parallel-testing-enabled YES \
             AD_HOC_CODE_SIGNING_ALLOWED=YES \

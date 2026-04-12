@@ -3,10 +3,27 @@ import Combine
 import SnapKit
 import Then
 import UIKit
+import ColorfulX
 
 class HomeViewController: UIViewController {
     private let sessionModel: SessionUploadModel
 
+    private let backgroundView: AnimatedMulticolorGradientView = .init().then {
+        $0.setColors([
+            .accent.withAlphaComponent(0.1),
+            .accent.withAlphaComponent(0.2),
+            .clear.withAlphaComponent(0),
+            .clear.withAlphaComponent(0),
+            .clear.withAlphaComponent(0),
+            .clear.withAlphaComponent(0),
+            .clear.withAlphaComponent(0),
+            .clear.withAlphaComponent(0),
+        ], animated: true)
+        $0.frameLimit = 30
+        $0.noise = 0
+        $0.speed /= 2
+    }
+    
     private let iconView = UIImageView().then {
         $0.image = UIImage(systemName: "qrcode.viewfinder")
         $0.tintColor = .label
@@ -29,19 +46,13 @@ class HomeViewController: UIViewController {
     }
 
     private lazy var howToUseButton = UIButton(type: .system).then {
-        var config = UIButton.Configuration.plain()
-        config.title = String(localized: "How to use")
-        config.image = UIImage(systemName: "questionmark.circle.fill")
-        config.imagePlacement = .leading
-        config.imagePadding = 6
-        config.baseForegroundColor = .systemBlue
-
-        let titleAttr = AttributeContainer([
+        let title = String(localized: "How to use?")
+        let attributes: [NSAttributedString.Key: Any] = [
             .font: UIFont.systemFont(ofSize: 14, weight: .medium),
-        ])
-        config.attributedTitle = AttributedString(config.title!, attributes: titleAttr)
-
-        $0.configuration = config
+            .foregroundColor: UIColor.accent,
+            .underlineStyle: NSUnderlineStyle.single.rawValue,
+        ]
+        $0.setAttributedTitle(NSAttributedString(string: title, attributes: attributes), for: .normal)
         $0.addTarget(self, action: #selector(showHowToUseTapped), for: .touchUpInside)
     }
 
@@ -69,7 +80,6 @@ class HomeViewController: UIViewController {
         let attributes: [NSAttributedString.Key: Any] = [
             .font: UIFont.preferredFont(forTextStyle: .footnote),
             .foregroundColor: UIColor.secondaryLabel.withAlphaComponent(0.5),
-            .underlineStyle: NSUnderlineStyle.single.rawValue,
         ]
         $0.setAttributedTitle(NSAttributedString(string: title, attributes: attributes), for: .normal)
         $0.titleLabel?.adjustsFontForContentSizeCategory = true
@@ -131,6 +141,11 @@ class HomeViewController: UIViewController {
     }
 
     private func setupLayout() {
+        view.addSubview(backgroundView)
+        backgroundView.snp.makeConstraints { make in
+            make.edges.equalToSuperview().inset(-128)
+        }
+        
         let buttonStack = UIStackView(arrangedSubviews: [scanButton, typeButton]).then {
             $0.axis = .horizontal
             $0.distribution = .fillEqually

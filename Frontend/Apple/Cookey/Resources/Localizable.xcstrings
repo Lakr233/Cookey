@@ -1,2085 +1,2350 @@
 {
-  "sourceLanguage" : "en",
-  "strings" : {
-    "%@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@"
+  "sourceLanguage": "en",
+  "strings": {
+    "%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@"
           }
         }
       }
     },
-    "1. Install the Skill" : {
-
-    },
-    "2. Ask your Agent" : {
-
-    },
-    "3. Scan & Approve" : {
-
+    "A login request was received. Would you like to start?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A login request was received. Would you like to start?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "收到登录请求，要开始登录吗？"
+          }
+        }
+      }
     },
-    "A login request was received. Would you like to start?" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "收到登录请求，要开始登录吗？"
+    "All Categories": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All Categories"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "所有分类"
           }
         }
       }
     },
-    "All Categories" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "所有分类"
+    "Allow Refresh Requests": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow Refresh Requests"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "允许刷新请求"
+          }
         }
       }
     },
-    "Allow Refresh Requests" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Allow Refresh Requests"
+    "An unknown error occurred.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An unknown error occurred."
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "允许刷新请求"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "发生未知错误。"
           }
         }
       }
     },
-    "An unknown error occurred." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "An unknown error occurred."
+    "apn_login_body": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approve login for %@"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "发生未知错误。"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "批准 %@ 的登录请求"
           }
         }
       }
     },
-    "apn_login_body" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Approve login for %@"
+    "apn_login_title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cookey Login Request"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "批准 %@ 的登录请求"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cookey 登录请求"
           }
         }
       }
     },
-    "apn_login_title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cookey Login Request"
+    "apn_refresh_body": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Session refresh for %@"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cookey 登录请求"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "刷新 %@ 的会话状态"
           }
         }
       }
     },
-    "apn_refresh_body" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Session refresh for %@"
+    "apn_refresh_title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cookey Session Refresh"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "刷新 %@ 的会话状态"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cookey 会话刷新"
           }
         }
       }
     },
-    "apn_refresh_title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cookey Session Refresh"
+    "App Icon": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App Icon"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cookey 会话刷新"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App 图标"
           }
         }
       }
     },
-    "App Icon" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "App Icon"
+    "Appearance": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appearance"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "App 图标"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "外观"
           }
         }
       }
     },
-    "Appearance" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Appearance"
+    "Ask your Agent": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ask your Agent"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "外观"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "告诉你的 Agent"
           }
         }
       }
     },
-    "Blue" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Blue"
+    "Blue": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blue"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "蓝色"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "蓝色"
           }
         }
       }
     },
-    "Bridge your AI agents with any website securely." : {
-
-
+    "Bridge your AI agents with any website securely.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bridge your AI agents with any website securely."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "安全地将你的 AI Agent 与任何网站连接。"
+          }
+        }
+      }
     },
-    "Browser" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Browser"
+    "Browser": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Browser"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "浏览器"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "浏览器"
           }
         }
       }
     },
-    "Built for Automation" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Built for Automation"
+    "Camera access is required to scan Cookey QR codes.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Camera access is required to scan Cookey QR codes."
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "为自动化而生"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "扫描 Cookey 二维码需要相机权限。"
           }
         }
       }
     },
-    "Camera access is required to scan Cookey QR codes." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Camera access is required to scan Cookey QR codes."
+    "Cancel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "扫描 Cookey 二维码需要相机权限。"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取消"
           }
         }
       }
     },
-    "Cancel" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cancel"
+    "Checking request…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking request…"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "取消"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在检查请求…"
           }
         }
       }
     },
-    "Checking request…" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Checking request…"
+    "Choose the icon shown on your Home Screen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the icon shown on your Home Screen."
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在检查请求…"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选一个主屏幕上显示的图标。"
           }
         }
       }
     },
-    "Choose the icon shown on your Home Screen." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose the icon shown on your Home Screen."
+    "Clear": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "选一个主屏幕上显示的图标。"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清除"
           }
         }
       }
     },
-    "Clear" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "清除"
+    "Communicating with %@…": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在与 %@ 通信…"
           }
         }
       }
     },
-    "Communicating with %@…" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Communicating with %@…"
+    "Connection rejected.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connection rejected."
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在与 %@ 通信…"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已拒绝连接。"
           }
         }
       }
     },
-    "Connection rejected." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已拒绝连接。"
+    "Contact Us": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contact Us"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "联系我们"
+          }
         }
       }
     },
-    "Contact Us" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "联系我们"
+    "Continue": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "继续"
           }
         }
       }
     },
-    "Continue" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Continue"
+    "Cookey": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cookey"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "继续"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cookey"
           }
         }
       }
     },
-    "Cookey" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cookey"
+    "Cookey can send future login requests from %@ directly to this device. Your push token is only sent to the Cookey relay server you choose and is never shared with third parties.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cookey can send future login requests from %@ directly to this device. Your push token is only sent to the Cookey relay server you choose and is never shared with third parties."
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cookey"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cookey 可以将未来来自 %@ 的登录请求直接推送到此设备。你的推送令牌只会发送至你选择的中继服务器，绝不会与第三方共享。"
           }
         }
       }
     },
-    "Cookey can send future login requests from %@ directly to this device. Your push token is only sent to the Cookey relay server you choose and is never shared with third parties." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cookey can send future login requests from %@ directly to this device. Your push token is only sent to the Cookey relay server you choose and is never shared with third parties."
+    "Cookey could not start the camera scanner.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cookey could not start the camera scanner."
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cookey 可以将未来来自 %@ 的登录请求直接推送到此设备。你的推送令牌只会发送至你选择的中继服务器，绝不会与第三方共享。"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cookey 无法启动相机。"
           }
         }
       }
     },
-    "Cookey could not start the camera scanner." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cookey could not start the camera scanner."
+    "Copied": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copied"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cookey 无法启动相机。"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已复制"
           }
         }
       }
     },
-    "Copy" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "拷贝"
+    "Copy": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拷贝"
+          }
         }
       }
     },
-    "Default" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Default"
+    "Copy for Agents": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy for Agents"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "默认"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "复制给 Agent"
           }
         }
       }
     },
-    "Default Server" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Default Server"
+    "Copy the instructions and send to your AI agent. It will handle the rest.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy the instructions and send to your AI agent. It will handle the rest."
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "默认服务器"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "复制指引并发送给你的 AI Agent，剩下的交给它。"
           }
         }
       }
     },
-    "Delete" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete"
+    "Default": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Default"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "删除"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "默认"
           }
         }
       }
     },
-    "Delete (%lld)" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete (%lld)"
+    "Default Server": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Default Server"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "删除（%lld）"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "默认服务器"
           }
         }
       }
     },
-    "Delete %lld Item(s)?" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete %lld Item(s)?"
+    "Delete": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "删除 %lld 项？"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "删除"
           }
         }
       }
     },
-    "Done" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Done"
+    "Delete (%lld)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete (%lld)"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "完成"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "删除（%lld）"
           }
         }
       }
     },
-    "Downloading the latest session from %@…" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Downloading the latest session from %@…"
+    "Delete %lld Item(s)?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete %lld Item(s)?"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在从 %@ 下载最新会话…"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "删除 %lld 项？"
           }
         }
       }
     },
-    "Edit" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "编辑"
+    "Done": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "完成"
           }
         }
       }
     },
-    "Edit Default Server" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "编辑默认服务器"
+    "Downloading the latest session from %@…": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在从 %@ 下载最新会话…"
           }
         }
       }
     },
-    "Enable login notifications?" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Enable login notifications?"
+    "Edit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "要启用登录通知吗？"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "编辑"
           }
         }
       }
     },
-    "Enable Notifications" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Enable Notifications"
+    "Edit Default Server": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit Default Server"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "启用通知"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "编辑默认服务器"
           }
         }
       }
     },
-    "Enable Push Notifications for Cookey?" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Enable Push Notifications for Cookey?"
+    "Enable login notifications?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enable login notifications?"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "要为 Cookey 启用推送通知吗？"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "要启用登录通知吗？"
           }
         }
       }
     },
-    "Encrypting and sending your browser session." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Encrypting and sending your browser session."
+    "Enable Notifications": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enable Notifications"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在加密并发送会话。"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "启用通知"
           }
         }
       }
     },
-    "End-to-end Encrypted" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "End-to-end Encrypted"
+    "Enable Push Notifications for Cookey?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enable Push Notifications for Cookey?"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "端到端加密"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "要为 Cookey 启用推送通知吗？"
           }
         }
       }
     },
-    "Enter" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Enter"
+    "Encrypting and sending your browser session.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encrypting and sending your browser session."
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "输入"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在加密并发送会话。"
           }
         }
       }
     },
-    "Enter a domain name — HTTPS is enforced automatically." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "请输入域名（将自动使用 HTTPS）。"
+    "Enter": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "输入"
           }
         }
       }
     },
-    "Enter Pair Key" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Enter Pair Key"
+    "Enter a domain name — HTTPS is enforced automatically.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a domain name — HTTPS is enforced automatically."
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "输入配对码"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请输入域名（将自动使用 HTTPS）。"
           }
         }
       }
     },
-    "Enter the pair key shown in your terminal." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Enter the pair key shown in your terminal."
+    "Enter Pair Key": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter Pair Key"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "请输入终端显示的配对码。"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "输入配对码"
           }
         }
       }
     },
-    "Error" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Error"
+    "Enter the pair key shown in your terminal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the pair key shown in your terminal."
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "错误"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请输入终端显示的配对码。"
           }
         }
       }
     },
-    "Every component — CLI, app, relay — is open source and auditable." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Every component — CLI, app, relay — is open source and auditable."
+    "Error": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Error"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "CLI、App 和中继等所有组件均完全开源且可审计。"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "错误"
           }
         }
       }
     },
-    "Filter by Category" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "按分类筛选"
+    "Filter by Category": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter by Category"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按分类筛选"
           }
         }
       }
     },
-    "Filter by Level" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "按级别筛选"
+    "Filter by Level": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter by Level"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按级别筛选"
           }
         }
       }
     },
-    "First connection from this computer. Verify the fingerprint below matches what your terminal shows. If they don't match, reject the connection — it may be intercepted by a third party." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "这是首次连接该电脑。请核对下方指纹与终端显示的是否一致。如果不一致，请拒绝连接，因为通信可能已被第三方截获。"
+    "First connection from this computer. Verify the fingerprint below matches what your terminal shows. If they don't match, reject the connection — it may be intercepted by a third party.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "First connection from this computer. Verify the fingerprint below matches what your terminal shows. If they don't match, reject the connection — it may be intercepted by a third party."
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这是首次连接该电脑。请核对下方指纹与终端显示的是否一致。如果不一致，请拒绝连接，因为通信可能已被第三方截获。"
+          }
         }
       }
     },
-    "General" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "通用"
+    "General": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "General"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "通用"
           }
         }
       }
     },
-    "Get Started" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Get Started"
+    "Get Started": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get Started"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "开始使用"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开始使用"
           }
         }
       }
     },
-    "Getting Started" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "开始使用"
+    "Getting Started": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Getting Started"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开始使用"
+          }
         }
       }
-    },
-    "Guide" : {
-
     },
-    "How to use" : {
-
+    "Guide": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guide"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用指南"
+          }
+        }
+      }
     },
-    "If you enable push notifications, future login or session refresh requests for %@ can be sent directly to this device — no need to scan a QR code or enter a pairing code again.\n\nThis is optional — Cookey works perfectly without notifications. You can change this later in Settings." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "If you enable push notifications, future login or session refresh requests for %@ can be sent directly to this device — no need to scan a QR code or enter a pairing code again.\n\nThis is optional — Cookey works perfectly without notifications. You can change this later in Settings."
+    "How to use?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How to use?"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "启用推送通知后，未来来自 %@ 的登录或会话刷新请求将直接发送到此设备，无需再次扫码或输入配对码。\n\n此功能为可选项，不开启通知也能正常使用 Cookey。你可以随时在设置中更改。"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用方法?"
           }
         }
       }
     },
-    "Inspect recent application logs for troubleshooting." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "查看近期应用日志以排查问题。"
+    "If you enable push notifications, future login or session refresh requests for %@ can be sent directly to this device — no need to scan a QR code or enter a pairing code again.\n\nThis is optional — Cookey works perfectly without notifications. You can change this later in Settings.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开启推送通知后，%@ 的登录或会话刷新请求会直接发送到当前设备。"
           }
         }
       }
     },
-    "Invalid Link" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Invalid Link"
+    "Inspect recent application logs for troubleshooting.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inspect recent application logs for troubleshooting."
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "无效链接"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "查看近期应用日志以排查问题。"
           }
         }
       }
     },
-    "Invalid or expired pair key." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Invalid or expired pair key."
+    "Install the Skill": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Install the Skill"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "配对码无效或已过期。"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "安装 Skill"
           }
         }
       }
     },
-    "Invalid server response for pair key." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Invalid server response for pair key."
+    "Invalid Link": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invalid Link"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "服务器返回的配对码响应无效。"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无效链接"
           }
         }
       }
     },
-    "Key mismatch: the server response differs from the encrypted seed payload." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "密钥不匹配：服务器响应与加密种子荷载不一致。"
+    "Invalid or expired pair key.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invalid or expired pair key."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "配对码无效或已过期。"
           }
         }
       }
     },
-    "Known Key, New Device" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已知密钥，新设备"
+    "Invalid server response for pair key.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invalid server response for pair key."
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "服务器返回的配对码响应无效。"
+          }
         }
       }
     },
-    "Last seen: %@" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "上次连接：%@"
+    "Key mismatch: the server response differs from the encrypted seed payload.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Key mismatch: the server response differs from the encrypted seed payload."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "密钥不匹配：服务器响应与加密种子荷载不一致。"
           }
         }
       }
     },
-    "Loading session…" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Loading session…"
+    "Known Key, New Device": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Known Key, New Device"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在加载会话…"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已知密钥，新设备"
           }
         }
       }
     },
-    "Logs" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "日志"
+    "Last seen: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last seen: %@"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上次连接：%@"
+          }
         }
       }
     },
-    "Logs may contain sensitive information such as session tokens and request details. Sharing or taking screenshots could expose your credentials." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Logs may contain sensitive information such as session tokens and request details. Sharing or taking screenshots could expose your credentials."
+    "Loading session…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading session…"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "日志可能包含会话令牌和请求详情等敏感信息。分享或截图可能会导致凭据泄露。"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在加载会话…"
           }
         }
       }
     },
-    "Made with love @ cookey.sh" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Made with love @ cookey.sh"
+    "Logs": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logs"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "用爱制作 @ cookey.sh"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "日志"
           }
         }
       }
     },
-    "Manage command-line public keys you have verified. Removing a key will require re-verification on the next connection." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Manage command-line public keys you have verified. Removing a key will require re-verification on the next connection."
+    "Logs may contain sensitive information such as session tokens and request details. Sharing or taking screenshots could expose your credentials.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logs may contain sensitive information such as session tokens and request details. Sharing or taking screenshots could expose your credentials."
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "管理你已验证过的命令行公钥。移除某个公钥后，下次连接时需要重新验证。"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "日志可能包含会话令牌和请求详情等敏感信息。分享或截图可能会导致凭据泄露。"
           }
         }
       }
     },
-    "Navigation Error" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Navigation Error"
+    "Made with love @ cookey.sh": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Made with love @ cookey.sh"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "导航错误"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用爱制作 @ cookey.sh"
           }
         }
       }
     },
-    "New fingerprint" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "新指纹"
+    "Manage command-line public keys you have verified. Removing a key will require re-verification on the next connection.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manage command-line public keys you have verified. Removing a key will require re-verification on the next connection."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "管理你已验证过的命令行公钥。移除某个公钥后，下次连接时需要重新验证。"
           }
         }
       }
     },
-    "New Key" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "新密钥"
+    "Navigation Error": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Navigation Error"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "导航错误"
           }
         }
       }
     },
-    "New Login Request" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "New Login Request"
+    "New fingerprint": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New fingerprint"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "新登录请求"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新指纹"
           }
         }
       }
-    },
-    "Next" : {
-
     },
-    "No accounts or enrollment. The CLI generates its own key pair on first run." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No accounts or enrollment. The CLI generates its own key pair on first run."
+    "New Key": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Key"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "无需注册账号。CLI 会在首次运行时自动生成密钥对。"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新密钥"
           }
         }
       }
     },
-    "No camera is available on this device." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No camera is available on this device."
+    "New Login Request": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Login Request"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "此设备无可用相机。"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新登录请求"
           }
         }
       }
     },
-    "No categories" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "无分类"
+    "Next": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下一步"
+          }
         }
       }
     },
-    "No logs yet." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "暂无日志。"
+    "No camera is available on this device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No camera is available on this device."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此设备无可用相机。"
           }
         }
       }
     },
-    "No matching logs." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "无匹配日志。"
+    "No categories": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No categories"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无分类"
           }
         }
       }
     },
-    "No valid Cookey link found in the clipboard." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No valid Cookey link found in the clipboard."
+    "No logs yet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No logs yet."
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "剪贴板未发现有效的 Cookey 链接。"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂无日志。"
           }
         }
       }
     },
-    "Not Now" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Not Now"
+    "No matching logs.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No matching logs."
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "以后再说"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无匹配日志。"
           }
         }
       }
     },
-    "Notification permission was denied." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Notification permission was denied."
+    "No valid Cookey link found in the clipboard.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No valid Cookey link found in the clipboard."
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "推送通知权限已被拒绝。"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "剪贴板未发现有效的 Cookey 链接。"
           }
         }
       }
     },
-    "Notifications are disabled for Cookey on this device." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Notifications are disabled for Cookey on this device."
+    "Not Now": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not Now"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "此设备已禁用 Cookey 通知。"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "以后再说"
           }
         }
       }
     },
-    "OK" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "OK"
+    "Notification permission was denied.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notification permission was denied."
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "好"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "推送通知权限已被拒绝。"
           }
         }
       }
     },
-    "Open Settings" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open Settings"
+    "Notifications are disabled for Cookey on this device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications are disabled for Cookey on this device."
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "前往设置"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此设备已禁用 Cookey 通知。"
           }
         }
       }
     },
-    "Open Source" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open Source"
+    "OK": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "开源"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "好"
           }
         }
       }
     },
-    "Open Source Licenses" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "开源许可"
+    "Open Settings": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Settings"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "前往设置"
           }
         }
       }
     },
-    "Outputs Playwright-compatible JSON. Pipe into any browser automation tool." : {
-
-    },
-    "Outputs Playwright-compatible storageState JSON. Pipe into any browser automation tool." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Outputs Playwright-compatible storageState JSON. Pipe into any browser automation tool."
+    "Open Source Licenses": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Source Licenses"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "直接输出兼容 Playwright 的 storageState JSON，可直达任何浏览器自动化工具。"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开源许可"
           }
         }
       }
     },
-    "Passkey Not Supported" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Passkey Not Supported"
+    "Passkey Not Supported": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passkey Not Supported"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "暂不支持通行密钥 (Passkey)"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂不支持通行密钥 (Passkey)"
           }
         }
       }
     },
-    "Paste Link" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Paste Link"
+    "Paste Link": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paste Link"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "粘贴链接"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "粘贴链接"
           }
         }
       }
     },
-    "Please log in or complete the required actions on this page. When you are done, tap the send button in the top-right corner to package and deliver the session data to the requester." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "请在此页面完成登录或所需操作。完成后，点击右上角的发送按钮，打包并发送会话数据。"
+    "Please log in or complete the required actions on this page. When you are done, tap the send button in the top-right corner to package and deliver the session data to the requester.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please log in or complete the required actions on this page. When you are done, tap the send button in the top-right corner to package and deliver the session data to the requester."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请在此页面完成登录或所需操作。完成后，点击右上角的发送按钮，打包并发送会话数据。"
           }
         }
       }
     },
-    "Previous fingerprint" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "旧指纹"
+    "Previous fingerprint": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous fingerprint"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "旧指纹"
           }
         }
       }
     },
-    "Privacy Policy" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "隐私政策"
+    "Privacy Policy": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privacy Policy"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隐私政策"
           }
         }
       }
     },
-    "Refresh" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "刷新"
+    "Refresh": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "刷新"
           }
         }
       }
     },
-    "Reject" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "拒绝"
+    "Reject": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reject"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拒绝"
+          }
         }
       }
     },
-    "Report bugs, request features, or share your thoughts about Cookey." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Report bugs, request features, or share your thoughts about Cookey."
+    "Report bugs, request features, or share your thoughts about Cookey.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report bugs, request features, or share your thoughts about Cookey."
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "提交 Bug、请求新功能，或分享你对 Cookey 的建议。"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提交 Bug、请求新功能，或分享你对 Cookey 的建议。"
           }
         }
       }
     },
-    "Resolving pair key…" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Resolving pair key…"
+    "Resolving pair key…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resolving pair key…"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在解析配对码…"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在解析配对码…"
           }
         }
       }
     },
-    "Resource not found, please check your installation." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "未找到资源，请检查安装。"
+    "Resource not found, please check your installation.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resource not found, please check your installation."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未找到资源，请检查安装。"
           }
         }
       }
     },
-    "Scan" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Scan"
+    "Scan": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "扫描"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "扫描"
           }
         }
       }
     },
-    "Scan & Login" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Scan & Login"
+    "Scan & Approve": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan & Approve"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "扫码登录"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "扫码确认"
           }
         }
       }
     },
-    "Scan a QR code from your terminal, log in on your phone, done." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Scan a QR code from your terminal, log in on your phone, done."
+    "Search": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "扫描终端二维码，在手机上完成登录，就是这么简单。"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "搜索"
           }
         }
       }
     },
-    "Scan a QR code on your phone, log in on mobile, and your session lands encrypted in your terminal — ready for automation." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Scan a QR code on your phone, log in on mobile, and your session lands encrypted in your terminal — ready for automation."
+    "Search logs...": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search logs..."
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "手机扫码并完成登录，加密后的会话即可直达终端，随时准备用于自动化。"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "搜索日志…"
           }
         }
       }
     },
-    "Scan or enter the pair key from your terminal\nto transfer a login session." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Scan or enter the pair key from your terminal\nto transfer a login session."
+    "Security Warning": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Security Warning"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "扫描或输入终端显示的配对码\n以传输登录会话。"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "安全警告"
           }
         }
       }
     },
-    "Search" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Search"
+    "Select": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "搜索"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择"
           }
         }
       }
     },
-    "Search logs..." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "搜索日志…"
+    "Send": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "发送"
+          }
         }
       }
     },
-    "Security Warning" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "安全警告"
+    "Send Session": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send Session"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "发送会话"
           }
         }
       }
     },
-    "Select" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Select"
+    "Sensitive Data Warning": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sensitive Data Warning"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "选择"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "敏感数据警告"
           }
         }
       }
     },
-    "Self-Hostable" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Self-Hostable"
+    "Settings": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "可自托管"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "设置"
           }
         }
       }
     },
-    "Send" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Send"
+    "Share": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "发送"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "分享"
           }
         }
       }
     },
-    "Send Session" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Send Session"
+    "Silver": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Silver"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "发送会话"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "银色"
           }
         }
       }
     },
-    "Sensitive Data Warning" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sensitive Data Warning"
+    "Start": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "敏感数据警告"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开始"
           }
         }
       }
     },
-    "Session data is encrypted on-device before leaving your phone. The relay never sees plaintext." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Session data is encrypted on-device before leaving your phone. The relay never sees plaintext."
+    "Submit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Submit"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "会话数据在离开手机前已完成端侧加密，中继服务器无法触及明文。"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提交"
           }
         }
       }
-    },
-    "Session data is encrypted on-device. The relay never sees plaintext." : {
-
     },
-    "Settings" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Settings"
+    "Submit Feedback": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Submit Feedback"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "设置"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提交反馈"
           }
         }
       }
     },
-    "Share" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "分享"
+    "The captured browser session could not be encoded.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The captured browser session could not be encoded."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法编码捕获到的浏览器会话。"
           }
         }
       }
     },
-    "Silver" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Silver"
+    "The captured browser session was empty.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The captured browser session was empty."
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "银色"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "捕获的浏览器会话为空。"
           }
         }
       }
     },
-    "Simply paste and send this command to your AI agent (like Cursor or Claude) to install the skill." : {
-
-    },
-    "Simply tell your AI to \"log in to a website\". It will generate a secure QR code in the terminal or chat." : {
-
-
-    },
-    "Single Docker image, memory-only storage, auto-expiring sessions." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Single Docker image, memory-only storage, auto-expiring sessions."
+    "The captured browser session was empty. Reload the page, complete login, and try sending again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The captured browser session was empty. Reload the page, complete login, and try sending again."
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "单个 Docker 镜像，纯内存存储，且会话会自动过期。"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "捕获的浏览器会话为空。请刷新页面，完成登录后再试。"
           }
         }
       }
     },
-    "Start" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Start"
+    "The captured browser session was invalid. Reload the page and try sending again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The captured browser session was invalid. Reload the page and try sending again."
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "开始"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "捕获的浏览器会话无效。请刷新页面后再试。"
           }
         }
       }
     },
-    "Submit" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Submit"
+    "The identity of this computer has changed since you last connected. This could indicate a security issue, or the command-line tool may have been reinstalled.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The identity of this computer has changed since you last connected. This could indicate a security issue, or the command-line tool may have been reinstalled."
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "提交"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这台电脑的身份信息自上次连接以来发生了变化。这可能说明存在安全问题，或者命令行工具被重新安装过。"
           }
         }
       }
     },
-    "Submit Feedback" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Submit Feedback"
+    "The login request contains an invalid recipient key.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The login request contains an invalid recipient key."
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "提交反馈"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登录请求包含无效的接收方密钥。"
           }
         }
       }
     },
-    "The captured browser session could not be encoded." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The captured browser session could not be encoded."
+    "The server used when no relay is specified. HTTPS is enforced automatically.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server used when no relay is specified. HTTPS is enforced automatically."
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "无法编码捕获到的浏览器会话。"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未指定中继时的默认服务器（自动使用 HTTPS）。"
           }
         }
       }
     },
-    "The captured browser session was empty." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The captured browser session was empty."
+    "This action cannot be undone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This action cannot be undone."
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "捕获的浏览器会话为空。"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此操作无法撤销。"
           }
         }
       }
     },
-    "The captured browser session was empty. Reload the page, complete login, and try sending again." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The captured browser session was empty. Reload the page, complete login, and try sending again."
+    "This key was previously trusted under a different device identifier. This may indicate the command-line tool was migrated or reinstalled.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This key was previously trusted under a different device identifier. This may indicate the command-line tool was migrated or reinstalled."
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "捕获的浏览器会话为空。请刷新页面，完成登录后再试。"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "该密钥此前曾以其他设备标识被信任。这可能说明命令行工具已被迁移或重新安装。"
           }
         }
       }
     },
-    "The captured browser session was invalid. Reload the page and try sending again." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The captured browser session was invalid. Reload the page and try sending again."
+    "This login request has expired or does not exist.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This login request has expired or does not exist."
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "捕获的浏览器会话无效。请刷新页面后再试。"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此登录请求已过期或不存在。"
           }
         }
       }
     },
-    "The identity of this computer has changed since you last connected. This could indicate a security issue, or the command-line tool may have been reinstalled." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "这台电脑的身份信息自上次连接以来发生了变化。这可能说明存在安全问题，或者命令行工具被重新安装过。"
+    "This login request has expired.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This login request has expired."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此登录请求已过期。"
           }
         }
       }
     },
-    "The login request contains an invalid recipient key." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The login request contains an invalid recipient key."
+    "This website is requesting Passkey authentication, which is not supported in the in-app browser. Please use an alternative login method such as password or SMS verification.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This website is requesting Passkey authentication, which is not supported in the in-app browser. Please use an alternative login method such as password or SMS verification."
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "登录请求包含无效的接收方密钥。"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "该网站要求使用通行密钥 (Passkey) 验证，但应用内浏览器暂不支持。请使用密码或短信等其他方式登录。"
           }
         }
       }
     },
-    "The server used when no relay is specified. HTTPS is enforced automatically." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "未指定中继时的默认服务器（自动使用 HTTPS）。"
+    "This will package and send the current session state to the requester. Please confirm you have completed login or the required actions.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This will package and send the current session state to the requester. Please confirm you have completed login or the required actions."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这将打包当前会话状态并发送给请求方。请确认你已完成登录或所需操作。"
           }
         }
       }
     },
-    "This action cannot be undone." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This action cannot be undone."
+    "Timed out waiting for push notification registration.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timed out waiting for push notification registration."
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "此操作无法撤销。"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "注册推送通知超时。"
           }
         }
       }
     },
-    "This key was previously trusted under a different device identifier. This may indicate the command-line tool was migrated or reinstalled." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "该密钥此前曾以其他设备标识被信任。这可能说明命令行工具已被迁移或重新安装。"
+    "Transfer complete": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfer complete"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "传输完成"
           }
         }
       }
     },
-    "This login request has expired or does not exist." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This login request has expired or does not exist."
+    "Transfer failed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfer failed"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "此登录请求已过期或不存在。"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "传输失败"
           }
         }
       }
     },
-    "This login request has expired." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This login request has expired."
+    "Trust": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trust"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "此登录请求已过期。"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "信任"
           }
         }
       }
     },
-    "This website is requesting Passkey authentication, which is not supported in the in-app browser. Please use an alternative login method such as password or SMS verification." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This website is requesting Passkey authentication, which is not supported in the in-app browser. Please use an alternative login method such as password or SMS verification."
+    "Trust New Key": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trust New Key"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "该网站要求使用通行密钥 (Passkey) 验证，但应用内浏览器暂不支持。请使用密码或短信等其他方式登录。"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "信任新密钥"
           }
         }
       }
     },
-    "This will package and send the current session state to the requester. Please confirm you have completed login or the required actions." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This will package and send the current session state to the requester. Please confirm you have completed login or the required actions."
+    "Trusted Public Keys": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trusted Public Keys"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "这将打包当前会话状态并发送给请求方。请确认你已完成登录或所需操作。"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "受信任的公钥"
           }
         }
       }
     },
-    "Timed out waiting for push notification registration." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Timed out waiting for push notification registration."
+    "Unavailable": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unavailable"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "注册推送通知超时。"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不可用"
           }
         }
       }
     },
-    "Transfer complete" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Transfer complete"
+    "Uploading session…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uploading session…"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "传输完成"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在上传会话…"
+          }
+        }
+      }
+    },
+    "Use Default (%@)": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用默认 (%@)"
           }
         }
       }
     },
-    "Transfer failed" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Transfer failed"
+    "View Logs": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View Logs"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "传输失败"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "查看日志"
           }
         }
       }
     },
-    "Trust" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "信任"
+    "When enabled, the relay server can send push notifications to this device for session refresh requests. This requires system notification permissions.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When enabled, the relay server can send push notifications to this device for session refresh requests. This requires system notification permissions."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开启后，中继服务器可以通过推送通知向该设备发送会话刷新请求（需要系统通知权限）。"
           }
         }
       }
     },
-    "Trust New Key" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "信任新密钥"
+    "Your terminal can export the session now.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your terminal can export the session now."
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你的终端现在可以导出会话了。"
+          }
         }
       }
     },
-    "Trusted Public Keys" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Trusted Public Keys"
+    "Sure, here's your QR code 👇": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sure, here's your QR code 👇"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "受信任的公钥"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "好的，这是你的二维码 👇"
           }
         }
       }
     },
-    "Unavailable" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unavailable"
+    "I've finished logging in ✅": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I've finished logging in ✅"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "不可用"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "我已经登录好了 ✅"
           }
         }
       }
     },
-    "Uploading session…" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Uploading session…"
+    "Got it, I can see your homepage now. What would you like me to do?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Got it, I can see your homepage now. What would you like me to do?"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在上传会话…"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "收到，我已经能看到你的主页了。你想让我做什么？"
           }
         }
       }
     },
-    "Use Default (%@)" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "使用默认服务器 (%@)"
+    "Tell your AI to log in to a website. It will generate a secure QR code in the terminal or chat. If scanning isn't possible, ask it for a link instead.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tell your AI to log in to a website. It will generate a secure QR code in the terminal or chat. If scanning isn't possible, ask it for a link instead."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "告诉你的 AI 登录某个网站，它会在终端或对话中生成一个安全的二维码。如果无法扫描，让它提供链接。"
           }
         }
       }
-    },
-    "Use this app to scan the code, log in normally, and securely deliver the session back to your AI." : {
-
     },
-    "View Logs" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "查看日志"
+    "Scan the QR code with this app and complete login. Your session will be securely delivered back to your AI.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan the QR code with this app and complete login. Your session will be securely delivered back to your AI."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用当前应用扫描二维码并完成登录，你的会话就会安全地传回给你的 AI。"
           }
         }
       }
     },
-    "Welcome to" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Welcome to"
+    "If you can't scan, open the link your AI provided — it will redirect to this app automatically.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you can't scan, open the link your AI provided — it will redirect to this app automatically."
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "欢迎使用"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "如果无法扫码，打开你的 AI 提供的链接，会自动跳转到当前应用继续操作。"
           }
         }
       }
     },
-    "Welcome to Cookey" : {
-
+    "To verify security, ask your AI to visit our website and review our source code.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To verify security, ask your AI to visit our website and review our source code."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "如需验证安全性，请让你的 AI 访问我们的网站并审查源代码。"
+          }
+        }
+      }
     },
-    "What's New" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "新功能"
+    "Host key: 🍪🔑🛡️✨": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Host key: 🍪🔑🛡️✨"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "主机密钥：🍪🔑🛡️✨"
           }
         }
       }
     },
-    "When enabled, the relay server can send push notifications to this device for session refresh requests. This requires system notification permissions." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "When enabled, the relay server can send push notifications to this device for session refresh requests. This requires system notification permissions."
+    "Welcome to Cookey": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Welcome to Cookey"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "开启后，中继服务器可以通过推送通知向该设备发送会话刷新请求（需要系统通知权限）。"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "欢迎使用 Cookey"
           }
         }
       }
     },
-    "Your terminal can export the session now." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your terminal can export the session now."
+    "Help your AI log in. We keep your data safe.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Help your AI log in. We keep your data safe."
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "你的终端现在可以导出会话了。"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "帮助你的 AI 登录，由我们确保数据安全无虞。"
           }
         }
       }
     },
-    "Zero Registration" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zero Registration"
+    "Help me log in to example.com": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Help me log in to example.com"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "无需注册"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "帮我登录 example.com"
           }
         }
       }
     }
   },
-  "version" : "1.1"
+  "version": "1.1"
 }

@@ -156,7 +156,8 @@ jobs:
             sleep 5
           done
 
-          python3 - "${devices_file}" "${GITHUB_ENV}" <<'PY'
+          selected_device_id="$(
+            python3 - "${devices_file}" "${GITHUB_ENV}" <<'PY'
           import json
           import pathlib
           import sys
@@ -211,12 +212,16 @@ jobs:
 
           print(
               "Using iOS Simulator destination: "
-              f"{name} ({os_version}) [{device_id}] state={state}"
+              f"{name} ({os_version}) [{device_id}] state={state}",
+              file=sys.stderr,
           )
+          print(device_id)
           PY
+          )"
 
-          xcrun simctl boot "${IOS_TEST_DEVICE_ID}" || true
-          xcrun simctl bootstatus "${IOS_TEST_DEVICE_ID}" -b
+          selected_device_id="$(printf '%s\n' "${selected_device_id}" | tail -n 1)"
+          xcrun simctl boot "${selected_device_id}" || true
+          xcrun simctl bootstatus "${selected_device_id}" -b
 
       - name: Run iOS tests with ad-hoc signing
         run: |

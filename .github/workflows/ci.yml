@@ -145,56 +145,78 @@ jobs:
         run: |
           set -euo pipefail
 
-          destinations_file="$(mktemp)"
-          xcodebuild \
-            -showdestinations \
-            -project Cookey.xcodeproj \
-            -scheme Cookey \
-            -configuration Debug \
-            -sdk iphonesimulator \
-            -clonedSourcePackagesDirPath .spm \
-            > "${destinations_file}" 2>&1
+          devices_file="$(mktemp)"
+          attempts=0
+          until xcrun simctl list --json devices available > "${devices_file}"; do
+            attempts=$((attempts + 1))
+            if [ "${attempts}" -ge 3 ]; then
+              echo "Failed to query available simulators after ${attempts} attempts." >&2
+              exit 1
+            fi
+            sleep 5
+          done
 
-          python3 - "${destinations_file}" "${GITHUB_ENV}" <<'PY'
+          python3 - "${devices_file}" "${GITHUB_ENV}" <<'PY'
+          import json
           import pathlib
-          import re
           import sys
 
-          destinations_text = pathlib.Path(sys.argv[1]).read_text(encoding="utf-8")
+          devices_payload = json.loads(
+              pathlib.Path(sys.argv[1]).read_text(encoding="utf-8")
+          )
           candidates = []
 
-          for line in destinations_text.splitlines():
-              if "platform:iOS Simulator" not in line:
+          for runtime_id, devices in devices_payload.get("devices", {}).items():
+              if ".SimRuntime.iOS-" not in runtime_id:
                   continue
 
-              device_match = re.search(r"\bid:([^,}]+)", line)
-              os_match = re.search(r"\bOS:([^,}]+)", line)
-              name_match = re.search(r"\bname:([^}]+)", line)
-
-              if not device_match or not os_match or not name_match:
-                  continue
-
-              device_id = device_match.group(1).strip()
-              os_version = os_match.group(1).strip()
-              name = name_match.group(1).strip()
-
-              if device_id.startswith("dvtdevice-") or name.startswith("Any "):
-                  continue
-
-              candidates.append((name, os_version, device_id))
-
-          if not candidates:
-              print(destinations_text, file=sys.stderr)
-              raise SystemExit(
-                  "No concrete iOS Simulator destinations were available for the Cookey scheme."
+              version_label = runtime_id.rsplit("iOS-", 1)[-1].replace("-", ".")
+              version_tuple = tuple(
+                  int(part) for part in version_label.split(".") if part.isdigit()
               )
 
-          name, os_version, device_id = candidates[0]
+              for device in devices:
+                  if not device.get("isAvailable", False):
+                      continue
+
+                  name = device["name"].strip()
+                  device_id = device["udid"].strip()
+                  state = device.get("state", "Unknown").strip()
+                  is_iphone = name.startswith("iPhone")
+                  is_clone = name.startswith("Clone ")
+                  candidates.append(
+                      (
+                          0 if is_iphone else 1,
+                          0 if not is_clone else 1,
+                          tuple(-part for part in version_tuple),
+                          name.lower(),
+                          name,
+                          version_label,
+                          device_id,
+                          state,
+                      )
+                  )
+
+          if not candidates:
+              print(devices_payload, file=sys.stderr)
+              raise SystemExit(
+                  "No available iOS Simulator devices were returned by simctl."
+              )
+
+          candidates.sort()
+          _, _, _, _, name, os_version, device_id, state = candidates[0]
           with pathlib.Path(sys.argv[2]).open("a", encoding="utf-8") as env_file:
               env_file.write(f"IOS_TEST_DESTINATION=id={device_id}\n")
+              env_file.write(f"IOS_TEST_DEVICE_ID={device_id}\n")
 
-          print(f"Using iOS Simulator destination: {name} ({os_version}) [{device_id}]")
+          print(
+              "Using iOS Simulator destination: "
+              f"{name} ({os_version}) [{device_id}] state={state}"
+          )
           PY
+
+          xcrun simctl boot "${IOS_TEST_DEVICE_ID}" || true
+          xcrun simctl bootstatus "${IOS_TEST_DEVICE_ID}" -b
 
       - name: Run iOS tests with ad-hoc signing
         run: |
@@ -204,6 +226,7 @@ jobs:
             -scheme Cookey \
             -configuration Debug \
             -destination "${IOS_TEST_DESTINATION}" \
+            -destination-timeout 180 \
             -clonedSourcePackagesDirPath .spm \
             -parallel-testing-enabled YES \
             AD_HOC_CODE_SIGNING_ALLOWED=YES \

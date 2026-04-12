@@ -94,8 +94,6 @@ jobs:
   ios-tests:
     name: iOS Tests (${{ matrix.shard.name }})
     runs-on: macos-26
-    env:
-      IOS_TEST_DESTINATION: platform=iOS Simulator,name=iPhone 17,OS=26.2
     strategy:
       fail-fast: false
       matrix:
@@ -142,6 +140,61 @@ jobs:
             -scheme Cookey \
             -clonedSourcePackagesDirPath .spm \
             | xcbeautify
+
+      - name: Resolve iOS test destination
+        run: |
+          set -euo pipefail
+
+          destinations_file="$(mktemp)"
+          xcodebuild \
+            -showdestinations \
+            -project Cookey.xcodeproj \
+            -scheme Cookey \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -clonedSourcePackagesDirPath .spm \
+            > "${destinations_file}" 2>&1
+
+          python3 - "${destinations_file}" "${GITHUB_ENV}" <<'PY'
+          import pathlib
+          import re
+          import sys
+
+          destinations_text = pathlib.Path(sys.argv[1]).read_text(encoding="utf-8")
+          candidates = []
+
+          for line in destinations_text.splitlines():
+              if "platform:iOS Simulator" not in line:
+                  continue
+
+              device_match = re.search(r"\bid:([^,}]+)", line)
+              os_match = re.search(r"\bOS:([^,}]+)", line)
+              name_match = re.search(r"\bname:([^}]+)", line)
+
+              if not device_match or not os_match or not name_match:
+                  continue
+
+              device_id = device_match.group(1).strip()
+              os_version = os_match.group(1).strip()
+              name = name_match.group(1).strip()
+
+              if device_id.startswith("dvtdevice-") or name.startswith("Any "):
+                  continue
+
+              candidates.append((name, os_version, device_id))
+
+          if not candidates:
+              print(destinations_text, file=sys.stderr)
+              raise SystemExit(
+                  "No concrete iOS Simulator destinations were available for the Cookey scheme."
+              )
+
+          name, os_version, device_id = candidates[0]
+          with pathlib.Path(sys.argv[2]).open("a", encoding="utf-8") as env_file:
+              env_file.write(f"IOS_TEST_DESTINATION=id={device_id}\n")
+
+          print(f"Using iOS Simulator destination: {name} ({os_version}) [{device_id}]")
+          PY
 
       - name: Run iOS tests with ad-hoc signing
         run: |

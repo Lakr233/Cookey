@@ -163,13 +163,20 @@ jobs:
           destinations_text = pathlib.Path(sys.argv[1]).read_text(encoding="utf-8")
           candidates = []
 
-          for device_id, os_version, name in re.findall(
-              r"\{\s*platform:iOS Simulator,\s*id:([^,]+),\s*OS:([^,]+),\s*name:([^}]+)\}",
-              destinations_text,
-          ):
-              device_id = device_id.strip()
-              os_version = os_version.strip()
-              name = name.strip()
+          for line in destinations_text.splitlines():
+              if "platform:iOS Simulator" not in line:
+                  continue
+
+              device_match = re.search(r"\bid:([^,}]+)", line)
+              os_match = re.search(r"\bOS:([^,}]+)", line)
+              name_match = re.search(r"\bname:([^}]+)", line)
+
+              if not device_match or not os_match or not name_match:
+                  continue
+
+              device_id = device_match.group(1).strip()
+              os_version = os_match.group(1).strip()
+              name = name_match.group(1).strip()
 
               if device_id.startswith("dvtdevice-") or name.startswith("Any "):
                   continue

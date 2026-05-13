@@ -68,6 +68,9 @@ private const val HISTORY_BACK_GUARD_JS = """
 })();
 """
 
+private const val ANDROID_BROWSER_USER_AGENT =
+    "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"
+
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
@@ -118,6 +121,7 @@ fun BrowserScreen(
             domStorageEnabled = true
             setSupportMultipleWindows(true)
             javaScriptCanOpenWindowsAutomatically = true
+            userAgentString = ANDROID_BROWSER_USER_AGENT
         }
 
         candidate.webViewClient = object : WebViewClient() {

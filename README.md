@@ -49,3 +49,7 @@ npx skills add Lakr233/Cookey --skill website-login
 ## Status
 
 Cookey is organized as a multi-component repo covering the CLI, relay server, Apple app, and website.
+
+## Sponsor
+
+[LookInside](https://lookinside-app.com/) helps you inspect a running iOS or macOS app UI from your Mac.

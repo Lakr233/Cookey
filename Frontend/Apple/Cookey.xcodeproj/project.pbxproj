@@ -14,6 +14,7 @@
 		502BCD212F7D7327007F5F2E /* CryptoBox in Frameworks */ = {isa = PBXBuildFile; productRef = 502BCD202F7D7327007F5F2E /* CryptoBox */; };
 		502BCEE42F7D865A007F5F2E /* ConfigurableKit in Frameworks */ = {isa = PBXBuildFile; productRef = 502BCEE32F7D865A007F5F2E /* ConfigurableKit */; };
 		5092EC382F8BE79500A3CE3B /* ColorfulX in Frameworks */ = {isa = PBXBuildFile; productRef = 5092EC372F8BE79500A3CE3B /* ColorfulX */; };
+		521945307997011CDD4626E1 /* LookInsideServer in Frameworks */ = {isa = PBXBuildFile; productRef = 8AEE0AA0F6AFE6B48498E870 /* LookInsideServer */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -45,6 +46,8 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		502BC30E2F7D455D007F5F2E /* CookeyTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = CookeyTests;
 			sourceTree = "<group>";
 		};
@@ -77,6 +80,7 @@
 				502BC3BF2F7D54D6007F5F2E /* SwifterSwift in Frameworks */,
 				502BC3BC2F7D54C0007F5F2E /* SnapKit in Frameworks */,
 				502BC3C22F7D54F8007F5F2E /* Then in Frameworks */,
+				521945307997011CDD4626E1 /* LookInsideServer in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -122,8 +126,6 @@
 				502BC30E2F7D455D007F5F2E /* CookeyTests */,
 			);
 			name = CookeyTests;
-			packageProductDependencies = (
-			);
 			productName = CookeyTests;
 			productReference = 502BC30D2F7D455D007F5F2E /* CookeyTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -152,6 +154,7 @@
 				502BCD202F7D7327007F5F2E /* CryptoBox */,
 				502BCEE32F7D865A007F5F2E /* ConfigurableKit */,
 				5092EC372F8BE79500A3CE3B /* ColorfulX */,
+				8AEE0AA0F6AFE6B48498E870 /* LookInsideServer */,
 			);
 			productName = Cookey;
 			productReference = 505FF5EA2F756F77005371A1 /* Cookey.app */;
@@ -193,8 +196,10 @@
 				502BC3D02F7D5600007F5F2E /* XCRemoteSwiftPackageReference "AlertController" */,
 				502BCEE22F7D865A007F5F2E /* XCRemoteSwiftPackageReference "ConfigurableKit" */,
 				5092EC362F8BE79500A3CE3B /* XCRemoteSwiftPackageReference "ColorfulX" */,
+				452E100197DBC9EC633AAC74 /* XCRemoteSwiftPackageReference "LookInside-Release" */,
 			);
 			preferredProjectObjectVersion = 77;
+			productRefGroup = 505FF5EB2F756F77005371A1 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -525,6 +530,10 @@
 				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
 				ENABLE_RESOURCE_ACCESS_USB = NO;
 				ENABLE_USER_SELECTED_FILES = readwrite;
+				EXCLUDED_SOURCE_FILE_NAMES = (
+					"$(inherited)",
+					"LookInsideServer*",
+				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Cookey/Resources/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Cookey;
@@ -597,6 +606,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		452E100197DBC9EC633AAC74 /* XCRemoteSwiftPackageReference "LookInside-Release" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/LookInsideApp/LookInside-Release.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.2.2;
+			};
+		};
 		502BC3BA2F7D54C0007F5F2E /* XCRemoteSwiftPackageReference "SnapKit" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/SnapKit/SnapKit";
@@ -681,6 +698,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 5092EC362F8BE79500A3CE3B /* XCRemoteSwiftPackageReference "ColorfulX" */;
 			productName = ColorfulX;
+		};
+		8AEE0AA0F6AFE6B48498E870 /* LookInsideServer */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 452E100197DBC9EC633AAC74 /* XCRemoteSwiftPackageReference "LookInside-Release" */;
+			productName = LookInsideServer;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

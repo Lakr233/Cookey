@@ -167,24 +167,30 @@ class HomeViewController: UIViewController {
             $0.setCustomSpacing(8, after: subtitleLabel)
         }
 
+        let foldRegion = FoldRegionView()
+        view.insertSubview(foldRegion, at: 0)
         view.addSubview(stack)
         view.addSubview(websiteButton)
         view.addSubview(buttonStack)
 
+        foldRegion.snp.makeConstraints {
+            $0.edges.equalToSuperview()
+        }
+
         buttonStack.snp.makeConstraints {
-            $0.leading.trailing.equalToSuperview().inset(32)
+            $0.contentColumn(in: foldRegion.controlRegion)
             $0.bottom.equalTo(websiteButton.snp.top).offset(-16)
             $0.height.equalTo(52)
         }
 
         websiteButton.snp.makeConstraints {
-            $0.centerX.equalToSuperview()
+            $0.centerX.equalTo(foldRegion.controlRegion)
             $0.bottom.equalTo(view.safeAreaLayoutGuide).inset(16)
         }
 
         stack.snp.makeConstraints {
-            $0.centerY.equalToSuperview().offset(-40) // slightly above center to balance the bottom buttons
-            $0.leading.trailing.equalToSuperview().inset(32)
+            $0.centerY.equalTo(foldRegion.contentRegion).offset(-40) // slightly above center to balance the bottom buttons
+            $0.contentColumn(in: foldRegion.contentRegion)
         }
     }
 

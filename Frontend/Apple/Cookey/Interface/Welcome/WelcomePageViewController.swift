@@ -98,6 +98,17 @@ class WelcomePageViewController: UIViewController, UIScrollViewDelegate {
         navigationController?.setNavigationBarHidden(true, animated: false)
     }
 
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        // Keep the current page in place when the sheet resizes, for example
+        // when the device folds or rotates.
+        guard !isTransitioning, !scrollView.isDragging, !scrollView.isDecelerating else { return }
+        let target = CGPoint(x: scrollView.bounds.width * CGFloat(pageControl.currentPage), y: 0)
+        if scrollView.contentOffset != target {
+            scrollView.contentOffset = target
+        }
+    }
+
     private func setupLayout() {
         view.addSubview(scrollView)
         scrollView.addSubview(stackView)
@@ -107,7 +118,8 @@ class WelcomePageViewController: UIViewController, UIScrollViewDelegate {
         scrollView.delegate = self
 
         scrollView.snp.makeConstraints { make in
-            make.top.leading.trailing.equalToSuperview()
+            make.top.equalToSuperview()
+            make.leading.trailing.equalTo(view.safeAreaLayoutGuide)
             make.bottom.equalTo(pageControl.snp.top).offset(-16)
         }
 
@@ -117,12 +129,12 @@ class WelcomePageViewController: UIViewController, UIScrollViewDelegate {
         }
 
         pageControl.snp.makeConstraints { make in
-            make.centerX.equalToSuperview()
+            make.centerX.equalTo(view.safeAreaLayoutGuide)
             make.bottom.equalTo(actionButton.snp.top).offset(-24)
         }
 
         actionButton.snp.makeConstraints { make in
-            make.leading.trailing.equalToSuperview().inset(32)
+            make.contentColumn(in: view.safeAreaLayoutGuide)
             make.bottom.equalTo(view.safeAreaLayoutGuide).inset(24)
             make.height.equalTo(52)
         }
@@ -133,7 +145,7 @@ class WelcomePageViewController: UIViewController, UIScrollViewDelegate {
         let welcomePage = makeWelcomePage()
         stackView.addArrangedSubview(welcomePage)
         welcomePage.snp.makeConstraints { make in
-            make.width.equalTo(view.snp.width)
+            make.width.equalTo(scrollView.snp.width)
         }
 
         // Pages 1-3: Steps
@@ -151,7 +163,7 @@ class WelcomePageViewController: UIViewController, UIScrollViewDelegate {
             )
             stackView.addArrangedSubview(stepView)
             stepView.snp.makeConstraints { make in
-                make.width.equalTo(view.snp.width)
+                make.width.equalTo(scrollView.snp.width)
             }
         }
     }
@@ -504,7 +516,7 @@ class WelcomePageViewController: UIViewController, UIScrollViewDelegate {
         if pageControl.currentPage < totalPages - 1 {
             isTransitioning = true
             let nextIndex = pageControl.currentPage + 1
-            let target = CGPoint(x: view.bounds.width * CGFloat(nextIndex), y: 0)
+            let target = CGPoint(x: scrollView.bounds.width * CGFloat(nextIndex), y: 0)
             UIView.animate(
                 withDuration: 0.5,
                 delay: 0,
@@ -525,7 +537,7 @@ class WelcomePageViewController: UIViewController, UIScrollViewDelegate {
     @objc private func pageChanged() {
         guard !isTransitioning else { return }
         isTransitioning = true
-        let target = CGPoint(x: view.bounds.width * CGFloat(pageControl.currentPage), y: 0)
+        let target = CGPoint(x: scrollView.bounds.width * CGFloat(pageControl.currentPage), y: 0)
         UIView.animate(
             withDuration: 0.5,
             delay: 0,
@@ -541,7 +553,8 @@ class WelcomePageViewController: UIViewController, UIScrollViewDelegate {
 
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         guard scrollView === self.scrollView else { return }
-        let page = round(scrollView.contentOffset.x / view.bounds.width)
+        guard scrollView.bounds.width > 0 else { return }
+        let page = round(scrollView.contentOffset.x / scrollView.bounds.width)
         pageControl.currentPage = Int(page)
 
         let totalPages = pages.count + 1

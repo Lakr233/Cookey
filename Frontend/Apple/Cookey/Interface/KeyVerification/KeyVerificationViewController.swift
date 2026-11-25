@@ -5,6 +5,7 @@ import UIKit
 final class KeyVerificationViewController: UIViewController {
     private let verificationState: KeyVerificationState
     private let onResponse: (Bool) -> Void
+    private var separatorHeightConstraints: [Constraint] = []
 
     // MARK: - Icon
 
@@ -118,6 +119,15 @@ final class KeyVerificationViewController: UIViewController {
         return button
     }()
 
+    // MARK: - Content scroll view
+
+    // The content scrolls when it is taller than the space above the
+    // buttons, for example on a short display, so the buttons stay visible.
+    private let contentScrollView = UIScrollView().then {
+        $0.contentInsetAdjustmentBehavior = .never
+        $0.alwaysBounceVertical = false
+    }
+
     // MARK: - Init
 
     init(verificationState: KeyVerificationState, onResponse: @escaping (Bool) -> Void) {
@@ -140,6 +150,27 @@ final class KeyVerificationViewController: UIViewController {
         view.backgroundColor = .systemBackground
         configureForState()
         layoutUI()
+        registerForTraitChanges([UITraitDisplayScale.self]) { (self: Self, _) in
+            self.updateSeparatorHeights()
+        }
+    }
+
+    override func viewIsAppearing(_ animated: Bool) {
+        super.viewIsAppearing(animated)
+        updateSeparatorHeights()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        // Show that more of the fingerprints is below when it does not fit.
+        contentScrollView.flashScrollIndicators()
+    }
+
+    private func updateSeparatorHeights() {
+        let height = 1.0 / max(traitCollection.displayScale, 1)
+        for constraint in separatorHeightConstraints {
+            constraint.update(offset: height)
+        }
     }
 
     // MARK: - Configure
@@ -226,7 +257,7 @@ final class KeyVerificationViewController: UIViewController {
         }
         separator.snp.makeConstraints {
             $0.leading.trailing.equalToSuperview()
-            $0.height.equalTo(1.0 / UIScreen.main.scale)
+            separatorHeightConstraints.append($0.height.equalTo(1.0 / max(traitCollection.displayScale, 1)).constraint)
         }
     }
 
@@ -276,19 +307,31 @@ final class KeyVerificationViewController: UIViewController {
             $0.alignment = .fill
         }
 
-        view.addSubview(contentStack)
+        view.addSubview(contentScrollView)
+        contentScrollView.addSubview(contentStack)
         view.addSubview(buttonStack)
 
+        contentScrollView.snp.makeConstraints {
+            $0.top.leading.trailing.equalTo(view.safeAreaLayoutGuide)
+            $0.bottom.equalTo(buttonStack.snp.top).offset(-24)
+        }
+
+        contentScrollView.contentLayoutGuide.snp.makeConstraints {
+            $0.width.equalTo(contentScrollView.frameLayoutGuide)
+            $0.height.greaterThanOrEqualTo(contentScrollView.frameLayoutGuide)
+            $0.height.equalTo(contentScrollView.frameLayoutGuide).priority(.low)
+        }
+
         contentStack.snp.makeConstraints {
-            $0.top.greaterThanOrEqualTo(view.safeAreaLayoutGuide).offset(32)
-            $0.centerY.equalToSuperview().offset(-40).priority(.medium)
-            $0.leading.trailing.equalToSuperview().inset(32)
+            $0.top.greaterThanOrEqualTo(contentScrollView.contentLayoutGuide).offset(32)
+            $0.bottom.lessThanOrEqualTo(contentScrollView.contentLayoutGuide)
+            $0.centerY.equalTo(view).offset(-40).priority(.medium)
+            $0.contentColumn(in: view.safeAreaLayoutGuide)
         }
 
         buttonStack.snp.makeConstraints {
-            $0.leading.trailing.equalToSuperview().inset(32)
+            $0.contentColumn(in: view.safeAreaLayoutGuide)
             $0.bottom.equalTo(view.safeAreaLayoutGuide).offset(-16)
-            $0.top.greaterThanOrEqualTo(contentStack.snp.bottom).offset(24)
         }
 
         iconView.snp.makeConstraints { $0.height.equalTo(56) }

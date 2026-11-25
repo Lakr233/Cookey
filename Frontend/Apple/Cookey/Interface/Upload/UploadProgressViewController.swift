@@ -45,10 +45,15 @@ class UploadProgressViewController: UIViewController {
             $0.spacing = 8
         }
 
+        let foldRegion = FoldRegionView()
+        view.addSubview(foldRegion)
         view.addSubview(stack)
+        foldRegion.snp.makeConstraints {
+            $0.edges.equalToSuperview()
+        }
         stack.snp.makeConstraints {
-            $0.center.equalToSuperview()
-            $0.leading.trailing.equalToSuperview().inset(32)
+            $0.centerY.equalTo(foldRegion.contentRegion)
+            $0.contentColumn(in: foldRegion.contentRegion)
         }
 
         bindModel()

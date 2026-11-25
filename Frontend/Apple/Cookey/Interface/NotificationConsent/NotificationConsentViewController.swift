@@ -68,23 +68,29 @@ class NotificationConsentViewController: UIViewController {
             $0.setCustomSpacing(8, after: titleLabel)
         }
 
+        let foldRegion = FoldRegionView()
+        view.addSubview(foldRegion)
         view.addSubview(stack)
         view.addSubview(enableButton)
         view.addSubview(declineButton)
 
+        foldRegion.snp.makeConstraints {
+            $0.edges.equalToSuperview()
+        }
+
         stack.snp.makeConstraints {
-            $0.center.equalToSuperview()
-            $0.leading.trailing.equalToSuperview().inset(32)
+            $0.centerY.equalTo(foldRegion.contentRegion)
+            $0.contentColumn(in: foldRegion.contentRegion)
         }
 
         enableButton.snp.makeConstraints {
-            $0.leading.trailing.equalToSuperview().inset(32)
+            $0.contentColumn(in: foldRegion.controlRegion)
             $0.bottom.equalTo(declineButton.snp.top).offset(-8)
             $0.height.equalTo(50)
         }
 
         declineButton.snp.makeConstraints {
-            $0.leading.trailing.equalToSuperview().inset(32)
+            $0.contentColumn(in: foldRegion.controlRegion)
             $0.bottom.equalTo(view.safeAreaLayoutGuide).inset(32)
         }
     }

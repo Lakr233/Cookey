@@ -33,7 +33,8 @@ class TextViewerController: UIViewController {
 
         view.addSubview(textView)
         textView.snp.makeConstraints {
-            $0.top.leading.trailing.equalToSuperview()
+            $0.top.equalToSuperview()
+            $0.leading.trailing.equalTo(view.safeAreaLayoutGuide)
             $0.bottom.equalTo(view.keyboardLayoutGuide.snp.top)
         }
 

@@ -7,6 +7,9 @@ class ScannerViewController: UIViewController, AVCaptureMetadataOutputObjectsDel
     private let captureSession = AVCaptureSession()
     private let captureQueue = DispatchQueue(label: "Cookey.Scanner.capture")
     private var didScan = false
+    private var captureDevice: AVCaptureDevice?
+    private var rotationCoordinator: AVCaptureDevice.RotationCoordinator?
+    private var rotationObservation: NSKeyValueObservation?
 
     private lazy var containerView = ScannerContainerView()
 
@@ -28,8 +31,13 @@ class ScannerViewController: UIViewController, AVCaptureMetadataOutputObjectsDel
 
         view.addSubview(containerView)
         containerView.snp.makeConstraints {
-            $0.center.equalToSuperview()
-            $0.leading.trailing.equalToSuperview().inset(32)
+            $0.centerX.equalTo(view.safeAreaLayoutGuide)
+            $0.centerY.equalToSuperview().priority(.high)
+            $0.leading.trailing.equalTo(view.safeAreaLayoutGuide).inset(32).priority(.high)
+            $0.leading.greaterThanOrEqualTo(view.safeAreaLayoutGuide).inset(32)
+            $0.trailing.lessThanOrEqualTo(view.safeAreaLayoutGuide).inset(32)
+            $0.top.greaterThanOrEqualTo(view.safeAreaLayoutGuide).inset(16)
+            $0.bottom.lessThanOrEqualTo(view.safeAreaLayoutGuide).inset(16)
             $0.height.equalTo(containerView.snp.width)
         }
         containerView.layer.cornerRadius = 16
@@ -41,6 +49,11 @@ class ScannerViewController: UIViewController, AVCaptureMetadataOutputObjectsDel
 
         containerView.previewLayer.session = captureSession
         startCamera()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        startPreviewRotationIfNeeded()
     }
 
     override func viewDidDisappear(_ animated: Bool) {
@@ -107,12 +120,47 @@ class ScannerViewController: UIViewController, AVCaptureMetadataOutputObjectsDel
                 }
                 captureSession.commitConfiguration()
                 captureSession.startRunning()
+                DispatchQueue.main.async {
+                    self.captureDevice = device
+                    self.startPreviewRotationIfNeeded()
+                }
             } catch {
                 DispatchQueue.main.async {
                     self.containerView.showMessage(String(localized: "Cookey could not start the camera scanner."))
                 }
             }
         }
+    }
+
+    /// Keeps the preview upright when the interface rotates or the app moves
+    /// to another display, for example when the device folds or unfolds.
+    private func startPreviewRotationIfNeeded() {
+        guard rotationCoordinator == nil,
+              let captureDevice,
+              view.window != nil
+        else { return }
+        let coordinator = AVCaptureDevice.RotationCoordinator(
+            device: captureDevice,
+            previewLayer: containerView.previewLayer,
+        )
+        rotationCoordinator = coordinator
+        applyPreviewRotation(coordinator.videoRotationAngleForHorizonLevelPreview)
+        rotationObservation = coordinator.observe(
+            \.videoRotationAngleForHorizonLevelPreview,
+            options: [.new],
+        ) { [weak self] _, change in
+            guard let angle = change.newValue else { return }
+            DispatchQueue.main.async {
+                self?.applyPreviewRotation(angle)
+            }
+        }
+    }
+
+    private func applyPreviewRotation(_ angle: CGFloat) {
+        guard let connection = containerView.previewLayer.connection,
+              connection.isVideoRotationAngleSupported(angle)
+        else { return }
+        connection.videoRotationAngle = angle
     }
 
     // MARK: - AVCaptureMetadataOutputObjectsDelegate
